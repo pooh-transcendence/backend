@@ -1,56 +1,51 @@
-import { ConsoleLogger, Injectable } from '@nestjs/common';
+import { ConsoleLogger, HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { CreateUserDto } from './create-user.dto';
+import { CreateUserDto } from './createuser.dto';
 import { User } from './user.entity';
-import { updateUserDto } from "./update-user.dto";
-import { typeOrmConfig } from 'src/configs/typeorm.config';
+import { BlockRepository } from './block.repository';
+import { Block } from './block.entity';
+import { CreateBlockDto } from './block.dto';
 
 @Injectable()
 export class UserService {
-    constructor(private userRepository : UserRepository){}
+    constructor(private userRepository: UserRepository,
+        private blockRepository: BlockRepository) { }
 
-    async createUser(createUserDto : CreateUserDto){ 
-        const {username, email, avatar} = createUserDto;
-        console.log(typeOrmConfig.entities);
-        /*
-        const user = await this.getUserByUserName(username);
-        if (user)
-            return user;
-        */
-        const dbUser = await this.userRepository.create({username, email, avatar});
-        if (!dbUser)
-            return null;
-        try{
-            console.log("id", dbUser.id); // id 가 증가하는 가?
-            await this.userRepository.save(dbUser);
-        }catch(error){
-            return null;
-        }
-        return dbUser;
+    async getAllUser(): Promise<User[]> {
+        return this.userRepository.getAllUser();
     }
 
-    async getUserByUserName(username : string) : Promise<User> {
-        const user = await this.userRepository.findOneBy({username : username});
-        if (!user)
-            return null;
-            //throw new HttpException(`There is no ${username} User`, HttpStatus.ACCEPTED);
-        return user;
+    async getUserById(userId: number): Promise<User> {
+        const found = await this.userRepository.getUserById(userId);
+        if (!found)
+            throw new HttpException({ reason: `There is UserId ${userId}` },
+                HttpStatus.BAD_REQUEST);
+        return found;
     }
-    //나중에 auth로 빠질 함수임
-    async updateUser(updateUserDto : updateUserDto) : Promise<User>{
-        const {username, email, avatar, friends} = updateUserDto;
-        const user = await this.getUserByUserName(username);
-        if (!user)
-            return null;
-        user.email = email || user.email;
-        user.avatar = avatar || user.avatar;
-        if (friends)
-            user.friends = user.friends.concat(friends.filter((friend) => (!user.friends.includes(friend)))); // 없는 것만  
-        try{
-            await this.userRepository.save(user);
-        }catch{
-            return null;
-        }
-        return user;
+
+    async createUser(createUserDto: CreateUserDto): Promise<User> {
+        return this.userRepository.createUser(createUserDto);
     }
+
+    async deleteUser(userId: number) {
+        this.userRepository.deleteUser(userId);
+    }
+
+    //User Update는 나중에 
+
+
+    async createBlock(createBlockDto: CreateBlockDto): Promise<Block> {
+        return this.blockRepository.createBlock(createBlockDto);
+    }
+
+    async deleteBlock(deleteBlockDto: CreateBlockDto) {
+        return this.blockRepository.deleteBlock(deleteBlockDto);
+    }
+
+    async getBlockByFromId(userId: number) {
+        const found = await this.blockRepository.getBlockByFromId(userId);
+        found.forEach((block) => { block.from = undefined; });
+        return found;
+    }
+
 }

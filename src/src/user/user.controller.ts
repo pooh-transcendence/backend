@@ -1,27 +1,25 @@
-import { Body, ConsoleLogger, Controller, HttpException, HttpStatus, InternalServerErrorException, Post, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, ConsoleLogger, Controller, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './create-user.dto';
+import { CreateUserDto } from './createuser.dto';
 import { User } from './user.entity';
-import { updateUserDto } from './update-user.dto';
+import { getegid } from 'process';
 
 @Controller('user')
 export class UserController {
-    constructor (private userService : UserService){}
+    constructor(private userService: UserService) { }
 
     @Post()
-    @UsePipes(ValidationPipe)
-    async createUser(@Body() createUserDto : CreateUserDto) : Promise<User>{
-        const user = await this.userService.createUser(createUserDto);
-        if (!user)
-            throw new HttpException(`Exist user ${createUserDto.username}`,HttpStatus.BAD_REQUEST);
-        return user;
+    async createUser(@Body() createUserDto: CreateUserDto) {
+        return this.userService.createUser(createUserDto);
     }
 
-    @Post('/update')
-    async updateUser(@Body() updateUserDto : updateUserDto){
-        const user = await this.userService.updateUser(updateUserDto);
-        if (!user)
-            throw new HttpException(`Not exist user ${updateUserDto.username}`,HttpStatus.BAD_REQUEST);
-        return user;
+    @Get('/:id')
+    async getUserById(@Param('id') userId: number) {
+        return this.userService.getUserById(userId);
+    }
+
+    @Get()
+    async getAllUser() {
+        return this, this.userService.getAllUser();
     }
 }
