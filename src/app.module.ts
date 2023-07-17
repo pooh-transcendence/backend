@@ -10,11 +10,12 @@ import { BlockModule } from './block/block.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
-    ChannelModule, UserModule, GameModule, BlockModule
+    ChannelModule,
+    UserModule,
+    GameModule,
+    BlockModule,
   ],
   controllers: [],
   providers: [],
 })
-
-export class AppModule {
-}
+export class AppModule {}

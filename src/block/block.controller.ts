@@ -5,21 +5,22 @@ import { CreateBlockDto } from './block.dto';
 
 @Controller('block')
 export class BlockController {
-    constructor(private blockService : BlockService){}
+  constructor(private blockService: BlockService) {}
 
-    @Get()
-    async getAllBlock() : Promise<BlockEntity[]>{
-        return this.blockService.getBlockAll();
-    }
+  @Get()
+  async getAllBlock(): Promise<BlockEntity[]> {
+    return this.blockService.getBlockAll();
+  }
 
-    @Get('/:id')
-    async getBlockByFromId(@Param('id') id : number) : Promise<BlockEntity[]>{
-        return this.blockService.getBlockByFromId(id);
-    }
+  @Get('/:id')
+  async getBlockByFromId(@Param('id') id: number): Promise<BlockEntity[]> {
+    return this.blockService.getBlockByFromId(id);
+  }
 
-    @Post()
-    async createBlock(@Body() createBlockDto : CreateBlockDto) : Promise<BlockEntity>
-    {
-        return this.blockService.createBlock(createBlockDto);
-    }
+  @Post()
+  async createBlock(
+    @Body() createBlockDto: CreateBlockDto,
+  ): Promise<BlockEntity> {
+    return this.blockService.createBlock(createBlockDto);
+  }
 }

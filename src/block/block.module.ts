@@ -6,9 +6,8 @@ import { BlockRepository } from './block.repository';
 import { BlockService } from './block.service';
 
 @Module({
-  imports :[TypeOrmModule.forFeature([BlockEntity])],
+  imports: [TypeOrmModule.forFeature([BlockEntity])],
   controllers: [BlockController],
-  providers :[BlockRepository, BlockService]
+  providers: [BlockRepository, BlockService],
 })
-
 export class BlockModule {}

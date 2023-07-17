@@ -1,7 +1,7 @@
-import { IsNotEmpty, isNumber } from "class-validator";
+import { IsNotEmpty, isNumber } from 'class-validator';
 
 export class CreateBlockDto {
-    from: number;
+  from: number;
 
-    to: number;
-};
+  to: number;
+}

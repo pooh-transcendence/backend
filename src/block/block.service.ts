@@ -5,23 +5,25 @@ import { BlockEntity } from './block.entity';
 
 @Injectable()
 export class BlockService {
-    constructor (private blockRepository: BlockRepository){}
-    
-    async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
-        return await this.blockRepository.createBlock(createBlockDto);
-    }
+  constructor(private blockRepository: BlockRepository) {}
 
-    async deleteBlock(deleteBlockDto: CreateBlockDto) {
-        return await this.blockRepository.deleteBlock(deleteBlockDto);
-    }
+  async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
+    return await this.blockRepository.createBlock(createBlockDto);
+  }
 
-    async getBlockByFromId(userId: number) {
-        const found = await this.blockRepository.getBlockByFromId(userId);
-        found.forEach((block) => { block.from = undefined; });
-        return found;
-    }
+  async deleteBlock(deleteBlockDto: CreateBlockDto) {
+    return await this.blockRepository.deleteBlock(deleteBlockDto);
+  }
 
-    async getBlockAll() : Promise<BlockEntity[]> {
-        return this.blockRepository.getAllBlock();
-    }
+  async getBlockByFromId(userId: number) {
+    const found = await this.blockRepository.getBlockByFromId(userId);
+    found.forEach((block) => {
+      block.from = undefined;
+    });
+    return found;
+  }
+
+  async getBlockAll(): Promise<BlockEntity[]> {
+    return this.blockRepository.getAllBlock();
+  }
 }
