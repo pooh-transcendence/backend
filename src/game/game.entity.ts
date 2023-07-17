@@ -8,12 +8,12 @@ export enum GameType {
 }
 
 @Entity()
-export class MatchEntity extends CommonEntity {
+export class GameEntity extends CommonEntity {
 
-    @ManyToOne(() => UserEntity, user => user.winnerMatch, {eager : false})
+    @ManyToOne(() => UserEntity, user => user.winnerGame, {eager : false})
     winner: UserEntity;
 
-    @ManyToOne(() => UserEntity, user => user.loserMatch, {eager : false})
+    @ManyToOne(() => UserEntity, user => user.loserGame, {eager : false})
     loser: UserEntity;
 
     @Column()

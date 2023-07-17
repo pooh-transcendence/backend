@@ -1,20 +1,19 @@
 import { Body, ConsoleLogger, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
 import { ChannelRepository } from './channel.repository';
-import { ChannelUserRepository } from './channeluser.repository';
-import { CreateChanneUserDto } from './channeluser.dto';
+import { ChannelUserRepository } from './channel-user.repository';
+import { CreateChanneUserDto } from './channel-user.dto';
 import { CreateChannelDto, UpdateChannelDto } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
-import { ChannelUser } from './channeluser.entity';
+import { ChannelUserEntity } from './channel-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
-export class ChatService {
+export class ChannelService {
     constructor(
         //@InjectRepository(Channel)
         private channelRepository: ChannelRepository,
         //@InjectRepository(ChannelUser)
         private channelUserRepository: ChannelUserRepository) { }
-
 
     async createChannel(owner: number, createChannelDto: CreateChannelDto, createChannelUserDtoList: CreateChanneUserDto[]): Promise<ChannelEntity> {
         const found = await this.channelRepository.findChannelByChannelName(createChannelDto.channelName);
@@ -31,11 +30,11 @@ export class ChatService {
         return channel;
     }
 
-    async addChannelUser(createChannelUserDto: CreateChanneUserDto): Promise<ChannelUser> {
+    async addChannelUser(createChannelUserDto: CreateChanneUserDto): Promise<ChannelUserEntity> {
         return await this.channelUserRepository.createChannelUser(createChannelUserDto);
     }
 
-    async banChannelUser(updateChannelDto: UpdateChannelDto): Promise<ChannelUser> {
+    async banChannelUser(updateChannelDto: UpdateChannelDto): Promise<ChannelUserEntity> {
         const { userId, channelId } = updateChannelDto;
         const channelUser = await this.channelUserRepository.findOneChannelUserById(userId, channelId);
         if (!channelId)
@@ -61,7 +60,7 @@ export class ChatService {
         return found;
     }
 
-    async joinChannelUser(createChannelUserDto: CreateChanneUserDto): Promise<ChannelUser> {
+    async joinChannelUser(createChannelUserDto: CreateChanneUserDto): Promise<ChannelUserEntity> {
         const { userId, channelId, password } = createChannelUserDto;
         const channel = await this.channelRepository.findOneBy({ id: channelId });
         const user = await this.channelUserRepository.findOneBy({ userId, channelId });

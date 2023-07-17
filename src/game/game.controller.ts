@@ -1,34 +1,34 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { GameService } from './game.service';
-import { CreateMatchDto } from './match.dto';
-import { MatchEntity } from './match.entity';
+import { CreateGameDto } from './create-game.dto';
+import { GameEntity } from './game.entity';
 
 @Controller('game')
 export class GameController {
     constructor(private gameService: GameService) { }
 
-    @Post('/match')
-    async createMatch(@Body() createMatchDto: CreateMatchDto): Promise<MatchEntity> {
-        return await this.gameService.createMatch(createMatchDto);
+    @Post('/game')
+    async createGame(@Body() createGameDto: CreateGameDto): Promise<GameEntity> {
+        return await this.gameService.createGame(createGameDto);
     }
 
-    @Get('/match')
-    async getAllMatch(): Promise<MatchEntity[]> {
-        return await this.gameService.getAllMatch();
+    @Get('/game')
+    async getAllGame(): Promise<GameEntity[]> {
+        return await this.gameService.getAllGame();
     }
 
-    @Get('/match/:matchId') // validate
-    async getMatchByMatchId(@Param('matchId') matchId: number): Promise<MatchEntity> {
-        return await this.gameService.getMatchByMatchId(matchId);
+    @Get('/game/:gameId') // validate
+    async getGameByGameId(@Param('gameId') gameId: number): Promise<GameEntity> {
+        return await this.gameService.getGameByGameId(gameId);
     }
 
-    @Get('/match/userid/:userId') //validate With Id
-    async getMatchByUserId(@Param('userId') userId: number): Promise<MatchEntity[]> {
-        return await this.gameService.getMatchByUserId(userId);
+    @Get('/game/userid/:userId') //validate With Id
+    async getGameByUserId(@Param('userId') userId: number): Promise<GameEntity[]> {
+        return await this.gameService.getGameByUserId(userId);
     }
 
-    @Delete('match/:matchId')
-    async getDeleteByMatchId(@Param('matchId') matchId: number) {
-        this.gameService.deleteMatchByMatchId(matchId);
+    @Delete('game/:gameId')
+    async getDeleteByGameId(@Param('gameId') gameId: number) {
+        this.gameService.deleteGameByGameId(gameId);
     }
 }

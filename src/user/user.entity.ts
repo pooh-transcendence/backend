@@ -1,5 +1,5 @@
 import { CommonEntity } from "src/common/common.entity";
-import { MatchEntity } from "src/game/match.entity";
+import { GameEntity } from "src/game/game.entity";
 import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
 export enum UserState {
@@ -36,11 +36,11 @@ export class UserEntity extends CommonEntity {
     @Column({ nullable: true })
     token: string;
 
-    @OneToMany(() => MatchEntity, match => MatchEntity.winner)
-    winnerMatch: MatchEntity[];
+    @OneToMany(() => GameEntity, game => game.winner)
+    winnerGame: GameEntity[];
 
-    @OneToMany(() => MatchEntity, match => MatchEntity.loser)
-    loserMatch: MatchEntity[];
+    @OneToMany(() => GameEntity, game => game.loser)
+    loserGame: GameEntity[];
 
     /*
     @CreateDateColumn()
