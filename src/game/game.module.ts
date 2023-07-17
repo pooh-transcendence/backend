@@ -6,10 +6,8 @@ import { GameEntity } from './game.entity';
 import { GameRepository } from './game.repository';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([GameEntity])
-  ],
+  imports: [TypeOrmModule.forFeature([GameEntity])],
   controllers: [GameController],
-  providers: [GameService, GameRepository]
+  providers: [GameService, GameRepository],
 })
-export class GameModule { }
+export class GameModule {}

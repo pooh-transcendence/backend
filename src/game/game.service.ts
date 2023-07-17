@@ -5,25 +5,25 @@ import { GameEntity } from './game.entity';
 
 @Injectable()
 export class GameService {
-    constructor(private gameRepository: GameRepository) { }
+  constructor(private gameRepository: GameRepository) {}
 
-    async createGame(createGameDto: CreateGameDto): Promise<GameEntity> {
-        return await this.gameRepository.createGame(createGameDto);
-    }
+  async createGame(createGameDto: CreateGameDto): Promise<GameEntity> {
+    return await this.gameRepository.createGame(createGameDto);
+  }
 
-    async getAllGame(): Promise<GameEntity[]> {
-        return await this.gameRepository.getAllGame();
-    }
+  async getAllGame(): Promise<GameEntity[]> {
+    return await this.gameRepository.getAllGame();
+  }
 
-    async getGameByUserId(userId: number): Promise<GameEntity[]> {
-        return await this.gameRepository.getGameByUserId(userId);
-    }
+  async getGameByUserId(userId: number): Promise<GameEntity[]> {
+    return await this.gameRepository.getGameByUserId(userId);
+  }
 
-    async getGameByGameId(gameId: number): Promise<GameEntity> {
-        return await this.gameRepository.getGameByGameId(gameId);
-    }
+  async getGameByGameId(gameId: number): Promise<GameEntity> {
+    return await this.gameRepository.getGameByGameId(gameId);
+  }
 
-    async deleteGameByGameId(gameId: number): Promise<void> {
-        await this.gameRepository.deleteGameByGameId(gameId);
-    }
+  async deleteGameByGameId(gameId: number): Promise<void> {
+    await this.gameRepository.deleteGameByGameId(gameId);
+  }
 }

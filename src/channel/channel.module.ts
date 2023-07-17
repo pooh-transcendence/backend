@@ -12,4 +12,4 @@ import { ChannelUserRepository } from './channel-user.repository';
   controllers: [ChannelController],
   providers: [ChannelService, ChannelRepository, ChannelUserRepository],
 })
-export class ChannelModule { }
+export class ChannelModule {}

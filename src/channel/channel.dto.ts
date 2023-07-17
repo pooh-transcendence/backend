@@ -1,12 +1,12 @@
-import { ChannelType } from "./channel.entity";
+import { ChannelType } from './channel.entity';
 
 export class CreateChannelDto {
-    channelType: ChannelType;
-    channelName: string;
-    password: string;
+  channelType: ChannelType;
+  channelName: string;
+  password: string;
 }
 
 export class UpdateChannelDto {
-    userId: number;
-    channelId: number;
+  userId: number;
+  channelId: number;
 }
