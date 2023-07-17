@@ -9,4 +9,5 @@ export class FreindRepository extends Repository<Friend>{
     }
 
     async createFriend() { }
+    // async 
 }
