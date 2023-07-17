@@ -1,18 +1,18 @@
 import { DataSource, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Channel } from "./channel.entity";
+import { ChannelEntity } from "./channel.entity";
 import { CreateChannelDto } from "./channel.dto";
 import { ChannelType } from "./channel.entity";
 import * as bcrypt from 'bcryptjs';
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 
 @Injectable()
-export class ChannelRepository extends Repository<Channel>{
-    constructor(@InjectRepository(Channel) private dataSource: DataSource) {
-        super(Channel, dataSource.manager);
+export class ChannelRepository extends Repository<ChannelEntity>{
+    constructor(@InjectRepository(ChannelEntity) private dataSource: DataSource) {
+        super(ChannelEntity, dataSource.manager);
     }
 
-    async createChannel(createChannelDto: CreateChannelDto, owner: number): Promise<Channel> {
+    async createChannel(createChannelDto: CreateChannelDto, owner: number): Promise<ChannelEntity> {
         const { channelType, channelName, password } = createChannelDto;
         let hashPassword = null;
 
@@ -38,11 +38,11 @@ export class ChannelRepository extends Repository<Channel>{
         }
         return channel;
     }
-    async findChannelByChannelName(channelName: string): Promise<Channel> {
+    async findChannelByChannelName(channelName: string): Promise<ChannelEntity> {
         return await this.findOneBy({ channelName });
     }
 
-    async getAllVisualChannel(): Promise<Channel[]> {
+    async getAllVisualChannel(): Promise<ChannelEntity[]> {
         return await this.findBy([{ channelType: ChannelType.PUBLIC }, { channelType: ChannelType.PROTECTED }]);
     }
 

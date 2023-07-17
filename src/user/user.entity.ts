@@ -1,3 +1,4 @@
+import { MatchEntity } from "src/game/match.entity";
 import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
 export enum UserState {
@@ -35,6 +36,12 @@ export class User extends BaseEntity {
 
     @Column({ nullable: true })
     token: string;
+
+    @OneToMany(() => MatchEntity, match => MatchEntity.winner)
+    winnerMatch: MatchEntity[];
+
+    @OneToMany(() => MatchEntity, match => MatchEntity.loser)
+    loserMatch: MatchEntity[];
 
     /*
     @CreateDateColumn()

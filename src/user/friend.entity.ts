@@ -2,7 +2,7 @@ import internal from "stream";
 import { BaseEntity, Column, Entity, PrimaryColumn, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity()
-export default class Friend extends BaseEntity {
+export default class FriendEntity extends BaseEntity {
 
     @PrimaryGeneratedColumn()
     id: number;

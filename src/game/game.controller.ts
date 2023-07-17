@@ -1,29 +1,29 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateMatchDto } from './match.dto';
-import { Match } from './match.entity';
+import { MatchEntity } from './match.entity';
 
 @Controller('game')
 export class GameController {
     constructor(private gameService: GameService) { }
 
     @Post('/match')
-    async createMatch(@Body() createMatchDto: CreateMatchDto): Promise<Match> {
+    async createMatch(@Body() createMatchDto: CreateMatchDto): Promise<MatchEntity> {
         return await this.gameService.createMatch(createMatchDto);
     }
 
     @Get('/match')
-    async getAllMatch(): Promise<Match[]> {
+    async getAllMatch(): Promise<MatchEntity[]> {
         return await this.gameService.getAllMatch();
     }
 
     @Get('/match/:matchId') // validate
-    async getMatchByMatchId(@Param('matchId') matchId: number): Promise<Match> {
+    async getMatchByMatchId(@Param('matchId') matchId: number): Promise<MatchEntity> {
         return await this.gameService.getMatchByMatchId(matchId);
     }
 
     @Get('/match/userid/:userId') //validate With Id
-    async getMatchByUserId(@Param('userId') userId: number): Promise<Match[]> {
+    async getMatchByUserId(@Param('userId') userId: number): Promise<MatchEntity[]> {
         return await this.gameService.getMatchByUserId(userId);
     }
 

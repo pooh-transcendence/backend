@@ -1,15 +1,16 @@
 import { DataSource, EntityRepository, Repository } from "typeorm";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Match } from "./match.entity";
+import { MatchEntity } from "./match.entity";
 import { CreateMatchDto } from "./match.dto";
 import { ConflictException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
+import { User } from "src/user/user.entity";
 
-export class MatchRepository extends Repository<Match>{
-    constructor(@InjectRepository(Match) private dataSource: DataSource) {
-        super(Match, dataSource.manager);
+export class MatchRepository extends Repository<MatchEntity>{
+    constructor(@InjectRepository(MatchEntity) private dataSource: DataSource) {
+        super(MatchEntity, dataSource.manager);
     }
 
-    async createMatch(createMatchDto: CreateMatchDto): Promise<Match> {
+    async createMatch(createMatchDto: CreateMatchDto): Promise<MatchEntity> {
         const match = await this.create(createMatchDto);
         if (!match)
             throw new InternalServerErrorException();
@@ -26,15 +27,15 @@ export class MatchRepository extends Repository<Match>{
         return match;
     }
 
-    async getAllMatch(): Promise<Match[]> {
+    async getAllMatch(): Promise<MatchEntity[]> {
         return this.find();
     }
 
-    async getMatchByUserId(userId: number): Promise<Match[]> {
-        return this.findBy([{ winner: userId }, { loser: userId }]);
+    async getMatchByUserId(userId: number): Promise<MatchEntity[]> {
+        return this.find({relations : ['winnerMatch', 'loserMatch']});
     }
 
-    async getMatchByMatchId(matchId: number): Promise<Match> {
+    async getMatchByMatchId(matchId: number): Promise<MatchEntity> {
         return this.findOneBy({ id: matchId });
     }
 

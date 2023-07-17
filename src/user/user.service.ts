@@ -2,14 +2,10 @@ import { ConsoleLogger, HttpException, HttpStatus, Injectable } from '@nestjs/co
 import { UserRepository } from './user.repository';
 import { CreateUserDto } from './createuser.dto';
 import { User } from './user.entity';
-import { BlockRepository } from './block.repository';
-import { Block } from './block.entity';
-import { CreateBlockDto } from './block.dto';
 
 @Injectable()
 export class UserService {
-    constructor(private userRepository: UserRepository,
-        private blockRepository: BlockRepository) { }
+    constructor(private userRepository: UserRepository){}     
 
     async getAllUser(): Promise<User[]> {
         return this.userRepository.getAllUser();
@@ -32,20 +28,4 @@ export class UserService {
     }
 
     //User Update는 나중에 
-
-
-    async createBlock(createBlockDto: CreateBlockDto): Promise<Block> {
-        return this.blockRepository.createBlock(createBlockDto);
-    }
-
-    async deleteBlock(deleteBlockDto: CreateBlockDto) {
-        return this.blockRepository.deleteBlock(deleteBlockDto);
-    }
-
-    async getBlockByFromId(userId: number) {
-        const found = await this.blockRepository.getBlockByFromId(userId);
-        found.forEach((block) => { block.from = undefined; });
-        return found;
-    }
-
 }

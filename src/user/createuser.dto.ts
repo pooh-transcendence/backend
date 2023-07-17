@@ -13,5 +13,5 @@ export class CreateUserDto {
 
     @IsNotEmpty()
     token: string;
-
+    
 }

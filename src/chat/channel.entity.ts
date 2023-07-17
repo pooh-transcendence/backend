@@ -7,7 +7,7 @@ export enum ChannelType {
 }
 
 @Entity()
-export class Channel extends BaseEntity {
+export class ChannelEntity extends BaseEntity {
     @PrimaryGeneratedColumn()
     id: number;
 

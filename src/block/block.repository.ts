@@ -1,18 +1,18 @@
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { DataSource, Repository } from "typeorm";
-import { Block } from "./block.entity";
+import { BlockEntity } from "./block.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CreateBlockDto } from "./block.dto";
 
 
 
 @Injectable()
-export class BlockRepository extends Repository<Block>{
-    constructor(@InjectRepository(Block) private dataSource: DataSource) {
-        super(Block, dataSource.manager);
+export class BlockRepository extends Repository<BlockEntity>{
+    constructor(@InjectRepository(BlockEntity) private dataSource: DataSource) {
+        super(BlockEntity, dataSource.manager);
     }
 
-    async createBlock(createBlockDto: CreateBlockDto): Promise<Block> {
+    async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
         const { from, to } = createBlockDto;
         const block = await this.create({ from, to });
 
@@ -36,11 +36,11 @@ export class BlockRepository extends Repository<Block>{
             throw new NotFoundException(`Couldn't find Block {${from} ,${to}} `);
     }
 
-    async getBlockByFromId(from: number): Promise<Block[]> {
+    async getBlockByFromId(from: number): Promise<BlockEntity[]> {
         return await this.findBy({ from });
     }
 
-    async getAllBock(): Promise<Block[]> {
+    async getAllBlock(): Promise<BlockEntity[]> {
         return await this.find();
     }
 }

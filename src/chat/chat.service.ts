@@ -3,7 +3,7 @@ import { ChannelRepository } from './channel.repository';
 import { ChannelUserRepository } from './channeluser.repository';
 import { CreateChanneUserDto } from './channeluser.dto';
 import { CreateChannelDto, UpdateChannelDto } from './channel.dto';
-import { Channel, ChannelType } from './channel.entity';
+import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelUser } from './channeluser.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -16,7 +16,7 @@ export class ChatService {
         private channelUserRepository: ChannelUserRepository) { }
 
 
-    async createChannel(owner: number, createChannelDto: CreateChannelDto, createChannelUserDtoList: CreateChanneUserDto[]): Promise<Channel> {
+    async createChannel(owner: number, createChannelDto: CreateChannelDto, createChannelUserDtoList: CreateChanneUserDto[]): Promise<ChannelEntity> {
         const found = await this.channelRepository.findChannelByChannelName(createChannelDto.channelName);
         if (found)
             throw new HttpException({ reason: "channel is Exist" }, HttpStatus.BAD_REQUEST);
@@ -55,7 +55,7 @@ export class ChatService {
         return channelUser;
     }
 
-    async getVisualChannel(): Promise<Channel[]> {
+    async getVisualChannel(): Promise<ChannelEntity[]> {
         const found = await this.channelRepository.getAllVisualChannel();
         found.forEach((channel) => { channel.password = undefined; });
         return found;
