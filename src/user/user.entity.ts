@@ -1,3 +1,4 @@
+import { CommonEntity } from "src/common/common.entity";
 import { MatchEntity } from "src/game/match.entity";
 import { BaseEntity, Column, CreateDateColumn, DeleteDateColumn, Entity, OneToMany, PrimaryColumn, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from "typeorm";
 
@@ -9,9 +10,7 @@ export enum UserState {
 
 @Entity()
 @Unique(['nickName'])
-export class User extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+export class UserEntity extends CommonEntity {
 
     @Column({ nullable: true })
     ftId: string;

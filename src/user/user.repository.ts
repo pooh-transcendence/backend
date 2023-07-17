@@ -1,35 +1,35 @@
 import { DataSource, Repository } from "typeorm";
-import { User } from "./user.entity";
+import { UserEntity } from "./user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { CreateUserDto } from "./createuser.dto";
 import { ConflictException, InternalServerErrorException } from "@nestjs/common";
 
-export class UserRepository extends Repository<User>{
-    constructor(@InjectRepository(User) private dataSource: DataSource) {
-        super(User, dataSource.manager);
+export class UserRepository extends Repository<UserEntity>{
+    constructor(@InjectRepository(UserEntity) private dataSource: DataSource) {
+        super(UserEntity, dataSource.manager);
     }
 
-    async getAllUser(): Promise<User[]> {
+    async getAllUser(): Promise<UserEntity[]> {
         return this.find();
     }
 
-    async getUserById(userId: number): Promise<User> {
+    async getUserById(userId: number): Promise<UserEntity> {
         return this.findOneBy({ id: userId });
     }
 
-    async createUser(createUserDto: CreateUserDto): Promise<User> {
+    async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
         const { nickName, email, ftId, token } = createUserDto;
-        const user = this.create({ nickName, email, ftId, token, winScore: 0, loseScore: 0 });
+        const UserEntity = this.create({ nickName, email, ftId, token, winScore: 0, loseScore: 0 });
         try {
-            await this.save(user);
+            await this.save(UserEntity);
         } catch (error) {
             if (error.code === '23505') {
-                throw new ConflictException('Existing user');
+                throw new ConflictException('Existing UserEntity');
             } else {
                 throw new InternalServerErrorException();
             }
         }
-        return user;
+        return UserEntity;
     }
 
     async deleteUser(userId: number) {

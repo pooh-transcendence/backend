@@ -1,11 +1,9 @@
+import { CommonEntity } from "src/common/common.entity";
 import internal from "stream";
 import { BaseEntity, Column, Entity, PrimaryColumn, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity()
-export default class FriendEntity extends BaseEntity {
-
-    @PrimaryGeneratedColumn()
-    id: number;
+export class FriendEntity extends CommonEntity {
 
     @Column()
     from: number;

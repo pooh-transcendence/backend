@@ -1,5 +1,6 @@
-import { User } from "src/user/user.entity";
-import { BaseEntity, Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
+import { CommonEntity } from "src/common/common.entity";
+import { UserEntity } from "src/user/user.entity";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm"
 
 export enum GameType {
     ONEVSONE = "1vs1",
@@ -7,16 +8,13 @@ export enum GameType {
 }
 
 @Entity()
-export class MatchEntity extends BaseEntity {
+export class MatchEntity extends CommonEntity {
 
-    @PrimaryGeneratedColumn()
-    id: number;
+    @ManyToOne(() => UserEntity, user => user.winnerMatch, {eager : false})
+    winner: UserEntity;
 
-    @ManyToOne(() => User, user => user.winnerMatch, {eager : false})
-    winner: User;
-
-    @ManyToOne(() => User, user => user.loserMatch, {eager : false})
-    loser: User;
+    @ManyToOne(() => UserEntity, user => user.loserMatch, {eager : false})
+    loser: UserEntity;
 
     @Column()
     gameType: GameType;
@@ -35,10 +33,4 @@ export class MatchEntity extends BaseEntity {
 
     @Column({ default: 1 })
     racketSize: number;
-
-    // @CreateDateColumn({ default: () => "CURRENT_TIMESTAMP" })
-    // startAt: Date;
-
-    // @UpdateDateColumn({ default: () => "CURRENT_TIMESTAMP" })
-    // updateAt: Date;
 }
