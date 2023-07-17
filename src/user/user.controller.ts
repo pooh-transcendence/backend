@@ -1,8 +1,6 @@
 import { Body, ConsoleLogger, Controller, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Post, UsePipes, ValidationPipe } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './createuser.dto';
-import { User } from './user.entity';
-import { getegid } from 'process';
 
 @Controller('user')
 export class UserController {

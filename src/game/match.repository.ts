@@ -3,7 +3,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { MatchEntity } from "./match.entity";
 import { CreateMatchDto } from "./match.dto";
 import { ConflictException, InternalServerErrorException, NotFoundException } from "@nestjs/common";
-import { User } from "src/user/user.entity";
 
 export class MatchRepository extends Repository<MatchEntity>{
     constructor(@InjectRepository(MatchEntity) private dataSource: DataSource) {
