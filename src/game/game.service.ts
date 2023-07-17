@@ -1,30 +1,29 @@
 import { Injectable } from '@nestjs/common';
-import { MatchRepository } from './match.repository';
-import { CreateMatchDto } from './match.dto';
-import { MatchEntity } from './match.entity';
-import { match } from 'assert';
+import { GameRepository } from './game.repository';
+import { CreateGameDto } from './create-game.dto';
+import { GameEntity } from './game.entity';
 
 @Injectable()
 export class GameService {
-    constructor(private matchRepository: MatchRepository) { }
+    constructor(private gameRepository: GameRepository) { }
 
-    async createMatch(createMatchDto: CreateMatchDto): Promise<MatchEntity> {
-        return await this.matchRepository.createMatch(createMatchDto);
+    async createGame(createGameDto: CreateGameDto): Promise<GameEntity> {
+        return await this.gameRepository.createGame(createGameDto);
     }
 
-    async getAllMatch(): Promise<MatchEntity[]> {
-        return await this.matchRepository.getAllMatch();
+    async getAllGame(): Promise<GameEntity[]> {
+        return await this.gameRepository.getAllGame();
     }
 
-    async getMatchByUserId(userId: number): Promise<MatchEntity[]> {
-        return await this.matchRepository.getMatchByUserId(userId);
+    async getGameByUserId(userId: number): Promise<GameEntity[]> {
+        return await this.gameRepository.getGameByUserId(userId);
     }
 
-    async getMatchByMatchId(matchId: number): Promise<MatchEntity> {
-        return await this.matchRepository.getMatchByMatchId(matchId);
+    async getGameByGameId(gameId: number): Promise<GameEntity> {
+        return await this.gameRepository.getGameByGameId(gameId);
     }
 
-    async deleteMatchByMatchId(matchId: number): Promise<void> {
-        await this.matchRepository.deleteMatchByMatchId(matchId);
+    async deleteGameByGameId(gameId: number): Promise<void> {
+        await this.gameRepository.deleteGameByGameId(gameId);
     }
 }

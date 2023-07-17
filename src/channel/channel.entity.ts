@@ -1,3 +1,4 @@
+import { CommonEntity } from "src/common/common.entity";
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 export enum ChannelType {
@@ -7,9 +8,7 @@ export enum ChannelType {
 }
 
 @Entity()
-export class ChannelEntity extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+export class ChannelEntity extends CommonEntity {
 
     @Column({ nullable: true })
     channelType: ChannelType;

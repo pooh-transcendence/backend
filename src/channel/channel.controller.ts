@@ -1,13 +1,13 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ChatService } from './chat.service';
+import { ChannelService } from './channel.service';
 import { typeOrmConfig } from 'src/configs/typeorm.config';
 import { UpdateChannelDto } from './channel.dto';
-import { CreateUserDto } from 'src/user/createuser.dto';
-import { CreateChanneUserDto } from './channeluser.dto';
+import { CreateUserDto } from 'src/user/create-user.dto';
+import { CreateChanneUserDto } from './channel-user.dto';
 
-@Controller('/chat')
-export class ChatController {
-    constructor(private chatService: ChatService) { }
+@Controller('/channel')
+export class ChannelController {
+    constructor(private chatService: ChannelService) { }
 
     @Post()
     async createChannel(@Body() data) {

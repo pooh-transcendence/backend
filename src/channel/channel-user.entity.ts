@@ -1,9 +1,8 @@
+import { CommonEntity } from "src/common/common.entity";
 import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
 
 @Entity()
-export class ChannelUser extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id: number;
+export class ChannelUserEntity extends CommonEntity {
 
     @Column({ nullable: true })
     userId: number;

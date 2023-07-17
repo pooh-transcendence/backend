@@ -1,15 +1,15 @@
-import { DataSource, EntityRepository, Repository } from "typeorm";
-import { ChannelUser } from "./channeluser.entity";
+import { DataSource, Repository } from "typeorm";
+import { ChannelUserEntity } from "./channel-user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
 import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 
 @Injectable()
-export class ChannelUserRepository extends Repository<ChannelUser>{
-    constructor(@InjectRepository(ChannelUser) private dataSource: DataSource) {
-        super(ChannelUser, dataSource.manager);
+export class ChannelUserRepository extends Repository<ChannelUserEntity>{
+    constructor(@InjectRepository(ChannelUserEntity) private dataSource: DataSource) {
+        super(ChannelUserEntity, dataSource.manager);
     }
 
-    async createChannelUser(createChannelUserDto): Promise<ChannelUser> {
+    async createChannelUser(createChannelUserDto): Promise<ChannelUserEntity> {
         const { userId, channelId, isAdmin, isBanned } = createChannelUserDto;
         const user = await this.create({ userId, channelId, isAdmin, isBanned });
         try {
@@ -24,7 +24,7 @@ export class ChannelUserRepository extends Repository<ChannelUser>{
         return user;
     }
 
-    async findOneChannelUserById(userId: number, channelId: number): Promise<ChannelUser> {
+    async findOneChannelUserById(userId: number, channelId: number): Promise<ChannelUserEntity> {
         const found = await this.findOneBy({ userId, channelId });
         if (!found)
             throw new NotFoundException(`Can't find ${userId} with ${channelId}`);

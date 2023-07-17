@@ -1,7 +1,7 @@
 import { DataSource, Repository } from "typeorm";
 import { UserEntity } from "./user.entity";
 import { InjectRepository } from "@nestjs/typeorm";
-import { CreateUserDto } from "./createuser.dto";
+import { CreateUserDto } from "./create-user.dto";
 import { ConflictException, InternalServerErrorException } from "@nestjs/common";
 
 export class UserRepository extends Repository<UserEntity>{

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ChatModule } from './chat/chat.module';
+import { ChannelModule } from './channel/channel.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './configs/typeorm.config';
 import { DataSource } from 'typeorm';
@@ -10,7 +10,7 @@ import { BlockModule } from './block/block.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig),
-    ChatModule, UserModule, GameModule, BlockModule
+    ChannelModule, UserModule, GameModule, BlockModule
   ],
   controllers: [],
   providers: [],
