@@ -7,6 +7,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { UserEntity } from 'src/user/user.entity';
+import { ChannelEntity } from './channel.entity';
 
 @Injectable()
 export class ChannelUserRepository extends Repository<ChannelUserEntity> {
@@ -16,11 +18,11 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     super(ChannelUserEntity, dataSource.manager);
   }
 
-  async createChannelUser(createChannelUserDto): Promise<ChannelUserEntity> {
-    const { userId, channelId, isAdmin, isBanned } = createChannelUserDto;
-    const user = await this.create({ userId, channelId, isAdmin, isBanned });
+  async createChannelUser(createChannelUserDto, user: UserEntity, channel: ChannelEntity): Promise<ChannelUserEntity> {
+    const { channelId, isAdmin, isBanned } = createChannelUserDto;
+    const channelUser = await this.create({ user, channel, isAdmin, isBanned });
     try {
-      await this.save(user);
+      await this.save(channelUser);
     } catch (error) {
       if (error.code === '23505') {
         throw new ConflictException('Existing user in channel');
@@ -28,16 +30,25 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
         throw new InternalServerErrorException();
       }
     }
-    return user;
+    return channelUser;
   }
 
-  async findOneChannelUserById(
+  async findChannelUserByUserId(
     userId: number,
-    channelId: number,
+  ): Promise<ChannelUserEntity[]> {
+    return await this.findBy({ user: { id: userId } });
+  }
+
+  async findChannelByChannelId(
+    channelId: number
+  ): Promise<ChannelUserEntity[]> {
+    return await this.findBy({ channel: { id: channelId } });
+  }
+
+  async findOneChannelUserByIds(
+    userId: number,
+    channelId: number
   ): Promise<ChannelUserEntity> {
-    const found = await this.findOneBy({ userId, channelId });
-    if (!found)
-      throw new NotFoundException(`Can't find ${userId} with ${channelId}`);
-    return found;
+    return await this.findOne({ where: { user: { id: userId }, channel: { id: channelId } } })
   }
 }

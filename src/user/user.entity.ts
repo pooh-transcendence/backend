@@ -1,3 +1,5 @@
+import { ChannelUserEntity } from 'src/channel/channel-user.entity';
+import { ChannelEntity } from 'src/channel/channel.entity';
 import { CommonEntity } from 'src/common/common.entity';
 import { GameEntity } from 'src/game/game.entity';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
@@ -17,10 +19,10 @@ export class UserEntity extends CommonEntity {
   @Column({ nullable: true })
   nickName: string;
 
-  @Column()
+  @Column({ default: 0 })
   winScore: number;
 
-  @Column()
+  @Column({ default: 0 })
   loseScore: number;
 
   @Column({ nullable: true })
@@ -29,7 +31,7 @@ export class UserEntity extends CommonEntity {
   @Column({ nullable: true })
   email: string;
 
-  @Column({ nullable: true })
+  @Column({ default: UserState.ONLINE, nullable: true })
   userState: UserState;
 
   @Column({ nullable: true })
@@ -41,6 +43,11 @@ export class UserEntity extends CommonEntity {
   @OneToMany(() => GameEntity, (game) => game.loser)
   loserGame: GameEntity[];
 
+  @OneToMany(() => ChannelEntity, (channel) => channel.owner)
+  ownChannel: ChannelEntity[];
+
+  //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
+  //Join : 
   /*
     @CreateDateColumn()
     created_at: Date;
