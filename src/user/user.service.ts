@@ -17,7 +17,7 @@ export class UserService {
   }
 
   async getUserById(userId: number): Promise<UserEntity> {
-    const found = await this.userRepository.getUserById(userId);
+    const found = await this.userRepository.getUserByUserId(userId);
     if (!found)
       throw new HttpException(
         { reason: `There is UserId ${userId}` },

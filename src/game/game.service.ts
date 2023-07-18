@@ -6,14 +6,16 @@ import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
 export class GameService {
-  constructor(private gameRepository: GameRepository, private userRepository: UserRepository) { }
+  constructor(
+    private gameRepository: GameRepository,
+    private userRepository: UserRepository,
+  ) {}
 
   async createGame(createGameDto: CreateGameDto): Promise<GameEntity> {
     const [id1, id2] = createGameDto.participants;
-    const user1 = await this.userRepository.getUserById(id1);
-    const user2 = await this.userRepository.getUserById(id2);
-    if (!user1 || !user2)
-      throw new NotFoundException("Couldn't find users");
+    const user1 = await this.userRepository.getUserByUserId(id1);
+    const user2 = await this.userRepository.getUserByUserId(id2);
+    if (!user1 || !user2) throw new NotFoundException("Couldn't find users");
     createGameDto.winner = user1;
     createGameDto.loser = user2;
     return await this.gameRepository.createGame(createGameDto);

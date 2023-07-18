@@ -12,4 +12,4 @@ import { UserRepository } from 'src/user/user.repository';
   controllers: [GameController],
   providers: [GameService, GameRepository, UserRepository],
 })
-export class GameModule { }
+export class GameModule {}
