@@ -1,7 +1,7 @@
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GameEntity } from './game.entity';
-import { CreateGameDto } from './create-game.dto';
+import { CreateGameDto } from './game.dto';
 import {
   ConflictException,
   InternalServerErrorException,
@@ -29,15 +29,18 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async getAllGame(): Promise<GameEntity[]> {
-    return this.find();
+    return this.find({ relations: ['winner', 'loser'] });
   }
 
   async getGameByUserId(userId: number): Promise<GameEntity[]> {
-    return this.find({ relations: ['winnerGame', 'loserGame'] });
+    return this.find({ relations: ['winner', 'loser'] });
   }
 
-  async getGameByGameId(gameId: number): Promise<GameEntity> {
-    return this.findOneBy({ id: gameId });
+  async getGameByGameId(gameId: number): Promise<GameEntity[]> {
+    return this.find({
+      relations: ['winner', 'loser'],
+      where: { id: gameId },
+    });
   }
 
   async deleteGameByGameId(gameId: number): Promise<void> {

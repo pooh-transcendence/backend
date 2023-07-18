@@ -29,7 +29,7 @@ export class UserEntity extends CommonEntity {
   @Column({ nullable: true })
   email: string;
 
-  @Column({ nullable: true })
+  @Column({ default: UserState.ONLINE, nullable: true })
   userState: UserState;
 
   @Column({ nullable: true })
