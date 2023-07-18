@@ -10,6 +10,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { channel } from 'diagnostics_channel';
+import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class ChannelRepository extends Repository<ChannelEntity> {
@@ -19,7 +21,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
 
   async createChannel(
     createChannelDto: CreateChannelDto,
-    owner: number,
+    ownUser: UserEntity
   ): Promise<ChannelEntity> {
     const { channelType, channelName, password } = createChannelDto;
     let hashPassword = null;
@@ -31,8 +33,9 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     const channel = this.create({
       channelType,
       channelName,
-      owner,
+      owner: ownUser,
       password: hashPassword,
+      channelUser: [],
     });
 
     try {
@@ -46,6 +49,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     }
     return channel;
   }
+
   async findChannelByChannelName(channelName: string): Promise<ChannelEntity> {
     return await this.findOneBy({ channelName });
   }
@@ -61,6 +65,13 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     password: string,
     hashPassword: string,
   ): Promise<boolean> {
+    if (password === undefined)
+      password = "";
     return await bcrypt.compare(password, hashPassword);
   }
+
+  async getChannelByChannelId(channelId: number): Promise<ChannelEntity> {
+    return this.findOneBy({ id: channelId });
+  }
+
 }

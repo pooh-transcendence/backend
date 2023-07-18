@@ -1,9 +1,11 @@
 import {
   Body,
+  ConflictException,
   ConsoleLogger,
   HttpException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { ChannelRepository } from './channel.repository';
@@ -13,6 +15,7 @@ import { CreateChannelDto, UpdateChannelDto } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelUserEntity } from './channel-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserRepository } from 'src/user/user.repository';
 
 @Injectable()
 export class ChannelService {
@@ -21,8 +24,9 @@ export class ChannelService {
     private channelRepository: ChannelRepository,
     //@InjectRepository(ChannelUser)
     private channelUserRepository: ChannelUserRepository,
-  ) {}
-
+    private userRepository: UserRepository,
+  ) { }
+  /*
   async createChannel(
     owner: number,
     createChannelDto: CreateChannelDto,
@@ -53,54 +57,68 @@ export class ChannelService {
     });
     channel.password = undefined;
     return channel;
+  }*/
+
+  async createChannel(ownerId: number, createChannelDto: CreateChannelDto, createChannelUserDtos: CreateChanneUserDto[]): Promise<ChannelEntity> {
+    const ownUser = await this.userRepository.getUserById(ownerId);
+    if (!ownUser)
+      throw new NotFoundException("Owner를 못찾음");
+    const channel = await this.channelRepository.createChannel(createChannelDto, ownUser);
+    const channelUsers: ChannelUserEntity[] = [];
+    for (const createChannelUserDto of createChannelUserDtos) {
+      const userId = createChannelUserDto.userId;
+      const user = await this.userRepository.getUserById(userId);
+      if (!user)
+        throw new NotFoundException(`id ${userId} 를 못찾음`);
+      channelUsers.push(await this.channelUserRepository.createChannelUser(createChannelUserDto, user, channel));
+    }
+    channel.channelUser.push(...channelUsers);
+    channel.password = undefined;
+    const result = await this.channelRepository.save(channel);
+    result.channelUser.forEach((channelUser) => (channelUser.channel = undefined));
+    return result;
   }
 
   async addChannelUser(
     createChannelUserDto: CreateChanneUserDto,
   ): Promise<ChannelUserEntity> {
-    return await this.channelUserRepository.createChannelUser(
-      createChannelUserDto,
+    const { userId, channelId } = createChannelUserDto;
+    const user = await this.userRepository.getUserById(createChannelUserDto.userId);
+    const channel = await this.channelRepository.getChannelByChannelId(channelId);
+    if (!user || !channel)
+      throw new NotFoundException();
+    const channelUser = await this.channelUserRepository.createChannelUser(
+      createChannelUserDto, user, channel
     );
+    if (!channelUser)
+      throw new HttpException({ reason: "channelUser 생성이 안됨" }, HttpStatus.BAD_REQUEST);
+    channel.channelUser.push(channelUser);
+    this.channelRepository.save(channel);
+    return channelUser;
   }
 
   async banChannelUser(
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
-    const channelUser = await this.channelUserRepository.findOneChannelUserById(
+    const channelUser = await this.channelUserRepository.findOneChannelUserByIds(
       userId,
-      channelId,
+      channelId
     );
-    if (!channelId)
-      throw new HttpException(
-        { reason: `There is no channelUser ${userId} in Channel ${channelId}` },
-        HttpStatus.BAD_REQUEST,
-      );
+    if (!channelUser)
+      throw new NotFoundException();
     channelUser.isBanned = true;
     return await this.channelUserRepository.save(channelUser);
   }
 
-  async kickChannelUser(updateChannelDto: UpdateChannelDto) {
+  async kickChannelUser(updateChannelDto: UpdateChannelDto): Promise<void> {
     const { userId, channelId } = updateChannelDto;
-    const channelUser = await this.channelUserRepository.findOneChannelUserById(
-      userId,
-      channelId,
-    );
-    if (!channelId)
-      throw new HttpException(
-        { reason: `There is no channelUser ${userId} in Channel ${channelId}` },
-        HttpStatus.BAD_REQUEST,
-      );
-    const result = await this.channelUserRepository.delete({
-      userId,
-      channelId,
-    });
+    const result = await this.channelUserRepository.delete({ user: { id: userId }, channel: { id: channelId } });
     if (result.affected === 0)
       throw new HttpException(
         `Cannot delete User ${userId}`,
         HttpStatus.BAD_REQUEST,
       );
-    return channelUser;
   }
 
   async getVisualChannel(): Promise<ChannelEntity[]> {
@@ -115,11 +133,10 @@ export class ChannelService {
     createChannelUserDto: CreateChanneUserDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId, password } = createChannelUserDto;
-    const channel = await this.channelRepository.findOneBy({ id: channelId });
-    const user = await this.channelUserRepository.findOneBy({
+    const channel = await this.channelRepository.getChannelByChannelId(channelId);
+    const user = await this.channelUserRepository.findOneChannelUserByIds(
       userId,
-      channelId,
-    });
+      channelId);
     if (!channel || channel.channelType == ChannelType.PRIVATE)
       throw new NotFoundException(`There is no Channel ${channelId}`);
     if (user)

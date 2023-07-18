@@ -27,8 +27,6 @@ export class UserRepository extends Repository<UserEntity> {
       email,
       ftId,
       token,
-      winScore: 0,
-      loseScore: 0,
     });
     try {
       await this.save(UserEntity);
