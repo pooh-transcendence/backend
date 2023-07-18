@@ -47,15 +47,5 @@ export class UserEntity extends CommonEntity {
   ownChannel: ChannelEntity[];
 
   //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
-  //Join : 
-  /*
-    @CreateDateColumn()
-    created_at: Date;
-
-    @UpdateDateColumn()
-    update_at: Date;
-
-    @DeleteDateColumn()
-    delete_at: Date;
-    */
+  //Join :
 }

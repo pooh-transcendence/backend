@@ -5,7 +5,7 @@ import { GameEntity } from './game.entity';
 
 @Controller('game')
 export class GameController {
-  constructor(private gameService: GameService) { }
+  constructor(private gameService: GameService) {}
 
   @Post()
   async createGame(@Body() createGameDto: CreateGameDto): Promise<GameEntity> {
@@ -18,7 +18,9 @@ export class GameController {
   }
 
   @Get('/:gameId') // validate
-  async getGameByGameId(@Param('gameId') gameId: number): Promise<GameEntity[]> {
+  async getGameByGameId(
+    @Param('gameId') gameId: number,
+  ): Promise<GameEntity[]> {
     return await this.gameService.getGameByGameId(gameId);
   }
 
