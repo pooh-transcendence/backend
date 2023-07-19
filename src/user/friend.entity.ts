@@ -11,6 +11,9 @@ import {
 
 @Entity()
 export class FriendEntity extends CommonEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
   @Column()
   from: number;
 

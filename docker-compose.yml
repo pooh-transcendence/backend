@@ -1,0 +1,71 @@
+version: '3.8'
+
+volumes:
+  db:
+    name: db
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./datas/db
+
+  pgadminDB:
+    name: pgadminDB
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./datas/pgadmin
+
+services:
+  postgres:
+    image : postgres:latest
+    container_name: postgres
+      #build: ./requirements/postgres
+    restart: on-failure:5
+    ports:
+      - "5432:5432"
+    networks:
+      - dream
+    tty: true
+    env_file:
+      - ./env/postgres.env
+    volumes:
+      - db:/var/lib/postgressql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: 
+      pgadmin
+    restart: 
+      on-failure:5
+    ports : 
+      - "5050:80"
+    tty: 
+      true
+    env_file:
+      ./env/pgadmin.env
+    networks:
+      - dream
+    volumes:
+      - pgadminDB:/var/lib/postgresql/data
+
+  backend : 
+    image: node:18-alpine
+    container_name: 
+      backend
+    build :
+      ./
+    volumes:
+      - ./:/app
+    networks:
+      - dream
+    ports:
+      - "3000:3000"
+    env_file:
+      - ./env/postgres.env
+
+networks:
+  dream:
+    name: dream
+    driver: bridge
