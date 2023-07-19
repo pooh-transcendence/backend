@@ -5,11 +5,12 @@ DIRS	=	./datas/{db,pgadmin}
 # CMD
 
 all:
-		@mkdir -p $(DIRS)
+		mkdir -p ./datas/db
+		mkdir -p ./datas/pgadmin
 		@docker compose -f ./docker-compose.yml up --build -d
 
 up:
-		@mkdir -p $(DIRS)
+		mkdir -p $(DIRS)
 		@docker compose -f ./docker-compose.yml up -d
 
 down:

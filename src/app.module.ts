@@ -18,4 +18,4 @@ import { BlockModule } from './block/block.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
