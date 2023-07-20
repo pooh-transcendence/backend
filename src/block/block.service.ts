@@ -23,7 +23,7 @@ export class BlockService {
     return found;
   }
 
-  async getBlockAll(): Promise<BlockEntity[]> {
+  async getAllBlock(): Promise<BlockEntity[]> {
     return this.blockRepository.getAllBlock();
   }
 }

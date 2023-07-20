@@ -17,7 +17,7 @@ export class BlockController {
 
   @Get()
   async getAllBlock(): Promise<BlockEntity[]> {
-    return this.blockService.getBlockAll();
+    return this.blockService.getAllBlock();
   }
 
   @Get('/:userId')
