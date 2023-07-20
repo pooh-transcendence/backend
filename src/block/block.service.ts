@@ -5,7 +5,7 @@ import { BlockEntity } from './block.entity';
 
 @Injectable()
 export class BlockService {
-  constructor(private blockRepository: BlockRepository) { }
+  constructor(private blockRepository: BlockRepository) {}
 
   async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
     return await this.blockRepository.createBlock(createBlockDto);

@@ -20,9 +20,9 @@ export class BlockController {
     return this.blockService.getBlockAll();
   }
 
-  @Get('/:blockId')
+  @Get('/:userId')
   async getBlockByFromId(
-    @Param('blockId', ParseIntPipe, PositiveIntPipe) id: number,
+    @Param('userId', ParseIntPipe, PositiveIntPipe) id: number,
   ): Promise<BlockEntity[]> {
     return this.blockService.getBlockByFromId(id);
   }
