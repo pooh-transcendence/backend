@@ -1,10 +1,11 @@
-import { ChannelType } from './channel.entity';
+import { PickType } from '@nestjs/swagger';
+import { ChannelEntity } from './channel.entity';
 
-export class CreateChannelDto {
-  channelType: ChannelType;
-  channelName: string;
-  password: string;
-}
+export class CreateChannelDto extends PickType(ChannelEntity, [
+  'channelType',
+  'channelName',
+  'password',
+] as const) {}
 
 export class UpdateChannelDto {
   userId: number;

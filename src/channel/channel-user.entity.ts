@@ -1,16 +1,8 @@
 import { CommonEntity } from 'src/common/common.entity';
-import {
-  BaseEntity,
-  Column,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-  Unique,
-} from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 import { ChannelEntity } from './channel.entity';
-import { channel } from 'diagnostics_channel';
 import { UserEntity } from 'src/user/user.entity';
-import { userInfo } from 'os';
+import { IsBoolean, IsNotEmpty } from 'class-validator';
 
 @Entity()
 export class ChannelUserEntity extends CommonEntity {
@@ -23,8 +15,12 @@ export class ChannelUserEntity extends CommonEntity {
   channel: ChannelEntity;
 
   @Column({ default: false })
+  @IsBoolean()
+  @IsNotEmpty()
   isAdmin: boolean;
 
   @Column({ default: false })
+  @IsBoolean()
+  @IsNotEmpty()
   isBanned: boolean;
 }
