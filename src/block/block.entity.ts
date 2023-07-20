@@ -1,13 +1,11 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { CommonEntity } from 'src/common/common.entity';
+import { Column, Entity } from 'typeorm';
 
 @Entity()
-export class BlockEntity extends BaseEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
-  @Column({ nullable: true })
+export class BlockEntity extends CommonEntity {
+  @Column()
   from: number;
 
-  @Column({ nullable: true })
+  @Column()
   to: number;
 }

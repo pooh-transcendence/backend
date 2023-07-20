@@ -21,7 +21,7 @@ export class ChannelController {
   }
 
   @Get('/visual')
-  async getVisualChannel() {
-    return this.chatService.getVisualChannel();
+  async getVisibleChannel() {
+    return this.chatService.getVisibleChannel();
   }
 }

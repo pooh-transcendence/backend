@@ -143,8 +143,8 @@ export class ChannelService {
       );
   }
 
-  async getVisualChannel(): Promise<ChannelEntity[]> {
-    const found = await this.channelRepository.getAllVisualChannel();
+  async getVisibleChannel(): Promise<ChannelEntity[]> {
+    const found = await this.channelRepository.getAllVisibleChannel();
     found.forEach((channel) => {
       channel.password = undefined;
     });

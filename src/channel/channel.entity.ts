@@ -1,7 +1,16 @@
 import { CommonEntity } from 'src/common/common.entity';
 import { UserEntity } from 'src/user/user.entity';
-import { BaseEntity, Column, Entity, ManyToOne, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BaseEntity,
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ChannelUserEntity } from './channel-user.entity';
+import { Exclude } from 'class-transformer';
 
 export enum ChannelType {
   PUBLIC = 'PUBLIC',
@@ -23,6 +32,8 @@ export class ChannelEntity extends CommonEntity {
   @Column({ nullable: true })
   password: string;
 
-  @OneToMany(() => ChannelUserEntity, (channelUser) => channelUser.channel, { eager: false })
+  @OneToMany(() => ChannelUserEntity, (channelUser) => channelUser.channel, {
+    eager: false,
+  })
   channelUser: ChannelUserEntity[];
 }
