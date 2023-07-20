@@ -45,7 +45,9 @@ export class GameController {
   }
 
   @Delete('/:gameId')
-  async getDeleteByGameId(@Param('gameId') gameId: number) {
+  async getDeleteByGameId(
+    @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
+  ) {
     this.gameService.deleteGameByGameId(gameId);
   }
 }

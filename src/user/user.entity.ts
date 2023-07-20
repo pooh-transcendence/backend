@@ -38,7 +38,7 @@ export class UserEntity extends CommonEntity {
   email: string;
 
   @Column({ default: UserState.ONLINE, nullable: true }) // TODO: default 설정
-  @IsIn(['OFFLINE', 'ONLINE', 'INGAME'])
+  @IsIn([UserState.OFFLINE, UserState.ONLINE, UserState.INGAME])
   userState: UserState;
 
   @Column({ nullable: true })
