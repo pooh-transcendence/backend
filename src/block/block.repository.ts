@@ -17,7 +17,7 @@ export class BlockRepository extends Repository<BlockEntity> {
 
   async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
     const { from, to } = createBlockDto;
-    const block = await this.create({ from, to });
+    const block = this.create({ from, to });
 
     try {
       await this.save(block);
