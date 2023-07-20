@@ -2,10 +2,12 @@ import { DataSource, Repository } from 'typeorm';
 import { ChannelUserEntity } from './channel-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  ClassSerializerInterceptor,
   ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { ChannelEntity } from './channel.entity';
@@ -48,7 +50,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     return await this.findBy({ channel: { id: channelId } });
   }
 
-  async findOneChannelUserByIds(
+  async findChannelUserByIds(
     userId: number,
     channelId: number,
   ): Promise<ChannelUserEntity> {

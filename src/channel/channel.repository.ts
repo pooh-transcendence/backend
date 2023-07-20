@@ -24,17 +24,17 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     ownUser: UserEntity,
   ): Promise<ChannelEntity> {
     const { channelType, channelName, password } = createChannelDto;
-    let hashPassword = null;
+    let hashedPassword = null;
 
     if (channelType === ChannelType.PROTECTED) {
       const salt = await bcrypt.genSalt();
-      hashPassword = await bcrypt.hash(password, salt);
+      hashedPassword = await bcrypt.hash(password, salt);
     }
     const channel = this.create({
       channelType,
       channelName,
       owner: ownUser,
-      password: hashPassword,
+      password: hashedPassword,
       channelUser: [],
     });
 
@@ -61,12 +61,12 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     ]);
   }
 
-  async isPasswordRight(
+  async isPasswordValid(
     password: string,
-    hashPassword: string,
+    hashedPassword: string,
   ): Promise<boolean> {
     if (password === undefined) password = '';
-    return await bcrypt.compare(password, hashPassword);
+    return await bcrypt.compare(password, hashedPassword);
   }
 
   async getChannelByChannelId(channelId: number): Promise<ChannelEntity> {
