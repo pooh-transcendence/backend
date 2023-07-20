@@ -21,7 +21,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
 
   async createChannel(
     createChannelDto: CreateChannelDto,
-    ownUser: UserEntity
+    ownUser: UserEntity,
   ): Promise<ChannelEntity> {
     const { channelType, channelName, password } = createChannelDto;
     let hashPassword = null;
@@ -54,7 +54,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     return await this.findOneBy({ channelName });
   }
 
-  async getAllVisualChannel(): Promise<ChannelEntity[]> {
+  async getAllVisibleChannel(): Promise<ChannelEntity[]> {
     return await this.findBy([
       { channelType: ChannelType.PUBLIC },
       { channelType: ChannelType.PROTECTED },
@@ -65,13 +65,11 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     password: string,
     hashPassword: string,
   ): Promise<boolean> {
-    if (password === undefined)
-      password = "";
+    if (password === undefined) password = '';
     return await bcrypt.compare(password, hashPassword);
   }
 
   async getChannelByChannelId(channelId: number): Promise<ChannelEntity> {
     return this.findOneBy({ id: channelId });
   }
-
 }
