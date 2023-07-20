@@ -10,7 +10,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { channel } from 'diagnostics_channel';
 import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
@@ -65,7 +64,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     password: string,
     hashedPassword: string,
   ): Promise<boolean> {
-    if (password === undefined) password = '';
+    if (password === undefined) password = ''; // TODO: check this
     return await bcrypt.compare(password, hashedPassword);
   }
 
