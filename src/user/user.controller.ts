@@ -1,22 +1,24 @@
 import {
   Body,
-  ConsoleLogger,
   Controller,
   Get,
   HttpException,
   HttpStatus,
   InternalServerErrorException,
+  Logger,
   Param,
+  ParseIntPipe,
   Post,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './create-user.dto';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
+
+  private logger = new Logger(UserController.name);
 
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
@@ -24,12 +26,14 @@ export class UserController {
   }
 
   @Get('/:userId')
-  async getUserById(@Param('userId') userId: number) {
+  async getUserById(
+    @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
+  ) {
     return this.userService.getUserById(userId);
   }
 
   @Get()
   async getAllUser() {
-    return this, this.userService.getAllUser();
+    return this.userService.getAllUser();
   }
 }
