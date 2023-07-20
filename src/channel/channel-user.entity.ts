@@ -14,9 +14,6 @@ import { userInfo } from 'os';
 
 @Entity()
 export class ChannelUserEntity extends CommonEntity {
-  @PrimaryGeneratedColumn()
-  id: number;
-
   @ManyToOne(() => UserEntity, { eager: true })
   user: UserEntity;
 
