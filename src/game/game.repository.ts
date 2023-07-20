@@ -33,7 +33,10 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async getGameByUserId(userId: number): Promise<GameEntity[]> {
-    return this.find({ relations: ['winner', 'loser'] });
+    return this.find({
+      relations: ['winner', 'loser'],
+      where: [{ winner: { id: userId } }, { loser: { id: userId } }],
+    });
   }
 
   async getGameByGameId(gameId: number): Promise<GameEntity[]> {

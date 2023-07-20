@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { ChannelEntity } from './channel.entity';
+import { CreateChanneUserDto } from './channel-user.dto';
 
 @Injectable()
 export class ChannelUserRepository extends Repository<ChannelUserEntity> {
@@ -18,7 +19,11 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     super(ChannelUserEntity, dataSource.manager);
   }
 
-  async createChannelUser(createChannelUserDto, user: UserEntity, channel: ChannelEntity): Promise<ChannelUserEntity> {
+  async createChannelUser(
+    createChannelUserDto: CreateChanneUserDto,
+    user: UserEntity,
+    channel: ChannelEntity,
+  ): Promise<ChannelUserEntity> {
     const { channelId, isAdmin, isBanned } = createChannelUserDto;
     const channelUser = await this.create({ user, channel, isAdmin, isBanned });
     try {
@@ -33,22 +38,22 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     return channelUser;
   }
 
-  async findChannelUserByUserId(
-    userId: number,
-  ): Promise<ChannelUserEntity[]> {
+  async findChannelUserByUserId(userId: number): Promise<ChannelUserEntity[]> {
     return await this.findBy({ user: { id: userId } });
   }
 
   async findChannelByChannelId(
-    channelId: number
+    channelId: number,
   ): Promise<ChannelUserEntity[]> {
     return await this.findBy({ channel: { id: channelId } });
   }
 
   async findOneChannelUserByIds(
     userId: number,
-    channelId: number
+    channelId: number,
   ): Promise<ChannelUserEntity> {
-    return await this.findOne({ where: { user: { id: userId }, channel: { id: channelId } } })
+    return await this.findOne({
+      where: { user: { id: userId }, channel: { id: channelId } },
+    });
   }
 }

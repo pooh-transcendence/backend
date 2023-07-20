@@ -23,8 +23,8 @@ export class UserController {
     return this.userService.createUser(createUserDto);
   }
 
-  @Get('/:id')
-  async getUserById(@Param('id') userId: number) {
+  @Get('/:userId')
+  async getUserById(@Param('userId') userId: number) {
     return this.userService.getUserById(userId);
   }
 
