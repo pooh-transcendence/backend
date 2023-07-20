@@ -20,7 +20,9 @@ export class ChannelUserEntity extends CommonEntity {
   @ManyToOne(() => UserEntity, { eager: true })
   user: UserEntity;
 
-  @ManyToOne(() => ChannelEntity, (channel) => channel.channelUser, { eager: true })
+  @ManyToOne(() => ChannelEntity, (channel) => channel.channelUser, {
+    eager: true,
+  })
   channel: ChannelEntity;
 
   @Column({ default: false })
