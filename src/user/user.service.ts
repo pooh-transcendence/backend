@@ -1,9 +1,4 @@
-import {
-  ConsoleLogger,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { CreateUserDto } from './create-user.dto';
 import { UserEntity } from './user.entity';
@@ -17,13 +12,13 @@ export class UserService {
   }
 
   async getUserById(userId: number): Promise<UserEntity> {
-    const found = await this.userRepository.getUserByUserId(userId);
-    if (!found)
+    const user = await this.userRepository.getUserByUserId(userId);
+    if (!user)
       throw new HttpException(
-        { reason: `There is UserId ${userId}` },
+        { message: `User with id ${userId} not found` },
         HttpStatus.BAD_REQUEST,
       );
-    return found;
+    return user;
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
@@ -34,5 +29,5 @@ export class UserService {
     this.userRepository.deleteUser(userId);
   }
 
-  //UserEntity Update는 나중에
+  //TODO: UserEntity Update
 }

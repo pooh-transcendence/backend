@@ -1,14 +1,7 @@
+import { IsIn, IsNumber } from 'class-validator';
 import { CommonEntity } from 'src/common/common.entity';
 import { UserEntity } from 'src/user/user.entity';
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  ManyToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne } from 'typeorm';
 
 export enum GameType {
   ONEVSONE = '1vs1',
@@ -24,20 +17,26 @@ export class GameEntity extends CommonEntity {
   loser: UserEntity;
 
   @Column()
+  @IsIn([GameType.ONEVSONE, GameType.LADDER])
   gameType: GameType;
 
   @Column({ default: 0 })
+  @IsNumber()
   winScore: number;
 
   @Column({ default: 0 })
+  @IsNumber()
   loseScore: number;
 
   @Column({ default: 1 })
+  @IsNumber()
   ballSpeed: number;
 
   @Column({ default: 1 })
+  @IsNumber()
   ballCount: number;
 
   @Column({ default: 1 })
+  @IsNumber()
   racketSize: number;
 }

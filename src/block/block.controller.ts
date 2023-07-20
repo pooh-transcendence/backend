@@ -1,7 +1,15 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+} from '@nestjs/common';
 import { BlockService } from './block.service';
 import { BlockEntity } from './block.entity';
 import { CreateBlockDto } from './block.dto';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @Controller('block')
 export class BlockController {
@@ -9,11 +17,13 @@ export class BlockController {
 
   @Get()
   async getAllBlock(): Promise<BlockEntity[]> {
-    return this.blockService.getBlockAll();
+    return this.blockService.getAllBlock();
   }
 
-  @Get('/:id')
-  async getBlockByFromId(@Param('id') id: number): Promise<BlockEntity[]> {
+  @Get('/:userId')
+  async getBlockByFromId(
+    @Param('userId', ParseIntPipe, PositiveIntPipe) id: number,
+  ): Promise<BlockEntity[]> {
     return this.blockService.getBlockByFromId(id);
   }
 

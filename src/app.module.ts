@@ -6,6 +6,8 @@ import { DataSource } from 'typeorm';
 import { UserModule } from './user/user.module';
 import { GameModule } from './game/game.module';
 import { BlockModule } from './block/block.module';
+import { ValidationPipe } from '@nestjs/common';
+import { APP_PIPE } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -16,6 +18,11 @@ import { BlockModule } from './block/block.module';
     BlockModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_PIPE,
+      useClass: ValidationPipe,
+    },
+  ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,4 +1,4 @@
-import { ChannelUserEntity } from 'src/channel/channel-user.entity';
+import { IsEmail, IsIn, IsNumber, IsString } from 'class-validator';
 import { ChannelEntity } from 'src/channel/channel.entity';
 import { CommonEntity } from 'src/common/common.entity';
 import { GameEntity } from 'src/game/game.entity';
@@ -14,27 +14,35 @@ export enum UserState {
 @Unique(['nickName'])
 export class UserEntity extends CommonEntity {
   @Column({ nullable: true })
+  @IsString()
   ftId: string;
 
   @Column({ nullable: true })
+  @IsString()
   nickName: string;
 
   @Column({ default: 0 })
+  @IsNumber()
   winScore: number;
 
   @Column({ default: 0 })
+  @IsNumber()
   loseScore: number;
 
   @Column({ nullable: true })
+  @IsString()
   avatar: string;
 
   @Column({ nullable: true })
+  @IsEmail()
   email: string;
 
-  @Column({ default: UserState.ONLINE, nullable: true })
+  @Column({ default: UserState.ONLINE, nullable: true }) // TODO: default 설정
+  @IsIn([UserState.OFFLINE, UserState.ONLINE, UserState.INGAME])
   userState: UserState;
 
   @Column({ nullable: true })
+  @IsString()
   token: string;
 
   @OneToMany(() => GameEntity, (game) => game.winner)

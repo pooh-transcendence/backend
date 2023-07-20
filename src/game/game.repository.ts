@@ -14,7 +14,7 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async createGame(createGameDto: CreateGameDto): Promise<GameEntity> {
-    const game = await this.create(createGameDto);
+    const game = this.create(createGameDto);
     if (!game) throw new InternalServerErrorException();
     try {
       await this.save(game);
@@ -33,7 +33,10 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async getGameByUserId(userId: number): Promise<GameEntity[]> {
-    return this.find({ relations: ['winner', 'loser'] });
+    return this.find({
+      relations: ['winner', 'loser'],
+      where: [{ winner: { id: userId } }, { loser: { id: userId } }],
+    });
   }
 
   async getGameByGameId(gameId: number): Promise<GameEntity[]> {

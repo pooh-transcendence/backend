@@ -1,8 +1,5 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ChannelService } from './channel.service';
-import { typeOrmConfig } from 'src/configs/typeorm.config';
-import { UpdateChannelDto } from './channel.dto';
-import { CreateUserDto } from 'src/user/create-user.dto';
 import { CreateChanneUserDto } from './channel-user.dto';
 
 @Controller('/channel')
@@ -20,7 +17,7 @@ export class ChannelController {
     return this.chatService.joinChannelUser(createChannelUserDto);
   }
 
-  @Get('/visual')
+  @Get('/visible')
   async getVisibleChannel() {
     return this.chatService.getVisibleChannel();
   }

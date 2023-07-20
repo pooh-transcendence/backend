@@ -120,11 +120,10 @@ export class ChannelService {
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
-    const channelUser =
-      await this.channelUserRepository.findOneChannelUserByIds(
-        userId,
-        channelId,
-      );
+    const channelUser = await this.channelUserRepository.findChannelUserByIds(
+      userId,
+      channelId,
+    );
     if (!channelUser) throw new NotFoundException();
     channelUser.isBanned = true;
     return await this.channelUserRepository.save(channelUser);
@@ -158,7 +157,7 @@ export class ChannelService {
     const channel = await this.channelRepository.getChannelByChannelId(
       channelId,
     );
-    const user = await this.channelUserRepository.findOneChannelUserByIds(
+    const user = await this.channelUserRepository.findChannelUserByIds(
       userId,
       channelId,
     );
@@ -171,7 +170,7 @@ export class ChannelService {
       );
     if (
       channel.channelType === ChannelType.PROTECTED &&
-      !(await this.channelRepository.isPasswordRight(
+      !(await this.channelRepository.isPasswordValid(
         password,
         channel.password,
       ))
