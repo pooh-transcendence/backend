@@ -7,7 +7,7 @@ import {
 import { DataSource, Repository } from 'typeorm';
 import { BlockEntity } from './block.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateBlockDto } from './block.dto';
+import { BlockDto } from './block.dto';
 
 @Injectable()
 export class BlockRepository extends Repository<BlockEntity> {
@@ -15,7 +15,7 @@ export class BlockRepository extends Repository<BlockEntity> {
     super(BlockEntity, dataSource.manager);
   }
 
-  async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
+  async createBlock(createBlockDto: BlockDto): Promise<BlockEntity> {
     const block = this.create(createBlockDto);
     try {
       await this.save(block);
@@ -29,7 +29,7 @@ export class BlockRepository extends Repository<BlockEntity> {
     return block;
   }
 
-  async deleteBlock(deleteBlock: CreateBlockDto): Promise<void> {
+  async deleteBlock(deleteBlock: BlockDto): Promise<void> {
     const result = await this.delete(deleteBlock);
     if (result.affected === 0)
       throw new NotFoundException(`Block ${deleteBlock} not found`);

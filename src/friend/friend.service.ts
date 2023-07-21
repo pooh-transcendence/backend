@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserRepository } from './user.repository';
-import { CreateFriendDto } from './user.dto';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { FriendEntity } from './friend.entity';
 import { FriendRepository } from './friend.respository';
+import { UserRepository } from 'src/user/user.repository';
+import { FriendDto } from './friend.dto';
+import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class FriendService {
@@ -11,12 +12,16 @@ export class FriendService {
     private userRepository: UserRepository,
   ) {}
 
-  async creatFriend(createFriendDto: CreateFriendDto): Promise<FriendEntity> {
+  private logger = new Logger(FriendService.name);
+
+  async creatFriend(createFriendDto: FriendDto): Promise<FriendEntity> {
     const { from, to } = createFriendDto;
+    // validation
     const fromUser = await this.userRepository.findOneBy({ id: from });
     const toUser = await this.userRepository.findOneBy({ id: to });
     if (!fromUser) throw new NotFoundException('from user not found');
     if (!toUser) throw new NotFoundException('to user not found');
+
     return await this.friendRepository.createFriend(createFriendDto);
   }
 
@@ -28,18 +33,17 @@ export class FriendService {
     return await this.friendRepository.getFriendByToId(id);
   }
 
-  async getFriendListByUserId(userId: number): Promise<string[]> {
+  async getFriendListByUserId(userId: number): Promise<UserEntity[]> {
     const friendId = await this.getFriendByFromId(userId);
     const friends = [];
     for (const id of friendId) {
-      friends.push(await this.userRepository.getUserProfileByUserId(id.to));
+      friends.push(await this.userRepository.getUserByUserId(id.to));
     }
     return friends;
   }
 
-  async deleteFriend(createFriendDto: CreateFriendDto): Promise<void> {
+  async deleteFriend(createFriendDto: FriendDto) {
     const result = await this.friendRepository.delete(createFriendDto);
-    if (result.affected === 0)
-      throw new NotFoundException('friend deleted not found');
+    if (result.affected === 0) throw new NotFoundException('friend not found');
   }
 }

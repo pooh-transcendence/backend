@@ -1,24 +1,20 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Logger,
   Param,
+  ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateFriendDto, CreateUserDto } from './user.dto';
-import { FriendService } from './friend.service';
-import { BlockService } from 'src/block/block.service';
+import { CreateUserDto } from './user.dto';
+import { FriendService } from 'src/friend/friend.service';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @Controller('user')
 export class UserController {
-  constructor(
-    private userService: UserService,
-    private friendService: FriendService,
-    private blockService: BlockService,
-  ) {}
+  constructor(private userService: UserService) {}
 
   private logger = new Logger(UserController.name);
 
@@ -33,31 +29,20 @@ export class UserController {
     return await this.userService.createUser(createUserDto);
   }
 
-  // @Get('/:userId')
-  // async getUserById(
-  //   @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
-  // ) {
-  //   return await this.userService.getUserById(userId);
-  // }
-
-  @Get()
-  async getAllUser() {
-    return await this.userService.getAllUser();
+  @Get('/:userId')
+  async getUserById(
+    @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
+  ) {
+    return await this.userService.getUserById(userId);
   }
+
+  // @Get()
+  // async getAllUser() {
+  //   return await this.userService.getAllUser();
+  // }
 
   // @Get('/friend/:id')
   // async getUserFriend(@Param('id', ParseIntPipe, PositiveIntPipe) id: number) {
   //   return await this.friendService.getFriendListByUserId(id);
   // }
-
-  @Delete('/friend')
-  async deleteUserFriend(@Body() createFriendDto: CreateFriendDto) {
-    // deleteFriendDto 에 to 만 넣어서 변경
-    await this.friendService.deleteFriend(createFriendDto);
-  }
-
-  @Post('/friend')
-  async createFriend(@Body() createFriendDto: CreateFriendDto) {
-    return await this.friendService.creatFriend(createFriendDto);
-  }
 }

@@ -1,6 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { BlockRepository } from './block.repository';
-import { CreateBlockDto } from './block.dto';
+import { BlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserEntity } from 'src/user/user.entity';
@@ -12,11 +12,18 @@ export class BlockService {
     private userRepository: UserRepository,
   ) {}
 
-  async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
+  async createBlock(createBlockDto: BlockDto): Promise<BlockEntity> {
+    const { from, to } = createBlockDto;
+    // validation
+    const fromUser = await this.userRepository.findOneBy({ id: from });
+    const toUser = await this.userRepository.findOneBy({ id: to });
+    if (!fromUser) throw new NotFoundException('from user not found');
+    if (!toUser) throw new NotFoundException('to user not found');
+
     return await this.blockRepository.createBlock(createBlockDto);
   }
 
-  async deleteBlock(deleteBlockDto: CreateBlockDto) {
+  async deleteBlock(deleteBlockDto: BlockDto) {
     return await this.blockRepository.deleteBlock(deleteBlockDto);
   }
 

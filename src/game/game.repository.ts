@@ -40,8 +40,8 @@ export class GameRepository extends Repository<GameEntity> {
     });
   }
 
-  async getGameByGameId(gameId: number): Promise<GameEntity[]> {
-    return this.find({
+  async getGameByGameId(gameId: number): Promise<GameEntity> {
+    return this.findOne({
       relations: ['winner', 'loser'],
       where: { id: gameId },
       order: { id: 'ASC' },

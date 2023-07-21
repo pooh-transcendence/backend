@@ -7,18 +7,13 @@ import {
   Post,
   ParseIntPipe,
 } from '@nestjs/common';
-import { UserService } from 'src/user/user.service';
 import { BlockService } from './block.service';
-import { CreateBlockDto } from './block.dto';
 import { UserEntity } from 'src/user/user.entity';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @Controller('block')
 export class BlockController {
-  constructor(
-    private userService: UserService,
-    private blockService: BlockService,
-  ) {}
+  constructor(private blockService: BlockService) {}
 
   private logger = new Logger(BlockController.name);
 
@@ -33,12 +28,12 @@ export class BlockController {
   @Delete()
   async deleteBlock(
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
-  ): Promise<void> {
+  ) {
     // TODO: jwt
-    const createBlockDto = new CreateBlockDto();
-    createBlockDto.from = this.userId; // TODO: jwt 후 this 삭제
-    createBlockDto.to = bannedUserId;
-    await this.blockService.deleteBlock(createBlockDto);
+    await this.blockService.deleteBlock({
+      from: this.userId,
+      to: bannedUserId,
+    });
   }
 
   @Post()
@@ -46,9 +41,9 @@ export class BlockController {
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
     // TODO: jwt
-    const createBlockDto = new CreateBlockDto();
-    createBlockDto.from = this.userId; // TODO: jwt 후 this 삭제
-    createBlockDto.to = bannedUserId;
-    return await this.blockService.createBlock(createBlockDto);
+    return await this.blockService.createBlock({
+      from: this.userId,
+      to: bannedUserId,
+    });
   }
 }

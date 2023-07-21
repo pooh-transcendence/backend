@@ -6,7 +6,7 @@ import { UserEntity } from './user.entity';
 import { UserRepository } from './user.repository';
 import { FriendRepository } from './friend.respository';
 import { FriendService } from './friend.service';
-import { FriendEntity } from './friend.entity';
+import { FriendEntity } from '../friend/friend.entity';
 import { BlockService } from 'src/block/block.service';
 import { BlockRepository } from 'src/block/block.repository';
 import { BlockEntity } from 'src/block/block.entity';
