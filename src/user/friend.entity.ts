@@ -4,9 +4,9 @@ import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class FriendEntity extends CommonEntity {
-  @Column()
   @IsNumber()
   @IsNotEmpty()
+  @Column()
   from: number;
 
   @Column()

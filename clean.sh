@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker-compose -f srcs/docker-compose.yml down
+docker-compose -f ./docker-compose.yml down
 docker stop $(docker ps -qa) 2>/dev/null
 docker rm $(docker ps -qa) 2>/dev/null
 docker rmi -f $(docker images -qa) 2>/dev/null
