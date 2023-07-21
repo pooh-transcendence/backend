@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { UserEntity } from './user.entity';
-import { CreateFriendDto, CreateUserDto } from './user.dto';
+import { CreateFriendDto, CreateUserDto, UserProfileDto } from './user.dto';
 import { FriendService } from './friend.service';
-import { BlockService } from './block.service';
+import { BlockService } from 'src/block/block.service';
 
 @Injectable()
 export class UserService {
@@ -34,11 +34,24 @@ export class UserService {
     return user;
   }
 
-  async getUserByNameAndId(userId: number): Promise<UserEntity> {
-    const user = await this.userRepository.getUserNameAndIdByUserId(userId);
-    if (!user) throw new NotFoundException(`User with id ${userId} not found`);
+  async getUserByNickname(nickname: string): Promise<UserEntity> {
+    const user = await this.userRepository.getUserByNickname(nickname);
+    if (!user)
+      throw new HttpException(
+        { message: `User with nickname ${nickname} not found` },
+        HttpStatus.BAD_REQUEST,
+      );
+    user['friends'] = await this.friendService.getFriendListByUserId(user.id);
+    // user['blocks'] = await this.blockService.getBlocListkByUserId(user.id);
     return user;
   }
+
+  // async getUserByNameAndId(userId: number): Promise<UserProfileDto> {
+  //   // TODO: 필요한가?
+  //   const user = await this.userRepository.getUserProfileByUserId(userId);
+  //   if (!user) throw new NotFoundException(`User with id ${userId} not found`);
+  //   return user;
+  // }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.userRepository.createUser(createUserDto);

@@ -6,10 +6,10 @@ import { UserEntity } from './user.entity';
 import { UserRepository } from './user.repository';
 import { FriendRepository } from './friend.respository';
 import { FriendService } from './friend.service';
-import { FriendEntity } from './friend.entity';
-import { BlockEntity } from './block.entity';
-import { BlockRepository } from './block.repository';
-import { BlockService } from './block.service';
+import { FriendEntity } from '../friend/friend.entity';
+import { BlockService } from 'src/block/block.service';
+import { BlockRepository } from 'src/block/block.repository';
+import { BlockEntity } from 'src/block/block.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, FriendEntity, BlockEntity])],
