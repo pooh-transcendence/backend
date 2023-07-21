@@ -29,13 +29,14 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async getAllGame(): Promise<GameEntity[]> {
-    return this.find({ relations: ['winner', 'loser'] });
+    return this.find({ relations: ['winner', 'loser'], order: { id: 'ASC' } });
   }
 
   async getGameByUserId(userId: number): Promise<GameEntity[]> {
     return this.find({
       relations: ['winner', 'loser'],
       where: [{ winner: { id: userId } }, { loser: { id: userId } }],
+      order: { id: 'ASC' },
     });
   }
 
@@ -43,6 +44,7 @@ export class GameRepository extends Repository<GameEntity> {
     return this.find({
       relations: ['winner', 'loser'],
       where: { id: gameId },
+      order: { id: 'ASC' },
     });
   }
 

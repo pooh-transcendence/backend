@@ -8,6 +8,8 @@ import {
   ParseIntPipe,
   Post,
   Query,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { GameService } from './game.service';
 import { CreateGameDto } from './game.dto';
@@ -26,11 +28,13 @@ export class GameController {
   }
 
   @Post()
+  @UsePipes(ValidationPipe)
   async createGame(@Body() createGameDto: CreateGameDto): Promise<GameEntity> {
     return await this.gameService.createGame(createGameDto);
   }
 
   @Get('/:gameId')
+  @UsePipes(ValidationPipe)
   async getGameByGameId(
     @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
   ): Promise<GameEntity[]> {
@@ -38,6 +42,7 @@ export class GameController {
   }
 
   @Get('/user/:userId')
+  @UsePipes(ValidationPipe)
   async getGameByUserId(
     @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
   ): Promise<GameEntity[]> {

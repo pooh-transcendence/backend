@@ -9,8 +9,4 @@ export class CreateUserDto extends PickType(UserEntity, [
   'token',
 ] as const) {}
 
-export class CreateFriendDto {
-  from: number;
-  to: number;
-}
-export class FriendDto extends FriendEntity {}
+export class CreateFriendDto extends FriendEntity {}

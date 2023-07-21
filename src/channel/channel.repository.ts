@@ -54,10 +54,13 @@ export class ChannelRepository extends Repository<ChannelEntity> {
   }
 
   async getAllVisibleChannel(): Promise<ChannelEntity[]> {
-    return await this.findBy([
-      { channelType: ChannelType.PUBLIC },
-      { channelType: ChannelType.PROTECTED },
-    ]);
+    return await this.find({
+      where: [
+        { channelType: ChannelType.PUBLIC },
+        { channelType: ChannelType.PROTECTED },
+      ],
+      order: { channelName: 'ASC' },
+    });
   }
 
   async isPasswordValid(
