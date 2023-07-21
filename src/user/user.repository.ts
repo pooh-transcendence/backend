@@ -1,11 +1,11 @@
 import { DataSource, Repository } from 'typeorm';
 import { UserEntity } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserDto } from './create-user.dto';
 import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { CreateUserDto } from './user.dto';
 
 export class UserRepository extends Repository<UserEntity> {
   constructor(@InjectRepository(UserEntity) private dataSource: DataSource) {
@@ -13,11 +13,15 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async getAllUser(): Promise<UserEntity[]> {
-    return this.find();
+    return this.find({ order: { id: 'ASC' } });
   }
 
   async getUserByUserId(userId: number): Promise<UserEntity> {
     return this.findOneBy({ id: userId });
+  }
+
+  async getUserNameAndIdByUserId(userId: number): Promise<UserEntity> {
+    return this.findOne({ where: { id: userId }, select: ['nickName', 'id'] });
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
@@ -43,9 +47,5 @@ export class UserRepository extends Repository<UserEntity> {
   async deleteUser(userId: number) {
     const result = await this.delete({ id: userId });
     if (result.affected != 0) throw new InternalServerErrorException();
-  }
-
-  async updateUser() {
-    console.log('update user');
   }
 }

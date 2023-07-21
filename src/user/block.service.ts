@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { BlockRepository } from './block.repository';
 import { CreateBlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class BlockService {
-  constructor(private blockRepository: BlockRepository) {}
+  constructor(
+    private blockRepository: BlockRepository,
+    private userRepository: UserRepository,
+  ) {}
 
   async createBlock(createBlockDto: CreateBlockDto): Promise<BlockEntity> {
     return await this.blockRepository.createBlock(createBlockDto);
@@ -15,12 +19,13 @@ export class BlockService {
     return await this.blockRepository.deleteBlock(deleteBlockDto);
   }
 
-  async getBlockByFromId(userId: number) {
-    const found = await this.blockRepository.getBlockByFromId(userId);
-    found.forEach((block) => {
-      block.from = undefined;
-    });
-    return found;
+  async getBlocListkByUserId(userId: number) {
+    const blockId = await this.blockRepository.getBlockByFromId(userId);
+    const blockUser = [];
+    for (const id of blockId) {
+      blockUser.push(await this.userRepository.getUserNameAndIdByUserId(id.to));
+    }
+    return blockUser;
   }
 
   async getAllBlock(): Promise<BlockEntity[]> {

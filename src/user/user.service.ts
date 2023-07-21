@@ -1,11 +1,22 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { CreateUserDto } from './create-user.dto';
 import { UserEntity } from './user.entity';
+import { CreateFriendDto, CreateUserDto } from './user.dto';
+import { FriendService } from './friend.service';
+import { BlockService } from './block.service';
 
 @Injectable()
 export class UserService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(
+    private userRepository: UserRepository,
+    private friendService: FriendService,
+    private blockService: BlockService,
+  ) {}
 
   async getAllUser(): Promise<UserEntity[]> {
     return this.userRepository.getAllUser();
@@ -18,6 +29,14 @@ export class UserService {
         { message: `User with id ${userId} not found` },
         HttpStatus.BAD_REQUEST,
       );
+    user['friends'] = await this.friendService.getFriendListByUserId(userId);
+    user['blocks'] = await this.blockService.getBlocListkByUserId(userId);
+    return user;
+  }
+
+  async getUserByNameAndId(userId: number): Promise<UserEntity> {
+    const user = await this.userRepository.getUserNameAndIdByUserId(userId);
+    if (!user) throw new NotFoundException(`User with id ${userId} not found`);
     return user;
   }
 
@@ -29,5 +48,12 @@ export class UserService {
     this.userRepository.deleteUser(userId);
   }
 
+  async createFriend(createFriendDto: CreateFriendDto) {
+    return this.friendService.creatFriend(createFriendDto);
+  }
+
+  async deleteFriend(createFriendDto: CreateFriendDto) {
+    return this.friendService.deleteFriend(createFriendDto);
+  }
   //TODO: UserEntity Update
 }

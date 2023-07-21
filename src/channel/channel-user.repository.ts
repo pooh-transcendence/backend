@@ -41,13 +41,19 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
   }
 
   async findChannelUserByUserId(userId: number): Promise<ChannelUserEntity[]> {
-    return await this.findBy({ user: { id: userId } });
+    return await this.find({
+      where: { user: { id: userId } },
+      order: { user: { nickName: 'ASC' } },
+    });
   }
 
   async findChannelByChannelId(
     channelId: number,
   ): Promise<ChannelUserEntity[]> {
-    return await this.findBy({ channel: { id: channelId } });
+    return await this.find({
+      where: { channel: { id: channelId } },
+      order: { channel: { channelName: 'ASC' } },
+    });
   }
 
   async findChannelUserByIds(

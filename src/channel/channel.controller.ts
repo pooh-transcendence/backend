@@ -1,18 +1,32 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  ParseIntPipe,
+  Post,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { CreateChanneUserDto } from './channel-user.dto';
+import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
+import { CreateChannelDto } from './channel.dto';
 
 @Controller('/channel')
 export class ChannelController {
   constructor(private chatService: ChannelService) {}
 
   @Post()
-  async createChannel(@Body() data) {
-    const { owner, ChannelInfo, ChannelUserInfo } = data;
+  async createChannel(
+    @Body('ChannelInfo', ChannelTypePipe) ChannelInfo: CreateChannelDto,
+    @Body('ChannelUserInfo') ChannelUserInfo: CreateChanneUserDto[],
+  ) {
+    const { owner } = ChannelInfo;
     return this.chatService.createChannel(owner, ChannelInfo, ChannelUserInfo);
   }
 
   @Post('/join')
+  @UsePipes(ValidationPipe)
   async joinChannel(@Body() createChannelUserDto: CreateChanneUserDto) {
     return this.chatService.joinChannelUser(createChannelUserDto);
   }
