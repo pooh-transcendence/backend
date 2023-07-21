@@ -24,13 +24,6 @@ export class UserRepository extends Repository<UserEntity> {
     return await this.findOneBy({ nickname: nickname });
   }
 
-  async getUserNameAndIdByUserId(userId: number): Promise<UserEntity> {
-    return await this.findOne({
-      where: { id: userId },
-      select: ['nickname', 'id'],
-    });
-  }
-
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     const { nickname, email, ftId, token } = createUserDto;
     const UserEntity = this.create({

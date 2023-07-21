@@ -6,7 +6,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { FriendDto } from './user.dto';
+import { CreateFriendDto } from './user.dto';
 
 export class FriendRepository extends Repository<FriendEntity> {
   constructor(@InjectRepository(FriendEntity) private datsSource: DataSource) {
@@ -15,7 +15,7 @@ export class FriendRepository extends Repository<FriendEntity> {
 
   private logger = new Logger(FriendRepository.name);
 
-  async createFriend(createFriendDto: FriendDto): Promise<FriendEntity> {
+  async createFriend(createFriendDto: CreateFriendDto): Promise<FriendEntity> {
     const friend = this.create(createFriendDto);
     try {
       await this.save(friend);

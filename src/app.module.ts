@@ -7,6 +7,8 @@ import { UserModule } from './user/user.module';
 import { GameModule } from './game/game.module';
 import { ValidationPipe } from '@nestjs/common';
 import { APP_PIPE } from '@nestjs/core';
+import { BlockController } from './block/block.controller';
+import { BlockModule } from './block/block.module';
 
 @Module({
   imports: [
@@ -14,6 +16,7 @@ import { APP_PIPE } from '@nestjs/core';
     ChannelModule,
     UserModule,
     GameModule,
+    BlockModule,
   ],
   controllers: [],
   providers: [

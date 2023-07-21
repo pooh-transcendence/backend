@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { BlockRepository } from './block.repository';
 import { CreateBlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
-import { UserRepository } from './user.repository';
+import { UserRepository } from 'src/user/user.repository';
+import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class BlockService {
@@ -19,16 +20,17 @@ export class BlockService {
     return await this.blockRepository.deleteBlock(deleteBlockDto);
   }
 
-  async getBlocListkByUserId(userId: number) {
-    const blockId = await this.blockRepository.getBlockByFromId(userId);
+  async getBlocListkByUserId(userId: number): Promise<UserEntity[]> {
+    const blockUserId = await this.blockRepository.getBlockByFromId(userId);
     const blockUser = [];
-    for (const id of blockId) {
-      blockUser.push(await this.userRepository.getUserNameAndIdByUserId(id.to));
+    for (const id of blockUserId) {
+      blockUser.push(await this.userRepository.getUserByUserId(id.to));
     }
     return blockUser;
   }
 
-  async getAllBlock(): Promise<BlockEntity[]> {
-    return this.blockRepository.getAllBlock();
-  }
+  // // TODO: 필요한가?
+  // async getAllBlock(): Promise<BlockEntity[]> {
+  //   return this.blockRepository.getAllBlock();
+  // }
 }

@@ -1,4 +1,4 @@
-import { OmitType, PickType } from '@nestjs/swagger';
+import { PickType } from '@nestjs/swagger';
 import { FriendEntity } from './friend.entity';
 import { UserEntity } from './user.entity';
 
@@ -9,4 +9,4 @@ export class CreateUserDto extends PickType(UserEntity, [
   'token',
 ] as const) {}
 
-export class FriendDto extends PickType(FriendEntity, ['to'] as const) {}
+export class CreateFriendDto extends FriendEntity {}

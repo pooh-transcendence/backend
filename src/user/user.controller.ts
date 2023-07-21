@@ -5,15 +5,12 @@ import {
   Get,
   Logger,
   Param,
-  ParseIntPipe,
   Post,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
-import { FriendDto, CreateUserDto } from './user.dto';
+import { CreateFriendDto, CreateUserDto } from './user.dto';
 import { FriendService } from './friend.service';
-import { CreateBlockDto } from './block.dto';
-import { BlockService } from './block.service';
+import { BlockService } from 'src/block/block.service';
 
 @Controller('user')
 export class UserController {
@@ -36,12 +33,12 @@ export class UserController {
     return await this.userService.createUser(createUserDto);
   }
 
-  @Get('/:userId')
-  async getUserById(
-    @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
-  ) {
-    return await this.userService.getUserById(userId);
-  }
+  // @Get('/:userId')
+  // async getUserById(
+  //   @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
+  // ) {
+  //   return await this.userService.getUserById(userId);
+  // }
 
   @Get()
   async getAllUser() {
@@ -54,28 +51,13 @@ export class UserController {
   // }
 
   @Delete('/friend')
-  async deleteUserFriend(@Body() createFriendDto: FriendDto) {
+  async deleteUserFriend(@Body() createFriendDto: CreateFriendDto) {
     // deleteFriendDto 에 to 만 넣어서 변경
     await this.friendService.deleteFriend(createFriendDto);
   }
 
   @Post('/friend')
-  async createFriend(@Body() createFriendDto: FriendDto) {
+  async createFriend(@Body() createFriendDto: CreateFriendDto) {
     return await this.friendService.creatFriend(createFriendDto);
-  }
-
-  @Get('/block/:id')
-  async getUserBlock(@Param('id', ParseIntPipe, PositiveIntPipe) id: number) {
-    return await this.friendService.getFriendListByUserId(id);
-  }
-
-  @Delete('/block')
-  async deleteBlock(@Body() createBlockDto: CreateBlockDto) {
-    await this.blockService.deleteBlock(createBlockDto);
-  }
-
-  @Post('/block')
-  async createBlock(@Body() createBlockDto: CreateBlockDto) {
-    return await this.blockService.createBlock(createBlockDto);
   }
 }
