@@ -28,6 +28,15 @@ export class FriendService {
     return await this.friendRepository.getFriendByToId(id);
   }
 
+  async getFriendListByUserId(userId: number): Promise<string[]> {
+    const friendId = await this.getFriendByFromId(userId);
+    const friends = [];
+    for (const id of friendId) {
+      friends.push(await this.userRepository.getUserNameAndIdByUserId(id.to));
+    }
+    return friends;
+  }
+
   async deleteFriend(createFriendDto: CreateFriendDto): Promise<void> {
     const result = await this.friendRepository.delete(createFriendDto);
     if (result.affected === 0)

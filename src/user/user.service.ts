@@ -8,12 +8,14 @@ import { UserRepository } from './user.repository';
 import { UserEntity } from './user.entity';
 import { CreateFriendDto, CreateUserDto } from './user.dto';
 import { FriendService } from './friend.service';
+import { BlockService } from './block.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private userRepository: UserRepository,
     private friendService: FriendService,
+    private blockService: BlockService,
   ) {}
 
   async getAllUser(): Promise<UserEntity[]> {
@@ -27,12 +29,8 @@ export class UserService {
         { message: `User with id ${userId} not found` },
         HttpStatus.BAD_REQUEST,
       );
-    const friendId = await this.friendService.getFriendByFromId(userId);
-    const friends = [];
-    for (const id of friendId) {
-      friends.push(await this.userRepository.getUserNameAndIdByUserId(id.to));
-    }
-    user['friends'] = friends;
+    user['friends'] = await this.friendService.getFriendListByUserId(userId);
+    user['blocks'] = await this.blockService.getBlocListkByUserId(userId);
     return user;
   }
 
