@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { IsEmail, IsIn, IsNumber, IsString } from 'class-validator';
 import { ChannelEntity } from 'src/channel/channel.entity';
 import { CommonEntity } from 'src/common/common.entity';
@@ -11,15 +12,16 @@ export enum UserState {
 }
 
 @Entity()
-@Unique(['nickName'])
+@Unique(['nickname'])
 export class UserEntity extends CommonEntity {
-  @Column({ nullable: true })
+  @Column()
   @IsString()
+  @Exclude()
   ftId: string;
 
-  @Column({ nullable: true })
+  @Column()
   @IsString()
-  nickName: string;
+  nickname: string;
 
   @Column({ default: 0 })
   @IsNumber()
@@ -33,7 +35,7 @@ export class UserEntity extends CommonEntity {
   @IsString()
   avatar: string;
 
-  @Column({ nullable: true })
+  @Column()
   @IsEmail()
   email: string;
 
@@ -43,6 +45,7 @@ export class UserEntity extends CommonEntity {
 
   @Column({ nullable: true })
   @IsString()
+  @Exclude()
   token: string;
 
   @OneToMany(() => GameEntity, (game) => game.winner)

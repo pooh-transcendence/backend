@@ -13,21 +13,28 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async getAllUser(): Promise<UserEntity[]> {
-    return this.find({ order: { id: 'ASC' } });
+    return await this.find({ order: { id: 'ASC' } });
   }
 
   async getUserByUserId(userId: number): Promise<UserEntity> {
-    return this.findOneBy({ id: userId });
+    return await this.findOneBy({ id: userId });
+  }
+
+  async getUserByNickname(nickname: string): Promise<UserEntity> {
+    return await this.findOneBy({ nickname: nickname });
   }
 
   async getUserNameAndIdByUserId(userId: number): Promise<UserEntity> {
-    return this.findOne({ where: { id: userId }, select: ['nickName', 'id'] });
+    return await this.findOne({
+      where: { id: userId },
+      select: ['nickname', 'id'],
+    });
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
-    const { nickName, email, ftId, token } = createUserDto;
+    const { nickname, email, ftId, token } = createUserDto;
     const UserEntity = this.create({
-      nickName,
+      nickname,
       email,
       ftId,
       token,

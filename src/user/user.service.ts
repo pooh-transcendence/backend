@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { UserEntity } from './user.entity';
-import { CreateFriendDto, CreateUserDto } from './user.dto';
+import { FriendDto, CreateUserDto } from './user.dto';
 import { FriendService } from './friend.service';
 import { BlockService } from './block.service';
 
@@ -34,6 +34,18 @@ export class UserService {
     return user;
   }
 
+  async getUserByNickname(nickname: string): Promise<UserEntity> {
+    const user = await this.userRepository.getUserByNickname(nickname);
+    if (!user)
+      throw new HttpException(
+        { message: `User with nickname ${nickname} not found` },
+        HttpStatus.BAD_REQUEST,
+      );
+    user['friends'] = await this.friendService.getFriendListByUserId(user.id);
+    user['blocks'] = await this.blockService.getBlocListkByUserId(user.id);
+    return user;
+  }
+
   async getUserByNameAndId(userId: number): Promise<UserEntity> {
     const user = await this.userRepository.getUserNameAndIdByUserId(userId);
     if (!user) throw new NotFoundException(`User with id ${userId} not found`);
@@ -48,11 +60,11 @@ export class UserService {
     this.userRepository.deleteUser(userId);
   }
 
-  async createFriend(createFriendDto: CreateFriendDto) {
+  async createFriend(createFriendDto: FriendDto) {
     return this.friendService.creatFriend(createFriendDto);
   }
 
-  async deleteFriend(createFriendDto: CreateFriendDto) {
+  async deleteFriend(createFriendDto: FriendDto) {
     return this.friendService.deleteFriend(createFriendDto);
   }
   //TODO: UserEntity Update
