@@ -6,45 +6,48 @@ import {
   Logger,
   ParseIntPipe,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserEntity } from 'src/user/user.entity';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decostor';
 
 @Controller('friend')
+@UseGuards(AuthGuard())
 export class FriendController {
   constructor(private friendService: FriendService) {}
 
   private logger = new Logger(FriendController.name);
 
-  private userId = 1; // TODO: jwt 후 삭제
-
   @Get()
-  async getUserFriendList(): Promise<UserEntity[]> {
-    // TODO: jwt
-    return await this.friendService.getFriendListByUserId(this.userId); // TODO: jwt 후 this 삭제
+  async getUserFriendList(
+    @GetUser('id') userId: number,
+  ): Promise<UserEntity[]> {
+    return await this.friendService.getFriendListByUserId(userId); // TODO: jwt 후 this 삭제
   }
 
   @Delete()
   async deleteUserFriend(
+    @GetUser('id') userId: number,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {
-    // TODO: jwt
     await this.friendService.deleteFriend({
-      from: this.userId,
+      from: userId,
       to: followingUserId,
     });
   }
 
   @Post()
   async createFriend(
+    @GetUser('id') userId: number,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {
-    // TODO: jwt
     return await this.friendService.creatFriend({
-      from: this.userId,
+      from: userId,
       to: followingUserId,
     });
   }

@@ -7,7 +7,6 @@ import {
   Param,
   ParseIntPipe,
   Post,
-  Query,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -37,7 +36,7 @@ export class GameController {
   @UsePipes(ValidationPipe)
   async getGameByGameId(
     @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
-  ): Promise<GameEntity[]> {
+  ): Promise<GameEntity> {
     return await this.gameService.getGameByGameId(gameId);
   }
 
