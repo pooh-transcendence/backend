@@ -4,15 +4,20 @@ import { UserService } from './user.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from './user.entity';
 import { UserRepository } from './user.repository';
-import { FriendRepository } from './friend.respository';
-import { FriendService } from './friend.service';
 import { FriendEntity } from '../friend/friend.entity';
 import { BlockService } from 'src/block/block.service';
 import { BlockRepository } from 'src/block/block.repository';
 import { BlockEntity } from 'src/block/block.entity';
+import { FriendRepository } from 'src/friend/friend.respository';
+import { FriendService } from 'src/friend/friend.service';
+import { AuthService } from 'src/auth/auth.service';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity, FriendEntity, BlockEntity])],
+  imports: [
+    TypeOrmModule.forFeature([UserEntity, FriendEntity, BlockEntity]),
+    AuthModule,
+  ],
   controllers: [UserController],
   providers: [
     UserService,

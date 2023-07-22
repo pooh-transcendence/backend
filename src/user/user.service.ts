@@ -1,14 +1,10 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserRepository } from './user.repository';
 import { UserEntity } from './user.entity';
-import { CreateFriendDto, CreateUserDto, UserProfileDto } from './user.dto';
-import { FriendService } from './friend.service';
 import { BlockService } from 'src/block/block.service';
+import { FriendService } from 'src/friend/friend.service';
+import { CreateUserDto } from './user.dto';
+import { FriendDto } from 'src/friend/friend.dto';
 
 @Injectable()
 export class UserService {
@@ -61,11 +57,11 @@ export class UserService {
     this.userRepository.deleteUser(userId);
   }
 
-  async createFriend(createFriendDto: CreateFriendDto) {
+  async createFriend(createFriendDto: FriendDto) {
     return this.friendService.creatFriend(createFriendDto);
   }
 
-  async deleteFriend(createFriendDto: CreateFriendDto) {
+  async deleteFriend(createFriendDto: FriendDto) {
     return this.friendService.deleteFriend(createFriendDto);
   }
   //TODO: UserEntity Update
