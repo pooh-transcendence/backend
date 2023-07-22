@@ -29,7 +29,7 @@ export class GameService {
     return await this.gameRepository.getGameByUserId(userId);
   }
 
-  async getGameByGameId(gameId: number): Promise<GameEntity[]> {
+  async getGameByGameId(gameId: number): Promise<GameEntity> {
     return await this.gameRepository.getGameByGameId(gameId);
   }
 
