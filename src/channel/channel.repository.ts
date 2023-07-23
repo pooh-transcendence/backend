@@ -8,9 +8,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
 } from '@nestjs/common';
-import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class ChannelRepository extends Repository<ChannelEntity> {
@@ -19,8 +17,8 @@ export class ChannelRepository extends Repository<ChannelEntity> {
   }
 
   async createChannel(
+    ownerId: number,
     createChannelDto: CreateChannelDto,
-    ownUser: UserEntity,
   ): Promise<ChannelEntity> {
     const { channelType, channelName, password } = createChannelDto;
     let hashedPassword = null;
@@ -32,9 +30,8 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     const channel = this.create({
       channelType,
       channelName,
-      owner: ownUser,
+      ownerId,
       password: hashedPassword,
-      channelUser: [],
     });
 
     try {
@@ -67,7 +64,6 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     password: string,
     hashedPassword: string,
   ): Promise<boolean> {
-    if (password === undefined) password = ''; // TODO: check this
     return await bcrypt.compare(password, hashedPassword);
   }
 

@@ -1,7 +1,7 @@
-export class CreateChanneUserDto {
-  userId: number;
-  channelId: number;
-  isAdmin: boolean;
-  isBanned: boolean;
+import { Optional } from '@nestjs/common';
+import { ChannelUserEntity } from './channel-user.entity';
+
+export class CreateChanneUserDto extends ChannelUserEntity {
+  @Optional()
   password: string;
 }

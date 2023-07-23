@@ -42,7 +42,6 @@ export class BlockController {
     @GetUser('id') userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
-    // TODO: jwt
     return await this.blockService.createBlock({
       from: userId,
       to: bannedUserId,

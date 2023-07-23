@@ -11,10 +11,21 @@ import { BlockEntity } from 'src/block/block.entity';
 import { FriendRepository } from 'src/friend/friend.respository';
 import { FriendService } from 'src/friend/friend.service';
 import { AuthModule } from 'src/auth/auth.module';
+import { ChannelEntity } from 'src/channel/channel.entity';
+import { ChannelUserEntity } from 'src/channel/channel-user.entity';
+import { ChannelRepository } from 'src/channel/channel.repository';
+import { ChannelUserRepository } from 'src/channel/channel-user.repository';
+import { ChannelService } from 'src/channel/channel.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity, FriendEntity, BlockEntity]),
+    TypeOrmModule.forFeature([
+      UserEntity,
+      FriendEntity,
+      BlockEntity,
+      ChannelEntity,
+      ChannelUserEntity,
+    ]),
     AuthModule,
   ],
   controllers: [UserController],
@@ -25,6 +36,10 @@ import { AuthModule } from 'src/auth/auth.module';
     FriendService,
     BlockRepository,
     BlockService,
+    ChannelRepository,
+    ChannelUserRepository,
+    ChannelService,
   ],
+  exports: [UserService, UserRepository],
 })
 export class UserModule {}

@@ -25,7 +25,7 @@ export class FriendController {
   async getUserFriendList(
     @GetUser('id') userId: number,
   ): Promise<UserEntity[]> {
-    return await this.friendService.getFriendListByUserId(userId); // TODO: jwt 후 this 삭제
+    return await this.friendService.getFriendListByUserId(userId);
   }
 
   @Delete()

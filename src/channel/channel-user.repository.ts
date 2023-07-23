@@ -2,15 +2,10 @@ import { DataSource, Repository } from 'typeorm';
 import { ChannelUserEntity } from './channel-user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
-  ClassSerializerInterceptor,
   ConflictException,
   Injectable,
   InternalServerErrorException,
-  NotFoundException,
-  UseInterceptors,
 } from '@nestjs/common';
-import { UserEntity } from 'src/user/user.entity';
-import { ChannelEntity } from './channel.entity';
 import { CreateChanneUserDto } from './channel-user.dto';
 
 @Injectable()
@@ -23,11 +18,8 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
 
   async createChannelUser(
     createChannelUserDto: CreateChanneUserDto,
-    user: UserEntity,
-    channel: ChannelEntity,
   ): Promise<ChannelUserEntity> {
-    const { channelId, isAdmin, isBanned } = createChannelUserDto;
-    const channelUser = await this.create({ user, channel, isAdmin, isBanned });
+    const channelUser = await this.create(createChannelUserDto);
     try {
       await this.save(channelUser);
     } catch (error) {
@@ -42,17 +34,15 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
 
   async findChannelUserByUserId(userId: number): Promise<ChannelUserEntity[]> {
     return await this.find({
-      where: { user: { id: userId } },
-      order: { user: { nickname: 'ASC' } },
+      where: { userId },
     });
   }
 
-  async findChannelByChannelId(
+  async findChannelUserByChannelId(
     channelId: number,
   ): Promise<ChannelUserEntity[]> {
     return await this.find({
-      where: { channel: { id: channelId } },
-      order: { channel: { channelName: 'ASC' } },
+      where: { id: channelId },
     });
   }
 
@@ -61,7 +51,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     channelId: number,
   ): Promise<ChannelUserEntity> {
     return await this.findOne({
-      where: { user: { id: userId }, channel: { id: channelId } },
+      where: { channelId, userId },
     });
   }
 }

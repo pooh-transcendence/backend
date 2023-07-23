@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './user.dto';
-import { FriendService } from 'src/friend/friend.service';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @Controller('user')
@@ -20,7 +19,6 @@ export class UserController {
 
   @Get('/:nickname')
   async getUserByNickname(@Param('nickname') nickname: string) {
-    // TODO: validation 필요
     return await this.userService.getUserByNickname(nickname);
   }
 
@@ -35,14 +33,4 @@ export class UserController {
   ) {
     return await this.userService.getUserById(userId);
   }
-
-  // @Get()
-  // async getAllUser() {
-  //   return await this.userService.getAllUser();
-  // }
-
-  // @Get('/friend/:id')
-  // async getUserFriend(@Param('id', ParseIntPipe, PositiveIntPipe) id: number) {
-  //   return await this.friendService.getFriendListByUserId(id);
-  // }
 }
