@@ -10,7 +10,6 @@ import { BlockRepository } from 'src/block/block.repository';
 import { BlockEntity } from 'src/block/block.entity';
 import { FriendRepository } from 'src/friend/friend.respository';
 import { FriendService } from 'src/friend/friend.service';
-import { AuthService } from 'src/auth/auth.service';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({

@@ -10,9 +10,13 @@ import { UserService } from 'src/user/user.service';
 import { BlockService } from 'src/block/block.service';
 import { BlockRepository } from 'src/block/block.repository';
 import { BlockEntity } from 'src/block/block.entity';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([FriendEntity, UserEntity, BlockEntity])],
+  imports: [
+    TypeOrmModule.forFeature([FriendEntity, UserEntity, BlockEntity]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+  ],
   controllers: [FriendController],
   providers: [
     FriendRepository,
