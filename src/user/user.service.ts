@@ -5,6 +5,7 @@ import { BlockService } from 'src/block/block.service';
 import { FriendService } from 'src/friend/friend.service';
 import { CreateUserDto } from './user.dto';
 import { FriendDto } from 'src/friend/friend.dto';
+import { ChannelService } from 'src/channel/channel.service';
 
 @Injectable()
 export class UserService {
@@ -12,6 +13,7 @@ export class UserService {
     private userRepository: UserRepository,
     private friendService: FriendService,
     private blockService: BlockService,
+    private channelService: ChannelService,
   ) {}
 
   async getAllUser(): Promise<UserEntity[]> {
@@ -27,6 +29,7 @@ export class UserService {
       );
     user['friends'] = await this.friendService.getFriendListByUserId(userId);
     user['blocks'] = await this.blockService.getBlocListkByUserId(userId);
+    user['channels'] = await this.channelService.getChannelByUserId(userId);
     return user;
   }
 
@@ -43,7 +46,6 @@ export class UserService {
   }
 
   // async getUserByNameAndId(userId: number): Promise<UserProfileDto> {
-  //   // TODO: 필요한가?
   //   const user = await this.userRepository.getUserProfileByUserId(userId);
   //   if (!user) throw new NotFoundException(`User with id ${userId} not found`);
   //   return user;

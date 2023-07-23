@@ -11,10 +11,21 @@ import { BlockService } from 'src/block/block.service';
 import { BlockRepository } from 'src/block/block.repository';
 import { BlockEntity } from 'src/block/block.entity';
 import { PassportModule } from '@nestjs/passport';
+import { ChannelService } from 'src/channel/channel.service';
+import { ChannelRepository } from 'src/channel/channel.repository';
+import { ChannelUserEntity } from 'src/channel/channel-user.entity';
+import { ChannelEntity } from 'src/channel/channel.entity';
+import { ChannelUserRepository } from 'src/channel/channel-user.repository';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([FriendEntity, UserEntity, BlockEntity]),
+    TypeOrmModule.forFeature([
+      FriendEntity,
+      UserEntity,
+      BlockEntity,
+      ChannelEntity,
+      ChannelUserEntity,
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [FriendController],
@@ -25,6 +36,9 @@ import { PassportModule } from '@nestjs/passport';
     UserService,
     BlockService,
     BlockRepository,
+    ChannelService,
+    ChannelRepository,
+    ChannelUserRepository,
   ],
   exports: [FriendService],
 })

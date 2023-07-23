@@ -3,7 +3,14 @@ import { UserEntity } from 'src/user/user.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { ChannelUserEntity } from './channel-user.entity';
 import { Exclude } from 'class-transformer';
-import { IsIn, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsIn,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+} from 'class-validator';
 
 export enum ChannelType {
   PUBLIC = 'PUBLIC',
@@ -22,8 +29,12 @@ export class ChannelEntity extends CommonEntity {
   @IsNotEmpty()
   channelName: string;
 
-  @ManyToOne(() => UserEntity, { eager: true })
-  owner: UserEntity;
+  //  @ManyToOne(() => UserEntity, { eager: true })
+  // owner: UserEntity;
+  @Column()
+  @IsNumber()
+  @IsPositive()
+  ownerId: number;
 
   @Column({ nullable: true })
   @Exclude()
@@ -31,8 +42,8 @@ export class ChannelEntity extends CommonEntity {
   @IsString()
   password: string;
 
-  @OneToMany(() => ChannelUserEntity, (channelUser) => channelUser.channel, {
+  /*@OneToMany(() => ChannelUserEntity, (channelUser) => channelUser.channel, {
     eager: false,
   })
-  channelUser: ChannelUserEntity[];
+  channelUser: ChannelUserEntity[];*/
 }

@@ -39,7 +39,7 @@ export class UserEntity extends CommonEntity {
   @IsEmail()
   email: string;
 
-  @Column({ default: UserState.ONLINE, nullable: true }) // TODO: default 설정
+  @Column({ default: UserState.ONLINE, nullable: true })
   @IsIn([UserState.OFFLINE, UserState.ONLINE, UserState.INGAME])
   userState: UserState;
 
@@ -53,9 +53,6 @@ export class UserEntity extends CommonEntity {
 
   @OneToMany(() => GameEntity, (game) => game.loser)
   loserGame: GameEntity[];
-
-  @OneToMany(() => ChannelEntity, (channel) => channel.owner)
-  ownChannel: ChannelEntity[];
 
   //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
   //Join :

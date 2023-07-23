@@ -1,11 +1,7 @@
 import {
-  Body,
-  ConflictException,
-  ConsoleLogger,
   HttpException,
   HttpStatus,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { ChannelRepository } from './channel.repository';
@@ -14,15 +10,13 @@ import { CreateChanneUserDto } from './channel-user.dto';
 import { CreateChannelDto, UpdateChannelDto } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelUserEntity } from './channel-user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserRepository } from 'src/user/user.repository';
+import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class ChannelService {
   constructor(
-    //@InjectRepository(Channel)
     private channelRepository: ChannelRepository,
-    //@InjectRepository(ChannelUser)
     private channelUserRepository: ChannelUserRepository,
     private userRepository: UserRepository,
   ) {}
@@ -64,12 +58,11 @@ export class ChannelService {
     createChannelDto: CreateChannelDto,
     createChannelUserDtos: CreateChanneUserDto[],
   ): Promise<ChannelEntity> {
-    const ownUser = await this.userRepository.getUserByUserId(ownerId);
-    if (!ownUser) throw new NotFoundException('Owner를 못찾음');
     const channel = await this.channelRepository.createChannel(
+      ownerId,
       createChannelDto,
-      ownUser,
     );
+    /*
     const channelUsers: ChannelUserEntity[] = [];
     for (const createChannelUserDto of createChannelUserDtos) {
       const userId = createChannelUserDto.userId;
@@ -89,7 +82,18 @@ export class ChannelService {
     result.channelUser.forEach(
       (channelUser) => (channelUser.channel = undefined),
     );
-    return result;
+    */
+    const channelUser: UserEntity[] = [];
+    for (const createChannelUserDto of createChannelUserDtos) {
+      const userId = createChannelUserDto.userId;
+      const user = await this.userRepository.getUserByUserId(userId);
+      if (!user) throw new NotFoundException(`user ${userId} not found`);
+      await this.channelUserRepository.createChannelUser(createChannelUserDto);
+      channelUser.push(user);
+    }
+    channel['channelUser'] = channelUser;
+    channel.password = undefined;
+    return channel;
   }
 
   async addChannelUser(
@@ -103,16 +107,12 @@ export class ChannelService {
     if (!user || !channel) throw new NotFoundException();
     const channelUser = await this.channelUserRepository.createChannelUser(
       createChannelUserDto,
-      user,
-      channel,
     );
     if (!channelUser)
       throw new HttpException(
         { reason: 'channelUser 생성이 안됨' },
         HttpStatus.BAD_REQUEST,
       );
-    channel.channelUser.push(channelUser);
-    this.channelRepository.save(channel);
     return channelUser;
   }
 
@@ -132,8 +132,8 @@ export class ChannelService {
   async kickChannelUser(updateChannelDto: UpdateChannelDto): Promise<void> {
     const { userId, channelId } = updateChannelDto;
     const result = await this.channelUserRepository.delete({
-      user: { id: userId },
-      channel: { id: channelId },
+      userId,
+      channelId,
     });
     if (result.affected === 0)
       throw new HttpException(
@@ -181,5 +181,27 @@ export class ChannelService {
       );
     createChannelUserDto.password = undefined;
     return await this.addChannelUser(createChannelUserDto);
+  }
+
+  async getChannelByUserId(userId: number): Promise<ChannelEntity[]> {
+    const channelUserList =
+      await this.channelUserRepository.findChannelUserByUserId(userId);
+    const channelList: ChannelEntity[] = [];
+    for (const channelUser of channelUserList) {
+      const channel = await this.channelRepository.getChannelByChannelId(
+        channelUser.channelId,
+      );
+      channel.password = undefined;
+      channelList.push(channel);
+    }
+    return channelList;
+  }
+
+  async isChannelUser(userId: number, channelId: number): Promise<boolean> {
+    const channelUser = await this.channelUserRepository.findChannelUserByIds(
+      userId,
+      channelId,
+    );
+    return channelUser ? true : false;
   }
 }
