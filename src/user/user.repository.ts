@@ -48,4 +48,20 @@ export class UserRepository extends Repository<UserEntity> {
     const result = await this.delete({ id: userId });
     if (result.affected != 0) throw new InternalServerErrorException();
   }
+
+  async updateUserAcessToken(userId: number, accessToken: string) {
+    const result = await this.update(
+      { id: userId },
+      { accessToken: accessToken },
+    );
+    if (result.affected != 1) throw new InternalServerErrorException();
+  }
+
+  async updateUserRefreshToken(userId: number, refreshToken: string) {
+    const result = await this.update(
+      { id: userId },
+      { refreshToken: refreshToken },
+    );
+    if (result.affected != 1) throw new InternalServerErrorException();
+  }
 }

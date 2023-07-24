@@ -20,7 +20,7 @@ export class UserEntity extends CommonEntity {
   ftId: string;
 
   @Column()
-  @IsString()
+  //@IsString()
   nickname: string;
 
   @Column({ default: 0 })
@@ -43,7 +43,7 @@ export class UserEntity extends CommonEntity {
   @IsIn([UserState.OFFLINE, UserState.ONLINE, UserState.INGAME])
   userState: UserState;
 
-  @Column()
+  @Column({ nullable: true })
   @IsString()
   // @Exclude()
   token: string;
@@ -54,6 +54,13 @@ export class UserEntity extends CommonEntity {
   @OneToMany(() => GameEntity, (game) => game.loser)
   loserGame: GameEntity[];
 
+  @Column({ nullable: true })
+  @Exclude()
+  accessToken: string;
+
+  @Column({ nullable: true })
+  @Exclude()
+  refreshToken: string;
   //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
   //Join :
 }
