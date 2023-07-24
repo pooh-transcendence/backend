@@ -38,7 +38,7 @@ export class ChannelEntity extends CommonEntity {
   ownerId: number;
 
   @Column({ nullable: true })
-  @Exclude()
+  // @Exclude()
   @IsOptional()
   @IsString()
   @Length(1, 12)

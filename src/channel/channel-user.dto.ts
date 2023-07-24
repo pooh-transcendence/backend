@@ -5,7 +5,7 @@ import { Length } from 'class-validator';
 
 export class CreateChanneUserDto extends ChannelUserEntity {
   @Optional()
-  @Exclude()
+  // @Exclude()
   @Length(1, 12)
   password: string;
 }
