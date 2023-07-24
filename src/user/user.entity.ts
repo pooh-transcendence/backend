@@ -15,12 +15,12 @@ export enum UserState {
 @Unique(['nickname'])
 export class UserEntity extends CommonEntity {
   @Column()
-  @IsString()
+  //@IsString()
   @Exclude()
   ftId: string;
 
   @Column()
-  @IsString()
+  //@IsString()
   nickname: string;
 
   @Column({ default: 0 })
@@ -44,7 +44,7 @@ export class UserEntity extends CommonEntity {
   userState: UserState;
 
   @Column({ nullable: true })
-  @IsString()
+  //@IsString()
   @Exclude()
   token: string;
 
@@ -54,6 +54,13 @@ export class UserEntity extends CommonEntity {
   @OneToMany(() => GameEntity, (game) => game.loser)
   loserGame: GameEntity[];
 
+  @Column({ nullable: true })
+  @Exclude()
+  accessToken: string;
+
+  @Column({ nullable: true })
+  @Exclude()
+  refreshToken: string;
   //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
   //Join :
 }

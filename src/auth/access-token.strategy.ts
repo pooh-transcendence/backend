@@ -19,13 +19,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload) {
-    const { id, nickname } = payload;
+    const { id, ftId } = payload;
     const user: UserEntity = await this.userRepository.findOne({
-      where: { id, nickname },
+      where: { id, ftId },
     });
-
     if (!user) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException("Sorry, you don't have permission.");
     }
     return user;
   }

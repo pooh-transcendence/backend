@@ -6,6 +6,8 @@ import { FriendService } from 'src/friend/friend.service';
 import { CreateUserDto } from './user.dto';
 import { FriendDto } from 'src/friend/friend.dto';
 import { ChannelService } from 'src/channel/channel.service';
+import { RefreshJwtModuleConfig } from 'src/configs/jwt.config';
+import { use } from 'passport';
 
 @Injectable()
 export class UserService {
@@ -30,6 +32,8 @@ export class UserService {
     user['friends'] = await this.friendService.getFriendListByUserId(userId);
     user['blocks'] = await this.blockService.getBlocListkByUserId(userId);
     user['channels'] = await this.channelService.getChannelByUserId(userId);
+    user.accessToken = undefined;
+    user.refreshToken = undefined;
     return user;
   }
 
@@ -41,15 +45,12 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     user['friends'] = await this.friendService.getFriendListByUserId(user.id);
-    // user['blocks'] = await this.blockService.getBlocListkByUserId(user.id);
+    user['blocks'] = await this.blockService.getBlocListkByUserId(user.id);
+    user['channels'] = await this.channelService.getChannelByUserId(user.id);
+    user.accessToken = undefined;
+    user.refreshToken = undefined;
     return user;
   }
-
-  // async getUserByNameAndId(userId: number): Promise<UserProfileDto> {
-  //   const user = await this.userRepository.getUserProfileByUserId(userId);
-  //   if (!user) throw new NotFoundException(`User with id ${userId} not found`);
-  //   return user;
-  // }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     return this.userRepository.createUser(createUserDto);
@@ -66,5 +67,14 @@ export class UserService {
   async deleteFriend(createFriendDto: FriendDto) {
     return this.friendService.deleteFriend(createFriendDto);
   }
+
+  async updateUserAcessToken(userId: number, accessToken: string) {
+    return this.userRepository.updateUserAcessToken(userId, accessToken);
+  }
+
+  async updateUserReFreshToken(userId: number, refreshToken: string) {
+    return this.userRepository.updateUserAcessToken(userId, refreshToken);
+  }
+
   //TODO: UserEntity Update
 }
