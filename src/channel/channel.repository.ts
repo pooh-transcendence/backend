@@ -17,16 +17,15 @@ export class ChannelRepository extends Repository<ChannelEntity> {
   }
 
   async createChannel(
-    ownerId: number,
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelEntity> {
-    const { channelType, channelName, password } = createChannelDto;
-    let hashedPassword = null;
+    const { ownerId, channelType, channelName, password } = createChannelDto;
 
-    if (channelType === ChannelType.PROTECTED) {
-      const salt = await bcrypt.genSalt();
-      hashedPassword = await bcrypt.hash(password, salt);
-    }
+    const hashedPassword =
+      channelType === ChannelType.PROTECTED
+        ? await bcrypt.hash(password, await bcrypt.genSalt())
+        : null;
+
     const channel = this.create({
       channelType,
       channelName,
@@ -38,7 +37,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
       this.save(channel);
     } catch (error) {
       if (error.code === '23505') {
-        throw new ConflictException('Existing username');
+        throw new ConflictException('Channel is already exists');
       } else {
         throw new InternalServerErrorException();
       }

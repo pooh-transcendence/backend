@@ -9,7 +9,7 @@ export class CreateChannelDto extends PickType(ChannelEntity, [
 ] as const) {
   @IsNotEmpty()
   @IsPositive()
-  owner: number;
+  ownerId: number;
 }
 
 export class UpdateChannelDto {

@@ -54,12 +54,10 @@ export class ChannelService {
   }*/
 
   async createChannel(
-    ownerId: number,
     createChannelDto: CreateChannelDto,
     createChannelUserDtos: CreateChanneUserDto[],
   ): Promise<ChannelEntity> {
     const channel = await this.channelRepository.createChannel(
-      ownerId,
       createChannelDto,
     );
     /*
@@ -110,7 +108,7 @@ export class ChannelService {
     );
     if (!channelUser)
       throw new HttpException(
-        { reason: 'channelUser 생성이 안됨' },
+        `Cannot create ChannelUser ${userId}`,
         HttpStatus.BAD_REQUEST,
       );
     return channelUser;
@@ -143,11 +141,11 @@ export class ChannelService {
   }
 
   async getVisibleChannel(): Promise<ChannelEntity[]> {
-    const found = await this.channelRepository.getAllVisibleChannel();
-    found.forEach((channel) => {
-      channel.password = undefined;
-    });
-    return found;
+    const channels = await this.channelRepository.getAllVisibleChannel();
+    // found.forEach((channel) => { // TODO: password는 exclude이므로 undefined하지 않아도 될 듯?
+    //   channel.password = undefined;
+    // });
+    return channels;
   }
 
   async joinChannelUser(
@@ -165,7 +163,7 @@ export class ChannelService {
       throw new NotFoundException(`There is no Channel ${channelId}`);
     if (user)
       throw new HttpException(
-        { reason: 'user is in user or banned' },
+        'User is already joined channel',
         HttpStatus.BAD_GATEWAY,
       );
     if (
@@ -175,11 +173,8 @@ export class ChannelService {
         channel.password,
       ))
     )
-      throw new HttpException(
-        { reason: 'password Failed' },
-        HttpStatus.BAD_REQUEST,
-      );
-    createChannelUserDto.password = undefined;
+      throw new HttpException('Password is not valid', HttpStatus.BAD_REQUEST);
+    // createChannelUserDto.password = undefined; // TODO: password는 DTO에서 exclude 처리
     return await this.addChannelUser(createChannelUserDto);
   }
 
