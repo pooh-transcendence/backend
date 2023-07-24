@@ -22,13 +22,15 @@ export class BlockController {
   private logger = new Logger(BlockController.name);
 
   @Get()
-  async getUserBlockList(@GetUser() user: UserEntity): Promise<UserEntity[]> {
-    return await this.blockService.getBlocListkByUserId(user.id);
+  async getBlockList(
+    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
+  ): Promise<UserEntity[]> {
+    return await this.blockService.getBlockListkByUserId(userId);
   }
 
   @Delete()
   async deleteBlock(
-    @GetUser('id') userId: number,
+    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
     await this.blockService.deleteBlock({
@@ -39,7 +41,7 @@ export class BlockController {
 
   @Post()
   async createBlock(
-    @GetUser('id') userId: number,
+    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
     return await this.blockService.createBlock({

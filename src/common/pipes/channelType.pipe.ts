@@ -1,4 +1,9 @@
-import { HttpException, Injectable, PipeTransform } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  PipeTransform,
+} from '@nestjs/common';
 import { CreateChannelDto } from 'src/channel/channel.dto';
 import { ChannelType } from 'src/channel/channel.entity';
 
@@ -7,8 +12,8 @@ export class ChannelTypePipe implements PipeTransform {
   transform(value: CreateChannelDto) {
     if (value.channelType === ChannelType.PROTECTED && !value.password) {
       throw new HttpException(
-        `Protected Channel ${value.channelName} doesn't have password`,
-        400,
+        `Protected Channel ${value.channelName} must have password`,
+        HttpStatus.BAD_REQUEST,
       );
     } else if (
       (value.channelType === ChannelType.PUBLIC ||
@@ -16,8 +21,8 @@ export class ChannelTypePipe implements PipeTransform {
       value.password
     ) {
       throw new HttpException(
-        `Public or Private Channel ${value.channelName} has password`,
-        400,
+        `Public or Private Channel ${value.channelName} must not have password`,
+        HttpStatus.BAD_REQUEST,
       );
     }
     return value;

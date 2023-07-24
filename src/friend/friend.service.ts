@@ -43,7 +43,6 @@ export class FriendService {
   }
 
   async deleteFriend(createFriendDto: FriendDto) {
-    const result = await this.friendRepository.delete(createFriendDto);
-    if (result.affected === 0) throw new NotFoundException('friend not found');
+    await this.friendRepository.deleteFriend(createFriendDto);
   }
 }

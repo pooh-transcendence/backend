@@ -1,17 +1,19 @@
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsPositive } from 'class-validator';
 import { CommonEntity } from 'src/common/common.entity';
 import { Column, Entity, Unique } from 'typeorm';
 
 @Entity()
 @Unique(['from', 'to'])
 export class FriendEntity extends CommonEntity {
-  @IsNumber()
-  @IsNotEmpty()
   @Column()
+  @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
   from: number;
 
   @Column()
-  @IsNumber()
   @IsNotEmpty()
+  @IsNumber()
+  @IsPositive()
   to: number;
 }

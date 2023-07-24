@@ -44,4 +44,10 @@ export class FriendRepository extends Repository<FriendEntity> {
       order: { from: 'ASC' },
     });
   }
+
+  async deleteFriend(deleteFriendDto: FriendDto): Promise<void> {
+    const result = await this.delete(deleteFriendDto);
+    if (result.affected === 0)
+      throw new ConflictException(`Friend ${deleteFriendDto} not found`);
+  }
 }

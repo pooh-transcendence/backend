@@ -26,14 +26,14 @@ export class UserRepository extends Repository<UserEntity> {
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
     const { nickname, email, ftId, token } = createUserDto;
-    const UserEntity = this.create({
+    const user = this.create({
       nickname,
       email,
       ftId,
       token,
     });
     try {
-      await this.save(UserEntity);
+      await this.save(user);
     } catch (error) {
       if (error.code === '23505') {
         throw new ConflictException('Existing UserEntity');
@@ -41,7 +41,7 @@ export class UserRepository extends Repository<UserEntity> {
         throw new InternalServerErrorException();
       }
     }
-    return UserEntity;
+    return user;
   }
 
   async deleteUser(userId: number) {

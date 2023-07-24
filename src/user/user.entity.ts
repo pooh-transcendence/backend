@@ -15,8 +15,8 @@ export enum UserState {
 @Unique(['nickname'])
 export class UserEntity extends CommonEntity {
   @Column()
-  //@IsString()
-  @Exclude()
+  @IsString()
+  // @Exclude()
   ftId: string;
 
   @Column()
@@ -44,8 +44,8 @@ export class UserEntity extends CommonEntity {
   userState: UserState;
 
   @Column({ nullable: true })
-  //@IsString()
-  @Exclude()
+  @IsString()
+  // @Exclude()
   token: string;
 
   @OneToMany(() => GameEntity, (game) => game.winner)

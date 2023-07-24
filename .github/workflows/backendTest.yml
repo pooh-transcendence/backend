@@ -2,16 +2,15 @@ name: backend_test
 
 on:
   push:
-    branches: [ "main" , "joowpark", "yubchoi" ]
+    branches: ['main', 'joowpark', 'yubchoi']
   pull_request:
-    branches: [ "main" ]
+    branches: ['main']
 
 jobs:
-
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: make 
+      - uses: actions/checkout@v3
+      - name: Build the Docker image
+        run: make

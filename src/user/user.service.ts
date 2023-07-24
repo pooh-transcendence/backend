@@ -6,8 +6,6 @@ import { FriendService } from 'src/friend/friend.service';
 import { CreateUserDto } from './user.dto';
 import { FriendDto } from 'src/friend/friend.dto';
 import { ChannelService } from 'src/channel/channel.service';
-import { RefreshJwtModuleConfig } from 'src/configs/jwt.config';
-import { use } from 'passport';
 
 @Injectable()
 export class UserService {
@@ -30,7 +28,7 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     user['friends'] = await this.friendService.getFriendListByUserId(userId);
-    user['blocks'] = await this.blockService.getBlocListkByUserId(userId);
+    user['blocks'] = await this.blockService.getBlockListkByUserId(userId);
     user['channels'] = await this.channelService.getChannelByUserId(userId);
     user.accessToken = undefined;
     user.refreshToken = undefined;
@@ -45,7 +43,7 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     user['friends'] = await this.friendService.getFriendListByUserId(user.id);
-    user['blocks'] = await this.blockService.getBlocListkByUserId(user.id);
+    user['blocks'] = await this.blockService.getBlockListkByUserId(user.id);
     user['channels'] = await this.channelService.getChannelByUserId(user.id);
     user.accessToken = undefined;
     user.refreshToken = undefined;
