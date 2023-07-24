@@ -22,7 +22,7 @@ export class ChannelController {
   @Post()
   @UseGuards(AuthGuard())
   async createChannel(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
+    @GetUser('id') userId: number,
     @Body('ChannelInfo', ChannelTypePipe) ChannelInfo: CreateChannelDto,
     @Body('ChannelUserInfo') ChannelUserInfo: CreateChanneUserDto[], // TODO: ChannelUserId만 받으면 안되나여?
   ) {
@@ -34,7 +34,7 @@ export class ChannelController {
   @Post('/join')
   @UseGuards(AuthGuard())
   async joinChannel(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
+    @GetUser('id') userId: number,
     @Body() createChannelUserDto: CreateChanneUserDto,
   ) {
     const { channelId } = createChannelUserDto;
@@ -54,9 +54,7 @@ export class ChannelController {
 
   @Get()
   @UseGuards(AuthGuard())
-  async getChannels(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
-  ) {
+  async getChannels(@GetUser('id') userId: number) {
     return this.chatService.getChannelByUserId(userId);
   }
 }
