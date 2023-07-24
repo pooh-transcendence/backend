@@ -35,13 +35,19 @@ export class BlockRepository extends Repository<BlockEntity> {
       throw new NotFoundException(`Block ${deleteBlockDto} not found`);
   }
 
-  async getBlockByFromId(from: number): Promise<{ id: number; to: number }[]> {
+  async getBlockListByFromId(
+    from: number,
+  ): Promise<{ id: number; to: number }[]> {
     return await this.find({
       where: { from },
       select: ['to'],
     });
   }
 
+  async isBlocked(from: number, to: number): Promise<boolean> {
+    const block = await this.findOne({ where: { from, to } });
+    return block ? true : false;
+  }
   // async getAllBlock(): Promise<BlockEntity[]> {
   //   return await this.find({ order: { id: 'DESC' } });
   // }

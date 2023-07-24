@@ -3,7 +3,7 @@ import { BlockRepository } from './block.repository';
 import { BlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
 import { UserRepository } from 'src/user/user.repository';
-import { UserEntity } from 'src/user/user.entity';
+import { UserProfileDto } from 'src/user/user.dto';
 
 @Injectable()
 export class BlockService {
@@ -27,13 +27,17 @@ export class BlockService {
     await this.blockRepository.deleteBlock(deleteBlockDto);
   }
 
-  async getBlockListkByUserId(userId: number): Promise<UserEntity[]> {
-    const blockUserId = await this.blockRepository.getBlockByFromId(userId);
+  async getBlockListByUserId(userId: number): Promise<UserProfileDto[]> {
+    const blockList = await this.blockRepository.getBlockListByFromId(userId);
     const blockUser = [];
-    for (const id of blockUserId) {
+    for (const id of blockList) {
       blockUser.push(await this.userRepository.getUserByUserId(id.to));
     }
     return blockUser;
+  }
+
+  async isBlocked(from: number, to: number): Promise<boolean> {
+    return await this.blockRepository.isBlocked(from, to);
   }
 
   // // TODO: 필요한가?
