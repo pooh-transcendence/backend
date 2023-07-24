@@ -19,7 +19,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
   async createChannelUser(
     createChannelUserDto: CreateChanneUserDto,
   ): Promise<ChannelUserEntity> {
-    const channelUser = await this.create(createChannelUserDto);
+    const channelUser = this.create(createChannelUserDto);
     try {
       await this.save(channelUser);
     } catch (error) {
