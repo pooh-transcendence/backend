@@ -6,8 +6,6 @@ import {
   Post,
   UnauthorizedException,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { CreateChanneUserDto } from './channel-user.dto';

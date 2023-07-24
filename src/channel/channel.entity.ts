@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Length,
 } from 'class-validator';
 
 export enum ChannelType {
@@ -40,6 +41,7 @@ export class ChannelEntity extends CommonEntity {
   @Exclude()
   @IsOptional()
   @IsString()
+  @Length(1, 12)
   password: string;
 
   /*@OneToMany(() => ChannelUserEntity, (channelUser) => channelUser.channel, {

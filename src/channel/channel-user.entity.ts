@@ -21,6 +21,7 @@ export class ChannelUserEntity extends CommonEntity {
   @Column()
   @IsNotEmpty()
   @IsNumber()
+  @IsPositive()
   channelId: number;
 
   @Column({ default: false })
