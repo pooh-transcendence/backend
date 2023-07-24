@@ -24,10 +24,10 @@ export class BlockService {
   }
 
   async deleteBlock(deleteBlockDto: BlockDto) {
-    return await this.blockRepository.deleteBlock(deleteBlockDto);
+    await this.blockRepository.deleteBlock(deleteBlockDto);
   }
 
-  async getBlocListkByUserId(userId: number): Promise<UserEntity[]> {
+  async getBlockListkByUserId(userId: number): Promise<UserEntity[]> {
     const blockUserId = await this.blockRepository.getBlockByFromId(userId);
     const blockUser = [];
     for (const id of blockUserId) {

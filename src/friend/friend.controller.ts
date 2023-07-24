@@ -22,15 +22,15 @@ export class FriendController {
   private logger = new Logger(FriendController.name);
 
   @Get()
-  async getUserFriendList(
-    @GetUser('id') userId: number,
+  async getFriendList(
+    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
   ): Promise<UserEntity[]> {
     return await this.friendService.getFriendListByUserId(userId);
   }
 
   @Delete()
-  async deleteUserFriend(
-    @GetUser('id') userId: number,
+  async deleteFriend(
+    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {
@@ -42,7 +42,7 @@ export class FriendController {
 
   @Post()
   async createFriend(
-    @GetUser('id') userId: number,
+    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {

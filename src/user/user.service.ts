@@ -28,7 +28,7 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     user['friends'] = await this.friendService.getFriendListByUserId(userId);
-    user['blocks'] = await this.blockService.getBlocListkByUserId(userId);
+    user['blocks'] = await this.blockService.getBlockListkByUserId(userId);
     user['channels'] = await this.channelService.getChannelByUserId(userId);
     return user;
   }
