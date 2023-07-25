@@ -27,7 +27,7 @@ export class UserService {
         HttpStatus.BAD_REQUEST,
       );
     user['friends'] = await this.getFriendListByUserId(userId);
-    user['blocks'] = await this.blockService.getBlockListByUserId(userId);
+    user['blocks'] = await this.getBlockListByUserId(userId);
     user['channels'] = await this.channelService.getChannelByUserId(userId);
     user.accessToken = undefined;
     user.refreshToken = undefined;
@@ -81,6 +81,15 @@ export class UserService {
       friends.push(await this.getUserProfileById(id.to));
     }
     return friends;
+  }
+
+  async getBlockListByUserId(userId: number): Promise<UserProfileDto[]> {
+    const blockList = await this.blockService.getBlockListByFromId(userId);
+    const blockUser = [];
+    for (const id of blockList) {
+      blockUser.push(await this.getUserProfileById(id.to));
+    }
+    return blockUser;
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {

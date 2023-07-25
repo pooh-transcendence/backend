@@ -4,6 +4,7 @@ import { BlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserProfileDto } from 'src/user/user.dto';
+import { ApiProperty } from '@nestjs/swagger';
 
 @Injectable()
 export class BlockService {
@@ -27,17 +28,12 @@ export class BlockService {
     await this.blockRepository.deleteBlock(deleteBlockDto);
   }
 
-  async getBlockListByUserId(userId: number): Promise<UserProfileDto[]> {
-    const blockList = await this.blockRepository.getBlockListByFromId(userId);
-    const blockUser = [];
-    for (const id of blockList) {
-      blockUser.push(await this.userRepository.getUserByUserId(id.to));
-    }
-    return blockUser;
-  }
-
   async isBlocked(from: number, to: number): Promise<boolean> {
     return await this.blockRepository.isBlocked(from, to);
+  }
+
+  async getBlockListByFromId(id: number): Promise<{ to: number }[]> {
+    return await this.blockRepository.getBlockListByFromId(id);
   }
 
   // // TODO: 필요한가?

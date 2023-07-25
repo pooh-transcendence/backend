@@ -2,18 +2,15 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   Logger,
   Post,
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
 import { BlockService } from './block.service';
-import { UserEntity } from 'src/user/user.entity';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
-import { UserProfileDto } from 'src/user/user.dto';
 
 @Controller('block')
 @UseGuards(AuthGuard())
@@ -22,10 +19,10 @@ export class BlockController {
 
   private logger = new Logger(BlockController.name);
 
-  @Get()
-  async getBlockList(@GetUser('id') userId: number): Promise<UserProfileDto[]> {
-    return await this.blockService.getBlockListByUserId(userId);
-  }
+  // @Get()
+  // async getBlockList(@GetUser('id') userId: number): Promise<UserProfileDto[]> {
+  //   return await this.blockService.getBlockListByFromId(userId);
+  // }
 
   @Delete()
   async deleteBlock(
@@ -43,6 +40,7 @@ export class BlockController {
     @GetUser('id') userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
+    userId = 1;
     return await this.blockService.createBlock({
       from: userId,
       to: bannedUserId,

@@ -47,10 +47,10 @@ export class UserEntity extends CommonEntity {
   // @Exclude()
   token: string;
 
-  @OneToMany(() => GameEntity, (game) => game.winner)
+  @OneToMany(() => GameEntity, (game) => game.winner, { eager: true })
   winnerGame: GameEntity[];
 
-  @OneToMany(() => GameEntity, (game) => game.loser)
+  @OneToMany(() => GameEntity, (game) => game.loser, { eager: true })
   loserGame: GameEntity[];
 
   @Column({ nullable: true })
