@@ -8,6 +8,7 @@ export class ChannelUserEntity extends CommonEntity {
   /*@ManyToOne(() => UserEntity, { eager: true })
   user: UserEntity;*/
   @Column()
+  @IsNotEmpty()
   @IsNumber()
   @IsPositive()
   userId: number;

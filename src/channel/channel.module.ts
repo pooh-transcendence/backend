@@ -9,7 +9,6 @@ import { ChannelUserRepository } from './channel-user.repository';
 import { UserEntity } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { PassportModule } from '@nestjs/passport';
-import { FriendModule } from 'src/friend/friend.module';
 
 @Module({
   imports: [

@@ -21,7 +21,7 @@ export class AuthController {
     private userService: UserService,
   ) {}
 
-  @Post('signIn')
+  @Post('signin')
   async signIn(@Body() createUserDto: CreateUserDto, @Res() res) {
     const { user, accessToken, refreshToken } = await this.authService.signIn(
       createUserDto,
@@ -31,7 +31,7 @@ export class AuthController {
     res.send(user);
   }
 
-  @Post('signOut')
+  @Post('signout')
   @UseGuards(AuthGuard())
   async signOut(@GetUser('id') userId: number, @Req() req) {
     await this.authService.signOut(userId);

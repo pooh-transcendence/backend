@@ -5,6 +5,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { CreateChanneUserDto } from './channel-user.dto';
 
@@ -16,6 +17,8 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     super(ChannelUserEntity, dataSource.manager);
   }
 
+  logger = new Logger(ChannelUserRepository.name);
+
   async createChannelUser(
     createChannelUserDto: CreateChanneUserDto,
   ): Promise<ChannelUserEntity> {
@@ -24,8 +27,10 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
       await this.save(channelUser);
     } catch (error) {
       if (error.code === '23505') {
+        this.logger.debug(error);
         throw new ConflictException('Existing user in channel');
       } else {
+        this.logger.debug(error);
         throw new InternalServerErrorException();
       }
     }
