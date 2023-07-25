@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   Logger,
   ParseIntPipe,
   Post,
@@ -10,10 +9,8 @@ import {
 } from '@nestjs/common';
 import { FriendService } from './friend.service';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
-import { UserEntity } from 'src/user/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decostor';
-import { UserProfileDto } from 'src/user/user.dto';
 
 @Controller('friend')
 @UseGuards(AuthGuard())

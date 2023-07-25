@@ -3,14 +3,14 @@ import { BlockRepository } from './block.repository';
 import { BlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
 import { UserRepository } from 'src/user/user.repository';
-import { UserProfileDto } from 'src/user/user.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { FriendRepository } from 'src/friend/friend.respository';
 
 @Injectable()
 export class BlockService {
   constructor(
     private blockRepository: BlockRepository,
     private userRepository: UserRepository,
+    private friendRepository: FriendRepository,
   ) {}
 
   async createBlock(createBlockDto: BlockDto): Promise<BlockEntity> {
@@ -18,14 +18,20 @@ export class BlockService {
     // validation
     const fromUser = await this.userRepository.findOneBy({ id: from });
     const toUser = await this.userRepository.findOneBy({ id: to });
-    if (!fromUser) throw new NotFoundException('from user not found');
-    if (!toUser) throw new NotFoundException('to user not found');
+    if (!fromUser) throw new NotFoundException(`From user ${from} not found`);
+    if (!toUser) throw new NotFoundException(`To user ${to} not found`);
+    if (from === to) throw new NotFoundException('Cannot block yourself');
+    if (await this.isBlocked(from, to))
+      throw new NotFoundException(`Already blocked user ${to}`);
+    if (await this.friendRepository.isFriend(from, to))
+      throw new NotFoundException(`Friend user ${to}`);
 
     return await this.blockRepository.createBlock(createBlockDto);
   }
 
-  async deleteBlock(deleteBlockDto: BlockDto) {
+  async deleteBlock(deleteBlockDto: BlockDto): Promise<string> {
     await this.blockRepository.deleteBlock(deleteBlockDto);
+    return `Successfully unblocked user ${deleteBlockDto.to}`;
   }
 
   async isBlocked(from: number, to: number): Promise<boolean> {
