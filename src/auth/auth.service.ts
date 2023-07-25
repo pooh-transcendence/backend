@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/user/user.dto';
-import { UserEntity } from 'src/user/user.entity';
+import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
 
@@ -21,15 +21,15 @@ export class AuthService {
     const { ftId } = createUserDto;
     let user = await this.userRepository.findOne({
       where: { ftId },
-      select: ['id', 'ftId'],
     });
     if (!user) user = await this.userRepository.createUser(createUserDto);
     const accessToken =
       user.accessToken || (await this.generateAccessTokenFree(user));
     const refreshToken =
       user.refreshToken || (await this.generateRefreshToken(user));
-    const reUser = await this.userService.getUserById(user.id);
-    return { user: reUser, accessToken, refreshToken };
+    user.accessToken = undefined;
+    user.refreshToken = undefined;
+    return { user, accessToken, refreshToken };
   }
 
   async generateRefreshToken(user: UserEntity): Promise<string> {
@@ -59,5 +59,11 @@ export class AuthService {
     });
     if (!result) throw new UnauthorizedException();
     return await this.generateAccessTokenFree(result);
+  }
+
+  async signOut(userId: number) {
+    await this.userRepository.updateUserAcessToken(userId, null);
+    await this.userRepository.updateUserRefreshToken(userId, null);
+    await this.userRepository.updateUserState(userId, UserState.OFFLINE);
   }
 }

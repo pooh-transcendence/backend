@@ -16,6 +16,7 @@ import { ChannelRepository } from 'src/channel/channel.repository';
 import { ChannelUserEntity } from 'src/channel/channel-user.entity';
 import { ChannelEntity } from 'src/channel/channel.entity';
 import { ChannelUserRepository } from 'src/channel/channel-user.repository';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { ChannelUserRepository } from 'src/channel/channel-user.repository';
       ChannelUserEntity,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
+    AuthModule,
   ],
   controllers: [FriendController],
   providers: [
