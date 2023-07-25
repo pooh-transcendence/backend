@@ -14,6 +14,7 @@ import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { UserEntity } from './user.entity';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user')
 @UseInterceptors(TransformInterceptor)
@@ -45,7 +46,6 @@ export class UserController {
   async getUserProfileById(
     @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
   ): Promise<UserProfileDto> {
-    this.logger.debug(`getUserById: ${userId}`);
     return await this.userService.getUserProfileById(userId);
   }
 
