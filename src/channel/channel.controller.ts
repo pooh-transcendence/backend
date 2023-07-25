@@ -30,29 +30,29 @@ export class ChannelController {
   @Post()
   @UseGuards(AuthGuard())
   async createChannel(
-    @GetUser('id') userId: number,
+    @GetUser() user: UserEntity,
     @Body('channelInfo', ChannelTypePipe)
     channelInfo: CreateChannelDto,
     @Body('channelUserIds', NumArrayPipe)
     channelUserIds: number[],
   ) {
-    channelInfo.ownerId = userId;
+    channelInfo.ownerId = user.id;
     return this.channelService.createChannel(channelInfo, channelUserIds);
   }
 
   @Post('/join')
   @UseGuards(AuthGuard())
   async joinChannel(
-    @GetUser('id') userId: number,
+    @GetUser() user: UserEntity,
     @Body() createChannelUserDto: CreateChanneUserDto,
   ) {
     const { channelId } = createChannelUserDto;
-    if (await this.channelService.isChannelUser(userId, channelId)) {
+    if (await this.channelService.isChannelUser(user.id, channelId)) {
       throw new UnauthorizedException({
         message: `User is already joined channel`,
       });
     }
-    createChannelUserDto.userId = userId;
+    createChannelUserDto.userId = user.id;
     return this.channelService.joinChannelUser(createChannelUserDto);
   }
 
