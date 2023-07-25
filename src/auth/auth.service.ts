@@ -1,6 +1,7 @@
 import {
   ConsoleLogger,
   Injectable,
+  Req,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -55,7 +56,7 @@ export class AuthService {
   ): Promise<string> {
     const result = await this.userRepository.findOneBy({
       id: userId,
-      refreshToken: refreshToken,
+      refreshToken,
     });
     if (!result) throw new UnauthorizedException();
     return await this.generateAccessTokenFree(result);
