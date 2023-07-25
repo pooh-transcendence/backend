@@ -6,6 +6,7 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -18,6 +19,7 @@ import { AuthGuard } from '@nestjs/passport';
 
 @Controller('user')
 @UseInterceptors(TransformInterceptor)
+@UseGuards(AuthGuard())
 export class UserController {
   constructor(private userService: UserService) {}
 
@@ -49,7 +51,6 @@ export class UserController {
     return await this.userService.getUserProfileById(userId);
   }
 
-  @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
     return await this.userService.createUser(createUserDto);
   }

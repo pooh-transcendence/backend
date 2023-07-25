@@ -1,6 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { UserEntity } from './user.entity';
+import { UserEntity, UserState } from './user.entity';
 import { BlockService } from 'src/block/block.service';
 import { FriendService } from 'src/friend/friend.service';
 import { CreateUserDto, UserProfileDto } from './user.dto';
@@ -29,8 +29,6 @@ export class UserService {
     user['friends'] = await this.getFriendListByUserId(userId);
     user['blocks'] = await this.getBlockListByUserId(userId);
     user['channels'] = await this.channelService.getChannelByUserId(userId);
-    user.accessToken = undefined;
-    user.refreshToken = undefined;
     return user;
   }
 
@@ -106,6 +104,10 @@ export class UserService {
 
   async updateUserReFreshToken(userId: number, refreshToken: string) {
     return this.userRepository.updateUserAcessToken(userId, refreshToken);
+  }
+
+  async updateUserState(userId: number, userState: UserState) {
+    return this.userRepository.updateUserState(userId, userState);
   }
 
   async convertUserEntityToDto(

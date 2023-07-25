@@ -1,5 +1,5 @@
 import { DataSource, Repository } from 'typeorm';
-import { UserEntity } from './user.entity';
+import { UserEntity, UserState } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   ConflictException,
@@ -17,7 +17,10 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async getUserByUserId(userId: number): Promise<UserEntity> {
-    return await this.findOneBy({ id: userId });
+    return await this.findOne({
+      where: { id: userId },
+      select: { accessToken: false, refreshToken: false },
+    });
   }
 
   async getUserByNickname(nickname: string): Promise<UserEntity> {
@@ -62,6 +65,11 @@ export class UserRepository extends Repository<UserEntity> {
       { id: userId },
       { refreshToken: refreshToken },
     );
+    if (result.affected != 1) throw new InternalServerErrorException();
+  }
+
+  async updateUserState(userId: number, userState: UserState) {
+    const result = await this.update({ id: userId }, { userState: userState });
     if (result.affected != 1) throw new InternalServerErrorException();
   }
 }

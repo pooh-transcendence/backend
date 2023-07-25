@@ -16,6 +16,7 @@ import { ChannelUserEntity } from 'src/channel/channel-user.entity';
 import { ChannelRepository } from 'src/channel/channel.repository';
 import { ChannelUserRepository } from 'src/channel/channel-user.repository';
 import { ChannelService } from 'src/channel/channel.service';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { ChannelService } from 'src/channel/channel.service';
       ChannelEntity,
       ChannelUserEntity,
     ]),
+    PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [UserController],
   providers: [
