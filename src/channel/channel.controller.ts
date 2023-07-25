@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   ParseIntPipe,
   Post,
@@ -13,8 +14,8 @@ import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
 import { CreateChannelDto } from './channel.dto';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserEntity } from 'src/user/user.entity';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @Controller('/channel')
 @UseGuards(AuthGuard())
@@ -57,5 +58,14 @@ export class ChannelController {
   @UseGuards(AuthGuard())
   async getChannels(@GetUser() user: UserEntity) {
     return this.chatService.getChannelByUserId(user.id);
+  }
+
+  @Delete()
+  @UseGuards(AuthGuard())
+  async quickLeaveChannel(
+    @GetUser() uesr: UserEntity,
+    @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
+  ) {
+    return await this.chatService.quickLeaveChannel(uesr.id, channelId);
   }
 }
