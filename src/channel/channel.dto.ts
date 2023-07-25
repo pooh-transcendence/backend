@@ -1,18 +1,15 @@
 import { PickType } from '@nestjs/swagger';
 import { ChannelEntity } from './channel.entity';
-import { IsNotEmpty, IsPositive } from 'class-validator';
+import { ChannelUserEntity } from './channel-user.entity';
 
 export class CreateChannelDto extends PickType(ChannelEntity, [
   'channelType',
   'channelName',
   'password',
-] as const) {
-  @IsNotEmpty()
-  @IsPositive()
-  ownerId: number;
-}
+  'ownerId',
+] as const) {}
 
-export class UpdateChannelDto {
-  userId: number;
-  channelId: number;
-}
+export class UpdateChannelDto extends PickType(ChannelUserEntity, [
+  'userId',
+  'channelId',
+] as const) {}

@@ -5,7 +5,6 @@ import {
   Logger,
   Param,
   ParseIntPipe,
-  Post,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';

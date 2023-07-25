@@ -8,6 +8,7 @@ import {
   ConflictException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 
 @Injectable()
@@ -15,6 +16,8 @@ export class ChannelRepository extends Repository<ChannelEntity> {
   constructor(@InjectRepository(ChannelEntity) private dataSource: DataSource) {
     super(ChannelEntity, dataSource.manager);
   }
+
+  logger = new Logger(ChannelRepository.name);
 
   async createChannel(
     createChannelDto: CreateChannelDto,
@@ -34,7 +37,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     });
 
     try {
-      this.save(channel);
+      await this.save(channel);
     } catch (error) {
       if (error.code === '23505') {
         throw new ConflictException('Channel is already exists');
@@ -67,6 +70,6 @@ export class ChannelRepository extends Repository<ChannelEntity> {
   }
 
   async getChannelByChannelId(channelId: number): Promise<ChannelEntity> {
-    return this.findOneBy({ id: channelId });
+    return await this.findOneBy({ id: channelId });
   }
 }

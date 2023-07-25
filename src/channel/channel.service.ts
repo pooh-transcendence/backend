@@ -20,73 +20,24 @@ export class ChannelService {
     private channelUserRepository: ChannelUserRepository,
     private userRepository: UserRepository,
   ) {}
-  /*
-  async createChannel(
-    owner: number,
-    createChannelDto: CreateChannelDto,
-    createChannelUserDtoList: CreateChanneUserDto[],
-  ): Promise<ChannelEntity> {
-    const found = await this.channelRepository.findChannelByChannelName(
-      createChannelDto.channelName,
-    );
-    if (found)
-      throw new HttpException(
-        { reason: 'channel is Exist' },
-        HttpStatus.BAD_REQUEST,
-      );
-    const channel = await this.channelRepository.createChannel(
-      createChannelDto,
-      owner,
-    );
-    const ownerChannerUser = {
-      id: owner,
-      channelId: channel.id,
-      isAdmin: true,
-      isBanned: false,
-    };
-    await this.channelUserRepository.createChannelUser(ownerChannerUser);
-    createChannelUserDtoList.forEach(async (createChannelUserDto) => {
-      createChannelUserDto.channelId = channel.id;
-      await this.channelUserRepository.createChannelUser(createChannelUserDto);
-    });
-    channel.password = undefined;
-    return channel;
-  }*/
 
   async createChannel(
     createChannelDto: CreateChannelDto,
-    createChannelUserDtos: CreateChanneUserDto[],
+    createChannelUserIds: number[],
   ): Promise<ChannelEntity> {
     const channel = await this.channelRepository.createChannel(
       createChannelDto,
     );
-    /*
-    const channelUsers: ChannelUserEntity[] = [];
-    for (const createChannelUserDto of createChannelUserDtos) {
-      const userId = createChannelUserDto.userId;
-      const user = await this.userRepository.getUserByUserId(userId);
-      if (!user) throw new NotFoundException(`id ${userId} 를 못찾음`);
-      channelUsers.push(
-        await this.channelUserRepository.createChannelUser(
-          createChannelUserDto,
-          user,
-          channel,
-        ),
-      );
-    }
-    channel.channelUser.push(...channelUsers);
-    channel.password = undefined;
-    const result = await this.channelRepository.save(channel);
-    result.channelUser.forEach(
-      (channelUser) => (channelUser.channel = undefined),
-    );
-    */
     const channelUser: UserEntity[] = [];
-    for (const createChannelUserDto of createChannelUserDtos) {
-      const userId = createChannelUserDto.userId;
+    for (const userId of createChannelUserIds) {
       const user = await this.userRepository.getUserByUserId(userId);
       if (!user) throw new NotFoundException(`user ${userId} not found`);
-      await this.channelUserRepository.createChannelUser(createChannelUserDto);
+
+      const channelUserDto = new CreateChanneUserDto();
+      channelUserDto.userId = userId;
+      channelUserDto.channelId = channel.id;
+      channelUserDto.password = undefined;
+      await this.channelUserRepository.createChannelUser(channelUserDto);
       channelUser.push(user);
     }
     channel['channelUser'] = channelUser;
