@@ -42,6 +42,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
       if (error.code === '23505') {
         throw new ConflictException('Channel is already exists');
       } else {
+        this.logger.debug(error);
         throw new InternalServerErrorException();
       }
     }

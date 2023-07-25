@@ -51,4 +51,10 @@ export class AuthController {
       .split('=')[1];
     return await this.authService.generateAccessToken(userId, refreshToken);
   }
+  /*
+  @Post('42callback')
+  async fortyTwoCallback(@Body('ftToken') accessToken: string) {
+    const data = await this.fortyTwoService.get('/v2/me', accessToken);
+  }
+  */
 }
