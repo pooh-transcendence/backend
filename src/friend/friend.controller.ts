@@ -11,6 +11,7 @@ import { FriendService } from './friend.service';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decostor';
+import { UserEntity } from 'src/user/user.entity';
 
 @Controller('friend')
 @UseGuards(AuthGuard())

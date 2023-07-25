@@ -199,4 +199,11 @@ export class ChannelService {
     );
     return channelUser ? true : false;
   }
+
+  async quickLeaveChannel(userId: number, channelId: number): Promise<any> {
+    return await this.channelUserRepository.deleteChannelUserByIds(
+      userId,
+      channelId,
+    );
+  }
 }

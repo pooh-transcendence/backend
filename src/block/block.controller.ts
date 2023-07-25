@@ -34,7 +34,7 @@ export class BlockController {
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
     return await this.blockService.deleteBlock({
-      from: userId,
+      from: user.id,
       to: bannedUserId,
     });
   }
