@@ -29,7 +29,7 @@ export class FriendRepository extends Repository<FriendEntity> {
     return friend;
   }
 
-  async getFriendByFromId(id: number): Promise<{ to: number }[]> {
+  async getFriendListByFromId(id: number): Promise<{ to: number }[]> {
     return await this.find({
       where: { from: id },
       select: ['to'],
@@ -37,7 +37,7 @@ export class FriendRepository extends Repository<FriendEntity> {
     });
   }
 
-  async getFriendByToId(id: number): Promise<{ from: number }[]> {
+  async getFriendListByToId(id: number): Promise<{ from: number }[]> {
     return await this.find({
       where: { to: id },
       select: ['from'],
@@ -45,9 +45,15 @@ export class FriendRepository extends Repository<FriendEntity> {
     });
   }
 
-  async deleteFriend(deleteFriendDto: FriendDto): Promise<void> {
+  async deleteFriend(deleteFriendDto: FriendDto) {
     const result = await this.delete(deleteFriendDto);
     if (result.affected === 0)
       throw new ConflictException(`Friend ${deleteFriendDto} not found`);
+  }
+
+  async isFriend(from: number, to: number): Promise<boolean> {
+    const friend = await this.findOne({ where: { from, to } });
+    if (friend) return true;
+    else return false;
   }
 }

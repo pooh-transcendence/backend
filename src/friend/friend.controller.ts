@@ -13,6 +13,7 @@ import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserEntity } from 'src/user/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decostor';
+import { UserProfileDto } from 'src/user/user.dto';
 
 @Controller('friend')
 @UseGuards(AuthGuard())
@@ -21,16 +22,16 @@ export class FriendController {
 
   private logger = new Logger(FriendController.name);
 
-  @Get()
-  async getFriendList(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
-  ): Promise<UserEntity[]> {
-    return await this.friendService.getFriendListByUserId(userId);
-  }
+  // @Get()
+  // async getFriendList(
+  //   @GetUser('id') userId: number,
+  // ): Promise<UserProfileDto[]> {
+  //   return await this.friendService.getFriendListByUserId(userId);
+  // }
 
   @Delete()
   async deleteFriend(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
+    @GetUser('id') userId: number,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {
@@ -42,7 +43,7 @@ export class FriendController {
 
   @Post()
   async createFriend(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
+    @GetUser('id') userId: number,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {

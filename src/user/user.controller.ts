@@ -1,6 +1,5 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
   Get,
   Logger,
@@ -10,33 +9,48 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './user.dto';
+import { CreateUserDto, UserProfileDto } from './user.dto';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { GetUser } from 'src/auth/get-user.decostor';
+import { UserEntity } from './user.entity';
 
 @Controller('user')
 @UseInterceptors(TransformInterceptor)
-@UseInterceptors(ClassSerializerInterceptor)
 export class UserController {
   constructor(private userService: UserService) {}
 
   private logger = new Logger(UserController.name);
 
-  @Get('/:nickname')
-  async getUserByNickname(@Param('nickname') nickname: string) {
-    return await this.userService.getUserByNickname(nickname);
+  // 유저 본인의 정보를 가져온다.
+  @Get()
+  async getUser(@GetUser('id') userId: number): Promise<UserEntity> {
+    return await this.userService.getUserById(userId);
+  }
+
+  // 유저의 닉네임으로 유저 정보를 가져온다.
+  @Get('/search/:nickname')
+  async getUserProfileByNickname(
+    @GetUser('id') userId: number,
+    @Param('nickname') nickname: string,
+  ): Promise<UserProfileDto> {
+    const user = await this.userService.getUserProfileByNickname(
+      userId,
+      nickname,
+    );
+    return user;
+  }
+
+  @Get('/:userId')
+  async getUserProfileById(
+    @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
+  ): Promise<UserProfileDto> {
+    this.logger.debug(`getUserById: ${userId}`);
+    return await this.userService.getUserProfileById(userId);
   }
 
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto) {
-    this.logger.debug(`createUserDto: ${JSON.stringify(createUserDto)}`);
     return await this.userService.createUser(createUserDto);
-  }
-
-  @Get('/:userId')
-  async getUserById(
-    @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
-  ) {
-    return await this.userService.getUserById(userId);
   }
 }

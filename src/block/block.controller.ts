@@ -2,14 +2,12 @@ import {
   Body,
   Controller,
   Delete,
-  Get,
   Logger,
   Post,
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
 import { BlockService } from './block.service';
-import { UserEntity } from 'src/user/user.entity';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
@@ -21,16 +19,14 @@ export class BlockController {
 
   private logger = new Logger(BlockController.name);
 
-  @Get()
-  async getBlockList(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
-  ): Promise<UserEntity[]> {
-    return await this.blockService.getBlockListkByUserId(userId);
-  }
+  // @Get()
+  // async getBlockList(@GetUser('id') userId: number): Promise<UserProfileDto[]> {
+  //   return await this.blockService.getBlockListByFromId(userId);
+  // }
 
   @Delete()
   async deleteBlock(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
+    @GetUser('id') userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
     await this.blockService.deleteBlock({
@@ -41,9 +37,10 @@ export class BlockController {
 
   @Post()
   async createBlock(
-    @GetUser('id', ParseIntPipe, PositiveIntPipe) userId: number,
+    @GetUser('id') userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
+    userId = 1;
     return await this.blockService.createBlock({
       from: userId,
       to: bannedUserId,

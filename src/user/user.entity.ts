@@ -1,6 +1,5 @@
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsIn, IsNumber, IsString } from 'class-validator';
-import { ChannelEntity } from 'src/channel/channel.entity';
 import { CommonEntity } from 'src/common/common.entity';
 import { GameEntity } from 'src/game/game.entity';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
@@ -20,7 +19,7 @@ export class UserEntity extends CommonEntity {
   ftId: string;
 
   @Column()
-  //@IsString()
+  @IsString()
   nickname: string;
 
   @Column({ default: 0 })
@@ -48,18 +47,20 @@ export class UserEntity extends CommonEntity {
   // @Exclude()
   token: string;
 
-  @OneToMany(() => GameEntity, (game) => game.winner)
+  @OneToMany(() => GameEntity, (game) => game.winner, { eager: true })
   winnerGame: GameEntity[];
 
-  @OneToMany(() => GameEntity, (game) => game.loser)
+  @OneToMany(() => GameEntity, (game) => game.loser, { eager: true })
   loserGame: GameEntity[];
 
   @Column({ nullable: true })
-  @Exclude()
+  // @Exclude()
+  @IsString()
   accessToken: string;
 
   @Column({ nullable: true })
-  @Exclude()
+  // @Exclude()
+  @IsString()
   refreshToken: string;
   //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
   //Join :
