@@ -28,10 +28,11 @@ export class FriendController {
 
   @Delete()
   async deleteFriend(
-    @GetUser('id') userId: number,
+    @GetUser() user: UserEntity,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {
+    const userId = user.id;
     await this.friendService.deleteFriend({
       from: userId,
       to: followingUserId,
@@ -40,10 +41,11 @@ export class FriendController {
 
   @Post()
   async createFriend(
-    @GetUser('id') userId: number,
+    @GetUser() user: UserEntity,
     @Body('followingUserId', ParseIntPipe, PositiveIntPipe)
     followingUserId: number,
   ) {
+    const userId = user.id;
     return await this.friendService.creatFriend({
       from: userId,
       to: followingUserId,

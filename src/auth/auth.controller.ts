@@ -2,17 +2,20 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { CreateUserDto } from 'src/user/user.dto';
+import { CreateUserDto, UserProfileDto } from 'src/user/user.dto';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { ref } from 'joi';
 import { GetUser } from './get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
+import { UserEntity } from 'src/user/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -33,10 +36,19 @@ export class AuthController {
 
   @Post('signOut')
   @UseGuards(AuthGuard())
-  async signOut(@GetUser('id') userId: number, @Req() req) {
-    await this.authService.signOut(userId);
+  async signOut(@GetUser('id') user: UserEntity, @Req() req) {
+    await this.authService.signOut(user.id);
     req.res.clearCookie('accessToken');
     req.res.clearCookie('refreshToken');
     req.res.send();
+  }
+
+  @Get('accessToken')
+  async getAccessToken(@Body('id', ParseIntPipe) userId: number, @Req() req) {
+    const refreshToken = req.headers.cookie
+      .split('; ')
+      .find((x) => x.startsWith('refreshToken'))
+      .split('=')[1];
+    return await this.authService.generateAccessToken(userId, refreshToken);
   }
 }
