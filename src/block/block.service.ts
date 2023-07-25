@@ -29,8 +29,9 @@ export class BlockService {
     return await this.blockRepository.createBlock(createBlockDto);
   }
 
-  async deleteBlock(deleteBlockDto: BlockDto) {
+  async deleteBlock(deleteBlockDto: BlockDto): Promise<string> {
     await this.blockRepository.deleteBlock(deleteBlockDto);
+    return `Successfully unblocked user ${deleteBlockDto.to}`;
   }
 
   async isBlocked(from: number, to: number): Promise<boolean> {
