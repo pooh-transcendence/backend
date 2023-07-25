@@ -26,18 +26,18 @@ export class UserController {
 
   // 유저 본인의 정보를 가져온다.
   @Get()
-  async getUser(@GetUser('id') userId: number): Promise<UserEntity> {
-    return await this.userService.getUserById(userId);
+  async getUser(@GetUser() user: UserEntity): Promise<UserEntity> {
+    return await this.userService.getUserById(user.id);
   }
 
   // 유저의 닉네임으로 유저 정보를 가져온다.
   @Get('/search/:nickname')
   async getUserProfileByNickname(
-    @GetUser('id') userId: number,
+    @GetUser() owner: UserEntity,
     @Param('nickname') nickname: string,
   ): Promise<UserProfileDto> {
     const user = await this.userService.getUserProfileByNickname(
-      userId,
+      owner.id,
       nickname,
     );
     return user;

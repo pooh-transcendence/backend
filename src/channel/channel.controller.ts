@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Logger,
+  ParseIntPipe,
   Post,
   UnauthorizedException,
   UseGuards,
@@ -14,11 +16,12 @@ import { ChannelTypePipe as ChannelTypePipe } from 'src/common/pipes/channelType
 import { CreateChannelDto } from './channel.dto';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
-import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { UserEntity } from 'src/user/user.entity';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
 
 @Controller('/channel')
-@UseInterceptors(TransformInterceptor)
+@UseGuards(AuthGuard())
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 
@@ -60,7 +63,16 @@ export class ChannelController {
 
   @Get()
   @UseGuards(AuthGuard())
-  async getChannels(@GetUser('id') userId: number) {
-    return this.channelService.getChannelByUserId(userId);
+  async getChannels(@GetUser() user: UserEntity) {
+    return this.channelService.getChannelByUserId(user.id);
+  }
+
+  @Delete()
+  @UseGuards(AuthGuard())
+  async quickLeaveChannel(
+    @GetUser() uesr: UserEntity,
+    @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
+  ) {
+    return await this.channelService.quickLeaveChannel(uesr.id, channelId);
   }
 }

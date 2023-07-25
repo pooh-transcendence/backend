@@ -43,7 +43,6 @@ export class UserEntity extends CommonEntity {
 
   @Column({ nullable: true })
   @IsString()
-  // @Exclude()
   token: string;
 
   @OneToMany(() => GameEntity, (game) => game.winner, { eager: true })
@@ -53,14 +52,12 @@ export class UserEntity extends CommonEntity {
   loserGame: GameEntity[];
 
   @Column({ nullable: true })
-  // @Exclude()
   @IsString()
-  accessToken: string;
+  accessToken!: string | null;
 
   @Column({ nullable: true })
-  // @Exclude()
   @IsString()
-  refreshToken: string;
+  refreshToken!: string | null;
   //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
   //Join :
 }

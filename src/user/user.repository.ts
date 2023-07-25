@@ -52,7 +52,7 @@ export class UserRepository extends Repository<UserEntity> {
     if (result.affected != 0) throw new InternalServerErrorException();
   }
 
-  async updateUserAcessToken(userId: number, accessToken: string) {
+  async updateUserAcessToken(userId: number, accessToken?: string | null) {
     const result = await this.update(
       { id: userId },
       { accessToken: accessToken },
@@ -60,7 +60,7 @@ export class UserRepository extends Repository<UserEntity> {
     if (result.affected != 1) throw new InternalServerErrorException();
   }
 
-  async updateUserRefreshToken(userId: number, refreshToken: string) {
+  async updateUserRefreshToken(userId: number, refreshToken?: string | null) {
     const result = await this.update(
       { id: userId },
       { refreshToken: refreshToken },

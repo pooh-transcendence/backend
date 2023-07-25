@@ -59,4 +59,14 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
       where: { channelId, userId },
     });
   }
+
+  async deleteChannelUserByIds(
+    userId: number,
+    channelId: number,
+  ): Promise<any> {
+    return await this.delete({
+      userId,
+      channelId,
+    });
+  }
 }
