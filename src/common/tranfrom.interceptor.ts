@@ -3,7 +3,6 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  HttpStatus,
 } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -22,7 +21,6 @@ export class TransformInterceptor<T>
   ): Observable<Response<T>> {
     return next.handle().pipe(
       map((data) => ({
-        status: HttpStatus.OK,
         success: true,
         data,
       })),

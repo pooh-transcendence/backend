@@ -48,7 +48,6 @@ export class UserController {
   async getUserProfileById(
     @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
   ): Promise<UserProfileDto> {
-    this.logger.debug(`getUserById: ${userId}`);
     return await this.userService.getUserProfileById(userId);
   }
 
