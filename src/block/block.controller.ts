@@ -6,14 +6,17 @@ import {
   Post,
   ParseIntPipe,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { BlockService } from './block.service';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
+import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
 
 @Controller('block')
 @UseGuards(AuthGuard())
+@UseInterceptors(TransformInterceptor)
 export class BlockController {
   constructor(private blockService: BlockService) {}
 
@@ -29,7 +32,7 @@ export class BlockController {
     @GetUser('id') userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
-    await this.blockService.deleteBlock({
+    return await this.blockService.deleteBlock({
       from: userId,
       to: bannedUserId,
     });
@@ -40,7 +43,6 @@ export class BlockController {
     @GetUser('id') userId: number,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
-    userId = 1;
     return await this.blockService.createBlock({
       from: userId,
       to: bannedUserId,
