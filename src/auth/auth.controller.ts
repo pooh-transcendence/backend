@@ -2,22 +2,22 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
   Req,
   Res,
+  Session,
   UseGuards,
 } from '@nestjs/common';
 import { CreateUserDto, UserProfileDto } from 'src/user/user.dto';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { ref } from 'joi';
 import { GetUser } from './get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
 import { FortyTwoApiService } from './fortytwo.service';
-import { accessSync } from 'fs';
 
 @Controller('auth')
 export class AuthController {
@@ -31,6 +31,7 @@ export class AuthController {
   async signIn(@Body() createUserDto: CreateUserDto, @Res() res) {
     const { user, accessToken, refreshToken } = await this.authService.signIn(
       createUserDto,
+      false,
     );
     res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
@@ -56,22 +57,59 @@ export class AuthController {
   }
 
   @Get('signUp')
-  async fortyTwoCallback(@Body('ftToken') token: string, @Res() res) {
+  async signUp(@Body('ftToken') token: string, @Res() res) {
     const data = await this.fortyTwoApiService.getDataFrom42API(
       token,
       '/v2/me',
     );
     const createUserDto: CreateUserDto = {
-      ftId: data.id,
+      ftId: data.id + data.id,
       nickname: data.user,
       email: data.email,
       token: token,
     };
-    const { user, accessToken, refreshToken } = await this.authService.signIn(
-      createUserDto,
-    );
+    const { user } = await this.authService.signIn(createUserDto, true);
+    /*
     res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
     res.send(user);
+    */
+    return await this.setupTwoFactorAuth(user);
+  }
+
+  async setupTwoFactorAuth(user: UserEntity) {
+    const secret = this.authService.generateSecret();
+    await this.userService.updateUserElements(user.id, {
+      secret: secret.base32,
+    });
+
+    //const user = await this.userService.getUserById(userId);
+    //if (!user) throw new NotFoundException('User not found.');
+
+    const userEmail = user.email;
+    const issuer = user.nickname;
+    const qrCodeURL = this.authService.generateQRCodeURL(
+      secret.ascii,
+      userEmail,
+      issuer,
+    );
+    return { qrCodeURL };
+  }
+
+  @Post('verify-two-factor-auth')
+  async verifyTwoFactorAuth(
+    @Body('verficationCode') verificationCode: any,
+    @Body('id', ParseIntPipe) userId: number,
+  ) {
+    const userElements = await this.userService.getUserById(userId);
+    const isVerified = this.authService.verifyToken(
+      userElements.secret,
+      verificationCode,
+    );
+    if (isVerified) {
+      return { message: 'Two-factor authentication is verified.' };
+    } else {
+      return { error: 'Invalid verification code.' };
+    }
   }
 }

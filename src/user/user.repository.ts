@@ -72,4 +72,13 @@ export class UserRepository extends Repository<UserEntity> {
     const result = await this.update({ id: userId }, { userState: userState });
     if (result.affected != 1) throw new InternalServerErrorException();
   }
+
+  async updateUserElements(userId: number, elements: any) {
+    const result = await this.update({ id: userId }, elements);
+    if (result.affected != 1) throw new InternalServerErrorException();
+  }
+
+  async getUserElementsById(userId: number, elements: any) {
+    return this.findOne({ where: { id: userId }, select: elements });
+  }
 }

@@ -29,6 +29,8 @@ export class UserService {
     user['friends'] = await this.getFriendListByUserId(userId);
     user['blocks'] = await this.getBlockListByUserId(userId);
     user['channels'] = await this.channelService.getChannelByUserId(userId);
+    user['accessToken'] = undefined;
+    user['refreshToken'] = undefined;
     return user;
   }
 
@@ -108,6 +110,16 @@ export class UserService {
 
   async updateUserState(userId: number, userState: UserState) {
     return this.userRepository.updateUserState(userId, userState);
+  }
+
+  async updateUserElements(userId: number, elements: any) {
+    return this.userRepository.updateUserElements(userId, elements);
+  }
+
+  async getUserElementsById(userId: number, elements: any): Promise<any> {
+    const result = this.userRepository.getUserElementsById(userId, elements);
+    if (!result) throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    return result;
   }
 
   async convertUserEntityToDto(
