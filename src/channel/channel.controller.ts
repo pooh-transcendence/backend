@@ -49,7 +49,7 @@ export class ChannelController {
     const { channelId } = createChannelUserDto;
     if (await this.channelService.isChannelUser(user.id, channelId)) {
       throw new UnauthorizedException({
-        message: `User is already joined channel`,
+        message: `User ${user.id} already joined channel ${channelId}`,
       });
     }
     createChannelUserDto.userId = user.id;
