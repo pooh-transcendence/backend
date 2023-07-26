@@ -55,9 +55,12 @@ export class AuthController {
     return await this.authService.generateAccessToken(userId, refreshToken);
   }
 
-  @Get('42callback')
+  @Get('signUp')
   async fortyTwoCallback(@Body('ftToken') token: string, @Res() res) {
-    const data = await this.fortyTwoApiService.get(token, '/v2/me');
+    const data = await this.fortyTwoApiService.getDataFrom42API(
+      token,
+      '/v2/me',
+    );
     const createUserDto: CreateUserDto = {
       ftId: data.id,
       nickname: data.user,

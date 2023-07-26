@@ -8,7 +8,11 @@ export class FortyTwoApiService {
   //  '344da0ec154bb944b972563c742d1f4cc0876ed0e15f1d7ed11d5a5925d121be'; // 여기에 42 API에서 발급받은 Bearer 토큰을 넣어주세요.
 
   // 42 API를 호출하는 GET 메서드
-  async get(token: string, endpoint: string, params?: Record<string, any>) {
+  async getDataFrom42API(
+    token: string,
+    endpoint: string,
+    params?: Record<string, any>,
+  ) {
     try {
       const response = await axios.get(`${this.baseUrl}${endpoint}`, {
         params,

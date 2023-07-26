@@ -22,7 +22,7 @@ export class AuthService {
 
   async signIn(createUserDto: CreateUserDto) {
     const { ftId } = createUserDto;
-    let user = await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { ftId },
     });
     if (!user)
