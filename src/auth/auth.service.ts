@@ -1,5 +1,7 @@
 import {
   ConsoleLogger,
+  HttpException,
+  HttpStatus,
   Injectable,
   Req,
   UnauthorizedException,
@@ -20,10 +22,14 @@ export class AuthService {
 
   async signIn(createUserDto: CreateUserDto) {
     const { ftId } = createUserDto;
-    let user = await this.userRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { ftId },
     });
-    if (!user) user = await this.userRepository.createUser(createUserDto);
+    if (!user)
+      throw new HttpException(
+        '아이디부터 만들어 주세요',
+        HttpStatus.BAD_REQUEST,
+      );
     const accessToken =
       user.accessToken || (await this.generateAccessTokenFree(user));
     const refreshToken =

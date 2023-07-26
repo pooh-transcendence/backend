@@ -8,8 +8,8 @@ import {
   Post,
   UnauthorizedException,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
+
 import { ChannelService } from './channel.service';
 import { CreateChanneUserDto } from './channel-user.dto';
 import { ChannelTypePipe as ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
