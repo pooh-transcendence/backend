@@ -16,12 +16,15 @@ import { ref } from 'joi';
 import { GetUser } from './get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
+import { FortyTwoApiService } from './fortytwo.service';
+import { accessSync } from 'fs';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
     private userService: UserService,
+    private fortyTwoApiService: FortyTwoApiService,
   ) {}
 
   @Post('signin')
@@ -51,10 +54,21 @@ export class AuthController {
       .split('=')[1];
     return await this.authService.generateAccessToken(userId, refreshToken);
   }
-  /*
-  @Post('42callback')
-  async fortyTwoCallback(@Body('ftToken') accessToken: string) {
-    const data = await this.fortyTwoService.get('/v2/me', accessToken);
+
+  @Get('42callback')
+  async fortyTwoCallback(@Body('ftToken') token: string, @Res() res) {
+    const data = await this.fortyTwoApiService.get(token, '/v2/me');
+    const createUserDto: CreateUserDto = {
+      ftId: data.id,
+      nickname: data.user,
+      email: data.email,
+      token: token,
+    };
+    const { user, accessToken, refreshToken } = await this.authService.signIn(
+      createUserDto,
+    );
+    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
+    res.send(user);
   }
-  */
 }

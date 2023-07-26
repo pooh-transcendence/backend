@@ -20,6 +20,7 @@ import { FriendEntity } from 'src/friend/friend.entity';
 import { BlockEntity } from 'src/block/block.entity';
 import { ChannelEntity } from 'src/channel/channel.entity';
 import { ChannelUserEntity } from 'src/channel/channel-user.entity';
+import { FortyTwoApiService } from './fortytwo.service';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { ChannelUserEntity } from 'src/channel/channel-user.entity';
     ChannelRepository,
     ChannelUserRepository,
     ChannelService,
+    FortyTwoApiService,
   ],
   exports: [JwtStrategy, PassportModule],
 })
