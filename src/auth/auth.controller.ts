@@ -2,22 +2,19 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   ParseIntPipe,
   Post,
   Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { CreateUserDto, UserProfileDto } from 'src/user/user.dto';
+import { CreateUserDto } from 'src/user/user.dto';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
-import { ref } from 'joi';
 import { GetUser } from './get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
 import { FortyTwoApiService } from './fortytwo.service';
-import { accessSync } from 'fs';
 
 @Controller('auth')
 export class AuthController {
@@ -55,7 +52,7 @@ export class AuthController {
     return await this.authService.generateAccessToken(userId, refreshToken);
   }
 
-  @Get('signUp')
+  @Get('signup')
   async fortyTwoCallback(@Body('ftToken') token: string, @Res() res) {
     const data = await this.fortyTwoApiService.getDataFrom42API(
       token,
