@@ -86,11 +86,11 @@ export class ChannelController {
 
   @Delete()
   @UseGuards(AuthGuard())
-  async quickLeaveChannel(
-    @GetUser() uesr: UserEntity,
+  async leaveChannel(
+    @GetUser() user: UserEntity,
     @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
   ) {
-    return await this.channelService.quickLeaveChannel(uesr.id, channelId);
+    return await this.channelService.leaveChannel(user.id, channelId);
   }
 
   verifyOwnerIdMatch(userId: number, ownerId: number) {

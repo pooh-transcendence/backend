@@ -31,7 +31,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
         throw new ConflictException('Existing user in channel');
       } else {
         this.logger.debug(error);
-        throw new InternalServerErrorException();
+        throw new InternalServerErrorException(error.message);
       }
     }
     return channelUser;
@@ -60,13 +60,14 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     });
   }
 
-  async deleteChannelUserByIds(
-    userId: number,
-    channelId: number,
-  ): Promise<any> {
-    return await this.delete({
+  async deleteChannelUserByIds(userId: number, channelId: number) {
+    const result = await this.softDelete({
       userId,
       channelId,
     });
+    if (result.affected !== 1)
+      throw new InternalServerErrorException(
+        `ChannelUser delete failed. userId: ${userId}, channelId: ${channelId}`,
+      );
   }
 }
