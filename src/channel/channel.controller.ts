@@ -6,7 +6,6 @@ import {
   Logger,
   ParseIntPipe,
   Post,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 
@@ -46,12 +45,6 @@ export class ChannelController {
     @GetUser() user: UserEntity,
     @Body() createChannelUserDto: CreateChanneUserDto,
   ) {
-    const { channelId } = createChannelUserDto;
-    if (await this.channelService.isChannelUser(user.id, channelId)) {
-      throw new UnauthorizedException({
-        message: `User ${user.id} already joined channel ${channelId}`,
-      });
-    }
     createChannelUserDto.userId = user.id;
     return this.channelService.joinChannelUser(createChannelUserDto);
   }
@@ -64,7 +57,7 @@ export class ChannelController {
   @Get()
   @UseGuards(AuthGuard())
   async getChannels(@GetUser() user: UserEntity) {
-    return this.channelService.getChannelByUserId(user.id);
+    return this.channelService.getChannelListByUserId(user.id);
   }
 
   @Delete()

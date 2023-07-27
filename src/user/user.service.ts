@@ -28,7 +28,7 @@ export class UserService {
       );
     user['friends'] = await this.getFriendListByUserId(userId);
     user['blocks'] = await this.getBlockListByUserId(userId);
-    user['channels'] = await this.channelService.getChannelByUserId(userId);
+    user['channels'] = await this.channelService.getChannelListByUserId(userId);
     return user;
   }
 

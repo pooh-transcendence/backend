@@ -30,39 +30,21 @@ export class ChannelService {
     );
     const channelUser: UserEntity[] = [];
     for (const userId of createChannelUserIds) {
-      const user = await this.userRepository.getUserByUserId(userId);
-      if (!user) throw new NotFoundException(`user ${userId} not found`);
-
+      // User 유효성 검사
+      await this.verifyUserForChannelJoin(userId, channel.id);
+      // ChannelUser 생성
       const channelUserDto = new CreateChanneUserDto();
       channelUserDto.userId = userId;
       channelUserDto.channelId = channel.id;
       channelUserDto.password = undefined;
       await this.channelUserRepository.createChannelUser(channelUserDto);
+      // channelUser 배열에 추가
+      const user = await this.userRepository.getUserByUserId(userId);
       channelUser.push(user);
     }
     channel['channelUser'] = channelUser;
     channel.password = undefined;
     return channel;
-  }
-
-  async addChannelUser(
-    createChannelUserDto: CreateChanneUserDto,
-  ): Promise<ChannelUserEntity> {
-    const { userId, channelId } = createChannelUserDto;
-    const user = await this.userRepository.getUserByUserId(userId);
-    const channel = await this.channelRepository.getChannelByChannelId(
-      channelId,
-    );
-    if (!user || !channel) throw new NotFoundException();
-    const channelUser = await this.channelUserRepository.createChannelUser(
-      createChannelUserDto,
-    );
-    if (!channelUser)
-      throw new HttpException(
-        `Cannot create ChannelUser ${userId}`,
-        HttpStatus.BAD_REQUEST,
-      );
-    return channelUser;
   }
 
   async banChannelUser(
@@ -103,33 +85,15 @@ export class ChannelService {
     createChannelUserDto: CreateChanneUserDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId, password } = createChannelUserDto;
-    const channel = await this.channelRepository.getChannelByChannelId(
-      channelId,
+    await this.verifyUserForChannelJoin(userId, channelId);
+    await this.verifyChannelForChannelJoin(channelId, password);
+    createChannelUserDto.password = undefined;
+    return await this.channelUserRepository.createChannelUser(
+      createChannelUserDto,
     );
-    const user = await this.channelUserRepository.findChannelUserByIds(
-      userId,
-      channelId,
-    );
-    if (!channel || channel.channelType == ChannelType.PRIVATE)
-      throw new NotFoundException(`There is no Channel ${channelId}`);
-    if (user)
-      throw new HttpException(
-        'User is already joined channel',
-        HttpStatus.BAD_GATEWAY,
-      );
-    if (
-      channel.channelType === ChannelType.PROTECTED &&
-      !(await this.channelRepository.isPasswordValid(
-        password,
-        channel.password,
-      ))
-    )
-      throw new HttpException('Password is not valid', HttpStatus.BAD_REQUEST);
-    // createChannelUserDto.password = undefined; // TODO: password는 DTO에서 exclude 처리
-    return await this.addChannelUser(createChannelUserDto);
   }
 
-  async getChannelByUserId(userId: number): Promise<ChannelEntity[]> {
+  async getChannelListByUserId(userId: number): Promise<ChannelEntity[]> {
     const channelUserList =
       await this.channelUserRepository.findChannelUserByUserId(userId);
     const channelList: ChannelEntity[] = [];
@@ -143,6 +107,55 @@ export class ChannelService {
     return channelList;
   }
 
+  async quickLeaveChannel(userId: number, channelId: number): Promise<any> {
+    return await this.channelUserRepository.deleteChannelUserByIds(
+      userId,
+      channelId,
+    );
+  }
+
+  // channel user 검사
+  async verifyUserForChannelJoin(userId: number, channelId: number) {
+    // user 존재 여부 확인
+    const user = await this.userRepository.getUserByUserId(userId);
+    if (!user) throw new NotFoundException(`There is no User ${userId}`);
+    // channel 가입 여부 확인
+    if (await this.isChannelUser(userId, channelId))
+      throw new HttpException(
+        `User ${userId} already joined Channel ${channelId}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    // Bannded User 여부 확인
+    if (await this.isBannedUser(userId, channelId))
+      throw new HttpException(
+        `User ${userId} is banned in Channel ${channelId}`,
+        HttpStatus.BAD_REQUEST,
+      );
+  }
+
+  // channel 검사
+  async verifyChannelForChannelJoin(channelId: number, password: string) {
+    // Channel 존재 여부 확인
+    const channel = await this.channelRepository.getChannelByChannelId(
+      channelId,
+    );
+    if (!channel || channel.channelType == ChannelType.PRIVATE)
+      throw new NotFoundException(`There is no Channel ${channelId}`);
+    // ChannelType이 PROTECTED인 경우 password 필수
+    if (channel.channelType === ChannelType.PROTECTED && !password) {
+      throw new HttpException('Password is required', HttpStatus.BAD_REQUEST);
+    }
+    // ChannelType이 PROTECTED인 경우 password 일치 여부 확인
+    if (
+      channel.channelType === ChannelType.PROTECTED &&
+      !(await this.channelRepository.isPasswordValid(
+        password,
+        channel.password,
+      ))
+    )
+      throw new HttpException('Password is not valid', HttpStatus.BAD_REQUEST);
+  }
+
   async isChannelUser(userId: number, channelId: number): Promise<boolean> {
     const channelUser = await this.channelUserRepository.findChannelUserByIds(
       userId,
@@ -151,10 +164,12 @@ export class ChannelService {
     return channelUser ? true : false;
   }
 
-  async quickLeaveChannel(userId: number, channelId: number): Promise<any> {
-    return await this.channelUserRepository.deleteChannelUserByIds(
+  async isBannedUser(userId: number, channelId: number): Promise<boolean> {
+    const channelUser = await this.channelUserRepository.findChannelUserByIds(
       userId,
       channelId,
     );
+    if (!channelUser) return false;
+    return channelUser.isBanned;
   }
 }
