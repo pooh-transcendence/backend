@@ -46,6 +46,14 @@ export class ChannelService {
       channelUser.push(user);
     }
     channel['channelUser'] = channelUser;
+    // channel owner를 admin으로 설정
+    const channelOwner = await this.channelUserRepository.findChannelUserByIds(
+      channel.ownerId,
+      channel.id,
+    );
+    channelOwner.isAdmin = true;
+    await this.channelUserRepository.update(channelOwner.id, channelOwner);
+    // channel password 제거
     channel.password = undefined;
     return channel;
   }
@@ -137,6 +145,27 @@ export class ChannelService {
     }
   }
 
+  async setAdmin(
+    requestUserId: number,
+    updateChannelDto: UpdateChannelDto,
+  ): Promise<ChannelUserEntity> {
+    const { userId, channelId } = updateChannelDto;
+    // requestUser Admin 여부 검사
+    await this.verifyAdminUser(requestUserId, channelId);
+    const channelUser = await this.channelUserRepository.findChannelUserByIds(
+      userId,
+      channelId,
+    );
+    // ChannelUser 유효성 검사
+    await this.verifyTargetUser(channelUser, channelId);
+    // setAdmin 처리
+    channelUser.isAdmin = true;
+    await this.channelUserRepository.update(channelUser.id, channelUser);
+    return channelUser;
+  }
+
+  /* Helper Functions */
+
   // channelUser 검사
   async verifyUserForChannelJoin(user: UserEntity, channelId: number) {
     const userId = user.id;
@@ -200,7 +229,11 @@ export class ChannelService {
     // channelUser가 이미 banned인지 검사
     this.verifyAlreadyBannedUser(channelUser);
     // channelUser가 owner가 아닌지 검사
-    await this.isChannelOwner(userId, channelId);
+    if (await this.isChannelOwner(userId, channelId))
+      throw new HttpException(
+        `User ${userId} is owner in Channel ${channelId}`,
+        HttpStatus.BAD_REQUEST,
+      );
   }
 
   // channelUser 존재 여부 검사

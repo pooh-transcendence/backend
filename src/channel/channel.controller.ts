@@ -40,7 +40,7 @@ export class ChannelController {
     channelUserIds: number[],
   ) {
     this.verifyOwnerIdMatch(user.id, channelInfo.ownerId);
-    return this.channelService.createChannel(channelInfo, channelUserIds);
+    return await this.channelService.createChannel(channelInfo, channelUserIds);
   }
 
   @Post('/join')
@@ -50,18 +50,18 @@ export class ChannelController {
     @Body() channelUserInfo: CreateChanneUserDto,
   ) {
     this.verifyOwnerIdMatch(user.id, channelUserInfo.userId);
-    return this.channelService.joinChannelUser(channelUserInfo);
+    return await this.channelService.joinChannelUser(channelUserInfo);
   }
 
   @Get('/visible')
   async getVisibleChannel() {
-    return this.channelService.getVisibleChannel();
+    return await this.channelService.getVisibleChannel();
   }
 
   @Get()
   @UseGuards(AuthGuard())
   async getChannels(@GetUser() user: UserEntity) {
-    return this.channelService.getChannelListByUserId(user.id);
+    return await this.channelService.getChannelListByUserId(user.id);
   }
 
   @Patch('/ban')
@@ -71,7 +71,7 @@ export class ChannelController {
     @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
   ) {
     this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
-    return this.channelService.banChannelUser(user.id, channelUserInfo);
+    return await this.channelService.banChannelUser(user.id, channelUserInfo);
   }
 
   @Delete('/kick')
@@ -80,8 +80,8 @@ export class ChannelController {
     @GetUser() user: UserEntity,
     @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
   ) {
-    this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId); // TODO: user.id
-    return this.channelService.kickChannelUser(user.id, channelUserInfo); // TODO: user.id
+    this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
+    return await this.channelService.kickChannelUser(user.id, channelUserInfo);
   }
 
   @Delete()
@@ -91,6 +91,15 @@ export class ChannelController {
     @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
   ) {
     return await this.channelService.leaveChannel(user.id, channelId);
+  }
+
+  @Patch('/admin')
+  @UseGuards(AuthGuard())
+  async setAdmin(
+    @GetUser() user: UserEntity,
+    @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
+  ) {
+    return await this.channelService.setAdmin(user.id, channelUserInfo);
   }
 
   verifyOwnerIdMatch(userId: number, ownerId: number) {
