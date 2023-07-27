@@ -150,8 +150,12 @@ export class ChannelService {
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
-    // requestUser Admin 여부 검사
-    await this.verifyAdminUser(requestUserId, channelId);
+    // owner만 admin 설정 가능
+    if (!(await this.isChannelOwner(requestUserId, channelId)))
+      throw new HttpException(
+        `User ${requestUserId} is not owner in Channel ${channelId}`,
+        HttpStatus.BAD_REQUEST,
+      );
     const channelUser = await this.channelUserRepository.findChannelUserByIds(
       userId,
       channelId,
@@ -240,7 +244,7 @@ export class ChannelService {
   verifyChannelUserExists(channelUser: ChannelUserEntity) {
     if (!channelUser)
       throw new HttpException(
-        `ChannelUser ${channelUser.userId} is not exists`,
+        `ChannelUser is not exists`,
         HttpStatus.BAD_REQUEST,
       );
   }

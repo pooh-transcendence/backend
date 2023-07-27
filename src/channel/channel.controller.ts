@@ -68,7 +68,7 @@ export class ChannelController {
   @UseGuards(AuthGuard())
   async banChannelUser(
     @GetUser() user: UserEntity,
-    @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
+    @Body() channelUserInfo: UpdateChannelDto,
   ) {
     this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
     return await this.channelService.banChannelUser(user.id, channelUserInfo);
@@ -78,7 +78,7 @@ export class ChannelController {
   @UseGuards(AuthGuard())
   async kickChannelUser(
     @GetUser() user: UserEntity,
-    @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
+    @Body() channelUserInfo: UpdateChannelDto,
   ) {
     this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
     return await this.channelService.kickChannelUser(user.id, channelUserInfo);
@@ -94,11 +94,16 @@ export class ChannelController {
   }
 
   @Patch('/admin')
-  @UseGuards(AuthGuard())
+  // @UseGuards(AuthGuard())
   async setAdmin(
     @GetUser() user: UserEntity,
-    @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
+    @Body() channelUserInfo: UpdateChannelDto,
   ) {
+    if (user.id === channelUserInfo.userId)
+      throw new HttpException(
+        `You can't set yourself as admin`,
+        HttpStatus.BAD_REQUEST,
+      );
     return await this.channelService.setAdmin(user.id, channelUserInfo);
   }
 
