@@ -29,8 +29,6 @@ export class UserService {
     user['friends'] = await this.getFriendListByUserId(userId);
     user['blocks'] = await this.getBlockListByUserId(userId);
     user['channels'] = await this.channelService.getChannelByUserId(userId);
-    user['accessToken'] = undefined;
-    user['refreshToken'] = undefined;
     return user;
   }
 

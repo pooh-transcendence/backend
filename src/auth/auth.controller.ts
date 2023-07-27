@@ -2,16 +2,13 @@ import {
   Body,
   Controller,
   Get,
-  NotFoundException,
-  Param,
   ParseIntPipe,
   Post,
   Req,
   Res,
-  Session,
   UseGuards,
 } from '@nestjs/common';
-import { CreateUserDto, UserProfileDto } from 'src/user/user.dto';
+import { CreateUserDto } from 'src/user/user.dto';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
 import { GetUser } from './get-user.decostor';
@@ -26,7 +23,7 @@ export class AuthController {
     private userService: UserService,
     private fortyTwoApiService: FortyTwoApiService,
   ) {}
-
+  /*
   @Post('signin')
   async signIn(@Body() createUserDto: CreateUserDto, @Res() res) {
     const { user, accessToken, refreshToken } = await this.authService.signIn(
@@ -37,7 +34,7 @@ export class AuthController {
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
     res.send(user);
   }
-
+  */
   @Post('signout')
   @UseGuards(AuthGuard())
   async signOut(@GetUser('id') user: UserEntity, @Req() req) {
@@ -56,7 +53,7 @@ export class AuthController {
     return await this.authService.generateAccessToken(userId, refreshToken);
   }
 
-  @Get('signUp')
+  @Get('signIn')
   async signUp(@Body('ftToken') token: string, @Res() res) {
     const data = await this.fortyTwoApiService.getDataFrom42API(
       token,
@@ -93,13 +90,14 @@ export class AuthController {
       userEmail,
       issuer,
     );
-    return { qrCodeURL };
+    return { qrCodeURL, userId: user.id };
   }
 
-  @Post('verify-two-factor-auth')
+  @Post('signInWithVerficationCode')
   async verifyTwoFactorAuth(
     @Body('verficationCode') verificationCode: any,
-    @Body('id', ParseIntPipe) userId: number,
+    @Body('userId', ParseIntPipe) userId: number,
+    @Res() res,
   ) {
     const userElements = await this.userService.getUserById(userId);
     const isVerified = this.authService.verifyToken(
@@ -107,7 +105,15 @@ export class AuthController {
       verificationCode,
     );
     if (isVerified) {
-      return { message: 'Two-factor authentication is verified.' };
+      const { user, accessToken, refreshToken } =
+        await this.authService.signInByUserId(userId);
+      await this.userService.updateUserElements(userId, { secret: null });
+      res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+      });
+      res.send(user);
     } else {
       return { error: 'Invalid verification code.' };
     }

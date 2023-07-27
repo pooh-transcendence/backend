@@ -43,6 +43,24 @@ export class AuthService {
     return { user, accessToken, refreshToken };
   }
 
+  async signInByUserId(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user)
+      throw new HttpException(
+        '아이디부터 만들어 주세요',
+        HttpStatus.BAD_REQUEST,
+      );
+    const accessToken =
+      user.accessToken || (await this.generateAccessTokenFree(user));
+    const refreshToken =
+      user.refreshToken || (await this.generateRefreshToken(user));
+    user.accessToken = undefined;
+    user.refreshToken = undefined;
+    return { user, accessToken, refreshToken };
+  }
+
   async generateRefreshToken(user: UserEntity): Promise<string> {
     const payload = { id: user.id };
     const refreshToken = await this.jwtService.sign(payload, {

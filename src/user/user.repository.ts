@@ -19,7 +19,12 @@ export class UserRepository extends Repository<UserEntity> {
   async getUserByUserId(userId: number): Promise<UserEntity> {
     return await this.findOne({
       where: { id: userId },
-      select: { accessToken: false, refreshToken: false },
+      select: {
+        accessToken: false,
+        refreshToken: false,
+        token: false,
+        secret: false,
+      },
     });
   }
 
