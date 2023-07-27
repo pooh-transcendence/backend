@@ -9,8 +9,8 @@ import {
   ParseIntPipe,
   Post,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-
 import { ChannelService } from './channel.service';
 import { CreateChanneUserDto } from './channel-user.dto';
 import { ChannelTypePipe as ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
@@ -20,9 +20,10 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
+import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
 
 @Controller('/channel')
-@UseGuards(AuthGuard())
+@UseInterceptors(TransformInterceptor)
 export class ChannelController {
   constructor(private channelService: ChannelService) {}
 

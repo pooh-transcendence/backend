@@ -75,9 +75,9 @@ export class ChannelService {
 
   async getVisibleChannel(): Promise<ChannelEntity[]> {
     const channels = await this.channelRepository.getAllVisibleChannel();
-    // found.forEach((channel) => { // TODO: password는 exclude이므로 undefined하지 않아도 될 듯?
-    //   channel.password = undefined;
-    // });
+    channels.forEach((channel) => {
+      channel.password = undefined;
+    });
     return channels;
   }
 
