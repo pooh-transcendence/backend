@@ -7,6 +7,7 @@ import {
   HttpStatus,
   Logger,
   ParseIntPipe,
+  Patch,
   Post,
   UseGuards,
   UseInterceptors,
@@ -14,7 +15,7 @@ import {
 import { ChannelService } from './channel.service';
 import { CreateChanneUserDto } from './channel-user.dto';
 import { ChannelTypePipe as ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
-import { CreateChannelDto } from './channel.dto';
+import { CreateChannelDto, UpdateChannelDto } from './channel.dto';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
@@ -38,7 +39,7 @@ export class ChannelController {
     @Body('channelUserIds', NumArrayPipe)
     channelUserIds: number[],
   ) {
-    this.verifyUserIdMatch(user.id, channelInfo.ownerId);
+    this.verifyOwnerIdMatch(user.id, channelInfo.ownerId);
     return this.channelService.createChannel(channelInfo, channelUserIds);
   }
 
@@ -46,10 +47,10 @@ export class ChannelController {
   @UseGuards(AuthGuard())
   async joinChannel(
     @GetUser() user: UserEntity,
-    @Body() createChannelUserDto: CreateChanneUserDto,
+    @Body() channelUserInfo: CreateChanneUserDto,
   ) {
-    this.verifyUserIdMatch(user.id, createChannelUserDto.userId);
-    return this.channelService.joinChannelUser(createChannelUserDto);
+    this.verifyOwnerIdMatch(user.id, channelUserInfo.userId);
+    return this.channelService.joinChannelUser(channelUserInfo);
   }
 
   @Get('/visible')
@@ -63,6 +64,16 @@ export class ChannelController {
     return this.channelService.getChannelListByUserId(user.id);
   }
 
+  @Patch('/ban')
+  @UseGuards(AuthGuard())
+  async banChannelUser(
+    @GetUser() user: UserEntity,
+    @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
+  ) {
+    this.verifySelfBanAttempt(user.id, channelUserInfo.userId);
+    return this.channelService.banChannelUser(user.id, channelUserInfo);
+  }
+
   @Delete()
   @UseGuards(AuthGuard())
   async quickLeaveChannel(
@@ -72,11 +83,16 @@ export class ChannelController {
     return await this.channelService.quickLeaveChannel(uesr.id, channelId);
   }
 
-  async verifyUserIdMatch(userId: number, requestUserId: number) {
-    if (userId !== requestUserId)
-      throw new HttpException(
-        `User id ${userId} does not match request user id ${requestUserId}`,
+  verifyOwnerIdMatch(userId: number, ownerId: number) {
+    if (userId !== ownerId)
+      return new HttpException(
+        `ownerId(${ownerId}) doesn't match userId(${userId})`,
         HttpStatus.BAD_REQUEST,
       );
+  }
+
+  verifySelfBanAttempt(userId: number, bannedUserId: number) {
+    if (userId === bannedUserId)
+      throw new HttpException(`You can't ban yourself`, HttpStatus.BAD_REQUEST);
   }
 }
