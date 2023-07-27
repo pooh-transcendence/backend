@@ -9,7 +9,12 @@ export class CreateChannelDto extends PickType(ChannelEntity, [
   'ownerId',
 ] as const) {}
 
-export class UpdateChannelDto extends PickType(ChannelUserEntity, [
+export class UpdateChannelDto extends PickType(ChannelEntity, [
+  'id',
+  'password',
+] as const) {}
+
+export class UpdateChannelUserDto extends PickType(ChannelUserEntity, [
   'userId',
   'channelId',
 ] as const) {}

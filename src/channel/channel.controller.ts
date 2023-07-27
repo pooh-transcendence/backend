@@ -15,7 +15,11 @@ import {
 import { ChannelService } from './channel.service';
 import { CreateChanneUserDto } from './channel-user.dto';
 import { ChannelTypePipe as ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
-import { CreateChannelDto, UpdateChannelDto } from './channel.dto';
+import {
+  CreateChannelDto,
+  UpdateChannelDto,
+  UpdateChannelUserDto,
+} from './channel.dto';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
@@ -68,7 +72,7 @@ export class ChannelController {
   @UseGuards(AuthGuard())
   async banChannelUser(
     @GetUser() user: UserEntity,
-    @Body() channelUserInfo: UpdateChannelDto,
+    @Body() channelUserInfo: UpdateChannelUserDto,
   ) {
     this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
     return await this.channelService.banChannelUser(user.id, channelUserInfo);
@@ -78,7 +82,7 @@ export class ChannelController {
   @UseGuards(AuthGuard())
   async kickChannelUser(
     @GetUser() user: UserEntity,
-    @Body() channelUserInfo: UpdateChannelDto,
+    @Body() channelUserInfo: UpdateChannelUserDto,
   ) {
     this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
     return await this.channelService.kickChannelUser(user.id, channelUserInfo);
@@ -94,10 +98,10 @@ export class ChannelController {
   }
 
   @Patch('/admin')
-  // @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard())
   async setAdmin(
     @GetUser() user: UserEntity,
-    @Body() channelUserInfo: UpdateChannelDto,
+    @Body() channelUserInfo: UpdateChannelUserDto,
   ) {
     if (user.id === channelUserInfo.userId)
       throw new HttpException(
@@ -105,6 +109,15 @@ export class ChannelController {
         HttpStatus.BAD_REQUEST,
       );
     return await this.channelService.setAdmin(user.id, channelUserInfo);
+  }
+
+  @Patch('/password')
+  @UseGuards(AuthGuard())
+  async updatePassword(
+    @GetUser() user: UserEntity,
+    @Body() channelInfo: UpdateChannelDto,
+  ) {
+    return await this.channelService.updatePassword(user.id, channelInfo);
   }
 
   verifyRequestIdMatch(userId: number, requestBodyUserId: number) {

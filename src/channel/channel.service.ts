@@ -8,7 +8,11 @@ import {
 import { ChannelRepository } from './channel.repository';
 import { ChannelUserRepository } from './channel-user.repository';
 import { CreateChanneUserDto } from './channel-user.dto';
-import { CreateChannelDto, UpdateChannelDto } from './channel.dto';
+import {
+  CreateChannelDto,
+  UpdateChannelDto,
+  UpdateChannelUserDto,
+} from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelUserEntity } from './channel-user.entity';
 import { UserRepository } from 'src/user/user.repository';
@@ -60,7 +64,7 @@ export class ChannelService {
 
   async banChannelUser(
     requestUserId: number,
-    updateChannelDto: UpdateChannelDto,
+    updateChannelDto: UpdateChannelUserDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
     // requestUser Admin 여부 검사
@@ -79,7 +83,7 @@ export class ChannelService {
 
   async kickChannelUser(
     requestUserId: number,
-    updateChannelDto: UpdateChannelDto,
+    updateChannelDto: UpdateChannelUserDto,
   ) {
     const { userId, channelId } = updateChannelDto;
     // requestUser Admin 여부 검사
@@ -147,7 +151,7 @@ export class ChannelService {
 
   async setAdmin(
     requestUserId: number,
-    updateChannelDto: UpdateChannelDto,
+    updateChannelDto: UpdateChannelUserDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
     // owner만 admin 설정 가능
@@ -166,6 +170,35 @@ export class ChannelService {
     channelUser.isAdmin = true;
     await this.channelUserRepository.update(channelUser.id, channelUser);
     return channelUser;
+  }
+
+  async updatePassword(
+    requestUserId: number,
+    updateChannelDto: UpdateChannelDto,
+  ): Promise<ChannelEntity> {
+    const { id, password } = updateChannelDto;
+    const channelId = id;
+    // owner만 password 설정 가능
+    if (!(await this.isChannelOwner(requestUserId, channelId)))
+      throw new HttpException(
+        `User ${requestUserId} is not owner in Channel ${channelId}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    const channel = await this.channelRepository.getChannelByChannelId(
+      channelId,
+    );
+    // password가 있다면 password 변경
+    if (password) {
+      // ChannelType 변경
+      channel.channelType = ChannelType.PROTECTED;
+      channel.password = password;
+    } else {
+      // ChannelType 변경
+      channel.channelType = ChannelType.PUBLIC;
+      channel.password = undefined;
+    }
+    await this.channelRepository.update(channelId, channel);
+    return channel;
   }
 
   /* Helper Functions */
