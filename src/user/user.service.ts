@@ -110,6 +110,16 @@ export class UserService {
     return this.userRepository.updateUserState(userId, userState);
   }
 
+  async updateUserElements(userId: number, elements: any) {
+    return this.userRepository.updateUserElements(userId, elements);
+  }
+
+  async getUserElementsById(userId: number, elements: any): Promise<any> {
+    const result = this.userRepository.getUserElementsById(userId, elements);
+    if (!result) throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
+    return result;
+  }
+
   async convertUserEntityToDto(
     fromId: number,
     user: UserEntity,

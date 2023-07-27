@@ -7,10 +7,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { isIBAN } from 'class-validator';
 import { CreateUserDto } from 'src/user/user.dto';
 import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
+import * as speakeasy from 'speakeasy';
 
 @Injectable()
 export class AuthService {
@@ -20,10 +22,30 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signIn(createUserDto: CreateUserDto) {
+  async signIn(createUserDto: CreateUserDto, isSignUp: boolean) {
     const { ftId } = createUserDto;
-    const user = await this.userRepository.findOne({
+    let user = await this.userRepository.findOne({
       where: { ftId },
+    });
+    if (!user && isSignUp)
+      user = await this.userService.createUser(createUserDto);
+    else
+      throw new HttpException(
+        '아이디부터 만들어 주세요',
+        HttpStatus.BAD_REQUEST,
+      );
+    const accessToken =
+      user.accessToken || (await this.generateAccessTokenFree(user));
+    const refreshToken =
+      user.refreshToken || (await this.generateRefreshToken(user));
+    user.accessToken = undefined;
+    user.refreshToken = undefined;
+    return { user, accessToken, refreshToken };
+  }
+
+  async signInByUserId(userId: number) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
     });
     if (!user)
       throw new HttpException(
@@ -72,5 +94,17 @@ export class AuthService {
     await this.userRepository.updateUserAcessToken(userId, null);
     await this.userRepository.updateUserRefreshToken(userId, null);
     await this.userRepository.updateUserState(userId, UserState.OFFLINE);
+  }
+
+  generateSecret() {
+    return speakeasy.generateSecret();
+  }
+
+  generateQRCodeURL(secret: string, user: string, issuer: string) {
+    return speakeasy.otpauthURL({ secret, label: user, issuer });
+  }
+
+  verifyToken(secret: string, token: string) {
+    return speakeasy.totp.verify({ secret, encoding: 'base32', token });
   }
 }
