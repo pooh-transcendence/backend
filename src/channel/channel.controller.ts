@@ -70,8 +70,18 @@ export class ChannelController {
     @GetUser() user: UserEntity,
     @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
   ) {
-    this.verifySelfBanAttempt(user.id, channelUserInfo.userId);
+    this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
     return this.channelService.banChannelUser(user.id, channelUserInfo);
+  }
+
+  @Delete('/kick')
+  @UseGuards(AuthGuard())
+  async kickChannelUser(
+    @GetUser() user: UserEntity,
+    @Body('channelUserInfo') channelUserInfo: UpdateChannelDto,
+  ) {
+    this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId); // TODO: user.id
+    return this.channelService.kickChannelUser(user.id, channelUserInfo); // TODO: user.id
   }
 
   @Delete()
@@ -91,8 +101,11 @@ export class ChannelController {
       );
   }
 
-  verifySelfBanAttempt(userId: number, bannedUserId: number) {
-    if (userId === bannedUserId)
-      throw new HttpException(`You can't ban yourself`, HttpStatus.BAD_REQUEST);
+  verifyNotSelfBanOrKick(fromUserId: number, toUserId: number) {
+    if (fromUserId === toUserId)
+      throw new HttpException(
+        `You can't ban or kick yourself`,
+        HttpStatus.BAD_REQUEST,
+      );
   }
 }

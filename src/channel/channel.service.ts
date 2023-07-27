@@ -53,28 +53,40 @@ export class ChannelService {
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
     // requestUser Admin 여부 검사
-    await this.verifyAdminUser(requestUserId, updateChannelDto.channelId);
+    await this.verifyAdminUser(requestUserId, channelId);
     const channelUser = await this.channelUserRepository.findChannelUserByIds(
       userId,
       channelId,
     );
     // ChannelUser 유효성 검사
-    await this.verifyBannedUser(channelUser, channelId);
-    // ChannelUser ban
+    await this.verifyTargetUser(channelUser, channelId);
+    // ban 처리
     channelUser.isBanned = true;
     await this.channelUserRepository.update(channelUser.id, channelUser);
     return channelUser;
   }
 
-  async kickChannelUser(updateChannelDto: UpdateChannelDto): Promise<void> {
+  async kickChannelUser(
+    requestUserId: number,
+    updateChannelDto: UpdateChannelDto,
+  ) {
     const { userId, channelId } = updateChannelDto;
+    // requestUser Admin 여부 검사
+    await this.verifyAdminUser(requestUserId, channelId);
+    const channelUser = await this.channelUserRepository.findChannelUserByIds(
+      userId,
+      channelId,
+    );
+    // ChannelUser 유효성 검사
+    await this.verifyTargetUser(channelUser, channelId);
+    // kick 처리
     const result = await this.channelUserRepository.delete({
       userId,
       channelId,
     });
     if (result.affected === 0)
       throw new HttpException(
-        `Cannot delete User ${userId}`,
+        `Cannot delete user ${userId}`,
         HttpStatus.BAD_REQUEST,
       );
   }
@@ -121,7 +133,7 @@ export class ChannelService {
     );
   }
 
-  // channel user 검사
+  // channelUser 검사
   async verifyUserForChannelJoin(user: UserEntity, channelId: number) {
     if (!user) throw new NotFoundException(`There is no User ${user.id}`);
     const channelUser = await this.channelUserRepository.findChannelUserByIds(
@@ -181,37 +193,28 @@ export class ChannelService {
       );
   }
 
-  async verifyBannedUser(channelUser: ChannelUserEntity, channelId: number) {
-    // ChannelUser 존재 여부 확인
+  async verifyTargetUser(channelUser: ChannelUserEntity, channelId: number) {
+    const userId = channelUser.userId;
+    // channelUser 존재 여부 검사
     if (!channelUser)
       throw new HttpException(
-        `User ${channelUser.id} is not joined in Channel ${channelId}`,
+        `User ${userId} is not joined in Channel ${channelId}`,
         HttpStatus.BAD_REQUEST,
       );
-    // ChannelUser가 이미 banned인 경우
+    // channelUser가 이미 banned인지 검사
     if (channelUser.isBanned)
       throw new HttpException(
-        `User ${channelUser.id} is already banned in Channel ${channelId}`,
+        `User ${userId} is already banned in Channel ${channelId}`,
         HttpStatus.BAD_REQUEST,
       );
-    // ChannelUser가 owner인 경우
+    // channelUser가 owner가 아닌지 검사
     const channel = await this.channelRepository.getChannelByChannelId(
       channelId,
     );
-    if (channelUser.userId === channel.ownerId)
+    if (channel.ownerId === channelUser.userId)
       throw new HttpException(
-        `You cannot ban owner of Channel ${channelId}`,
+        `User ${userId} is owner of Channel ${channelId}`,
         HttpStatus.BAD_REQUEST,
       );
   }
-
-  // async isBannedUser(channelUser: ChannelUserEntity): Promise<boolean> {
-  //   if (!channelUser) return false;
-  //   return channelUser.isBanned;
-  // }
-
-  // async isChannelAdmin(channelUser: ChannelUserEntity): Promise<boolean> {
-  //   if (!channelUser) return false;
-  //   return channelUser.isAdmin;
-  // }
 }
