@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Logger,
   ParseIntPipe,
   Post,
@@ -35,7 +37,7 @@ export class ChannelController {
     @Body('channelUserIds', NumArrayPipe)
     channelUserIds: number[],
   ) {
-    channelInfo.ownerId = user.id;
+    this.verifyUserIdMatch(user.id, channelInfo.ownerId);
     return this.channelService.createChannel(channelInfo, channelUserIds);
   }
 
@@ -45,7 +47,7 @@ export class ChannelController {
     @GetUser() user: UserEntity,
     @Body() createChannelUserDto: CreateChanneUserDto,
   ) {
-    createChannelUserDto.userId = user.id;
+    this.verifyUserIdMatch(user.id, createChannelUserDto.userId);
     return this.channelService.joinChannelUser(createChannelUserDto);
   }
 
@@ -67,5 +69,13 @@ export class ChannelController {
     @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
   ) {
     return await this.channelService.quickLeaveChannel(uesr.id, channelId);
+  }
+
+  async verifyUserIdMatch(userId: number, requestUserId: number) {
+    if (userId !== requestUserId)
+      throw new HttpException(
+        `User id ${userId} does not match request user id ${requestUserId}`,
+        HttpStatus.BAD_REQUEST,
+      );
   }
 }
