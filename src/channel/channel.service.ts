@@ -176,8 +176,7 @@ export class ChannelService {
     requestUserId: number,
     updateChannelDto: UpdateChannelDto,
   ): Promise<ChannelEntity> {
-    const { id, password } = updateChannelDto;
-    const channelId = id;
+    const { channelId, password } = updateChannelDto;
     // owner만 password 설정 가능
     if (!(await this.isChannelOwner(requestUserId, channelId)))
       throw new HttpException(
@@ -198,6 +197,7 @@ export class ChannelService {
       channel.password = undefined;
     }
     await this.channelRepository.update(channelId, channel);
+    channel.password = undefined;
     return channel;
   }
 

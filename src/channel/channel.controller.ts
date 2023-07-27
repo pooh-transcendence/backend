@@ -112,12 +112,12 @@ export class ChannelController {
   }
 
   @Patch('/password')
-  @UseGuards(AuthGuard())
+  // @UseGuards(AuthGuard())
   async updatePassword(
     @GetUser() user: UserEntity,
     @Body() channelInfo: UpdateChannelDto,
   ) {
-    return await this.channelService.updatePassword(user.id, channelInfo);
+    return await this.channelService.updatePassword(1, channelInfo);
   }
 
   verifyRequestIdMatch(userId: number, requestBodyUserId: number) {
