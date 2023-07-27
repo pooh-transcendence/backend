@@ -19,7 +19,12 @@ export class UserRepository extends Repository<UserEntity> {
   async getUserByUserId(userId: number): Promise<UserEntity> {
     return await this.findOne({
       where: { id: userId },
-      select: { accessToken: false, refreshToken: false },
+      select: {
+        accessToken: false,
+        refreshToken: false,
+        token: false,
+        secret: false,
+      },
     });
   }
 
@@ -71,5 +76,14 @@ export class UserRepository extends Repository<UserEntity> {
   async updateUserState(userId: number, userState: UserState) {
     const result = await this.update({ id: userId }, { userState: userState });
     if (result.affected != 1) throw new InternalServerErrorException();
+  }
+
+  async updateUserElements(userId: number, elements: any) {
+    const result = await this.update({ id: userId }, elements);
+    if (result.affected != 1) throw new InternalServerErrorException();
+  }
+
+  async getUserElementsById(userId: number, elements: any) {
+    return this.findOne({ where: { id: userId }, select: elements });
   }
 }

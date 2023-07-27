@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { IsEmail, IsIn, IsNumber, IsString } from 'class-validator';
 import { CommonEntity } from 'src/common/common.entity';
 import { GameEntity } from 'src/game/game.entity';
@@ -60,4 +61,8 @@ export class UserEntity extends CommonEntity {
   refreshToken!: string | null;
   //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
   //Join :
+
+  @Column({ nullable: true })
+  @Exclude()
+  secret: string;
 }
