@@ -39,7 +39,7 @@ export class ChannelController {
     @Body('channelUserIds', NumArrayPipe)
     channelUserIds: number[],
   ) {
-    this.verifyOwnerIdMatch(user.id, channelInfo.ownerId);
+    this.verifyRequestIdMatch(user.id, channelInfo.ownerId);
     return await this.channelService.createChannel(channelInfo, channelUserIds);
   }
 
@@ -49,7 +49,7 @@ export class ChannelController {
     @GetUser() user: UserEntity,
     @Body() channelUserInfo: CreateChanneUserDto,
   ) {
-    this.verifyOwnerIdMatch(user.id, channelUserInfo.userId);
+    this.verifyRequestIdMatch(user.id, channelUserInfo.userId);
     return await this.channelService.joinChannelUser(channelUserInfo);
   }
 
@@ -102,10 +102,10 @@ export class ChannelController {
     return await this.channelService.setAdmin(user.id, channelUserInfo);
   }
 
-  verifyOwnerIdMatch(userId: number, ownerId: number) {
-    if (userId !== ownerId)
+  verifyRequestIdMatch(userId: number, requestBodyUserId: number) {
+    if (userId !== requestBodyUserId)
       return new HttpException(
-        `ownerId(${ownerId}) doesn't match userId(${userId})`,
+        `Id in request body doesn't match with id in request header`,
         HttpStatus.BAD_REQUEST,
       );
   }
