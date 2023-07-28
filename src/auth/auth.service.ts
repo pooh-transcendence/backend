@@ -22,18 +22,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signIn(createUserDto: CreateUserDto, isSignUp: boolean) {
+  async signIn(createUserDto: CreateUserDto) {
     const { ftId } = createUserDto;
     let user = await this.userRepository.findOne({
       where: { ftId },
     });
-    if (!user && isSignUp)
-      user = await this.userService.createUser(createUserDto);
-    else
-      throw new HttpException(
-        '아이디부터 만들어 주세요',
-        HttpStatus.BAD_REQUEST,
-      );
+    if (!user) user = await this.userRepository.createUser(createUserDto);
     const accessToken =
       user.accessToken || (await this.generateAccessTokenFree(user));
     const refreshToken =
