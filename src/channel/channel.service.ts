@@ -49,6 +49,7 @@ export class ChannelService {
       // user 데이터 필터링
       user.winnerGame = undefined;
       user.loserGame = undefined;
+      user.secret = undefined;
       // channelUser 배열에 추가
       channelUser.push(user);
     }

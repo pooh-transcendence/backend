@@ -26,6 +26,7 @@ export class UserRepository extends Repository<UserEntity> {
         winScore: true,
         loseScore: true,
         userState: true,
+        secret: true,
       },
     });
   }
@@ -46,10 +47,9 @@ export class UserRepository extends Repository<UserEntity> {
       await this.save(user);
     } catch (error) {
       if (error.code === '23505') {
-        throw new ConflictException('Existing UserEntity');
+        throw new ConflictException(error.message);
       } else {
-        console.log(error);
-        throw new InternalServerErrorException();
+        throw new InternalServerErrorException(error.message);
       }
     }
     return user;
