@@ -53,25 +53,36 @@ export class AuthController {
     return await this.authService.generateAccessToken(userId, refreshToken);
   }
 
-  @Get('signIn')
-  async signUp(@Body('ftToken') token: string, @Res() res) {
+  @Post('signIn')
+  async signUp(@Body('ftToken') token: string) {
     const data = await this.fortyTwoApiService.getDataFrom42API(
       token,
       '/v2/me',
     );
     const createUserDto: CreateUserDto = {
-      ftId: data.id + data.id,
-      nickname: data.user,
+      ftId: data.id,
+      nickname: data.login,
       email: data.email,
       token: token,
     };
-    const { user } = await this.authService.signIn(createUserDto, true);
+    const { user } = await this.authService.signIn(createUserDto);
     /*
     res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
     res.send(user);
     */
-    return await this.setupTwoFactorAuth(user);
+    const secret = this.authService.generateSecret();
+    await this.userService.updateUserElements(user.id, {
+      secret: secret.base32,
+    });
+    const userEmail = user.email;
+    const issuer = user.nickname;
+    const qrCodeURL = this.authService.generateQRCodeURL(
+      secret.ascii,
+      userEmail,
+      issuer,
+    );
+    return { qrCodeURL, userId: user.id };
   }
 
   async setupTwoFactorAuth(user: UserEntity) {
@@ -115,7 +126,7 @@ export class AuthController {
       });
       res.send(user);
     } else {
-      return { error: 'Invalid verification code.' };
+      res.send({ error: 'Invalid verification code.' });
     }
   }
 }
