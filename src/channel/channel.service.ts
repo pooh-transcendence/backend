@@ -46,6 +46,9 @@ export class ChannelService {
       channelUserDto.channelId = channel.id;
       channelUserDto.password = undefined;
       await this.channelUserRepository.createChannelUser(channelUserDto);
+      // user 데이터 필터링
+      user.winnerGame = undefined;
+      user.loserGame = undefined;
       // channelUser 배열에 추가
       channelUser.push(user);
     }

@@ -20,10 +20,12 @@ export class UserRepository extends Repository<UserEntity> {
     return await this.findOne({
       where: { id: userId },
       select: {
-        accessToken: false,
-        refreshToken: false,
-        token: false,
-        secret: false,
+        id: true,
+        nickname: true,
+        avatar: true,
+        winScore: true,
+        loseScore: true,
+        userState: true,
       },
     });
   }
