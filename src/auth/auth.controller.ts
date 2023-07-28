@@ -6,7 +6,9 @@ import {
   Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { CreateUserDto } from 'src/user/user.dto';
 import { AuthService } from './auth.service';
@@ -15,8 +17,10 @@ import { GetUser } from './get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
 import { FortyTwoApiService } from './fortytwo.service';
+import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
 
 @Controller('auth')
+@UseInterceptors(TransformInterceptor)
 export class AuthController {
   constructor(
     private authService: AuthService,
@@ -126,7 +130,7 @@ export class AuthController {
       });
       res.send(user);
     } else {
-      res.send({ error: 'Invalid verification code.' });
+      throw new UnauthorizedException();
     }
   }
 }
