@@ -1,4 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import axios from 'axios';
 
 @Injectable()
@@ -11,6 +16,7 @@ export class FortyTwoApiService {
     params?: Record<string, any>,
   ) {
     try {
+      console.log('token', token);
       const response = await axios.get(`${this.baseUrl}${endpoint}`, {
         params,
         headers: {
@@ -19,7 +25,10 @@ export class FortyTwoApiService {
       });
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to fetch data from 42 API: ${error.message}`);
+      throw new HttpException(
+        `Failed to fetch data from 42 API: ${error.message}`,
+        400,
+      );
     }
   }
 }

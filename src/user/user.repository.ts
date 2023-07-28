@@ -46,6 +46,7 @@ export class UserRepository extends Repository<UserEntity> {
       if (error.code === '23505') {
         throw new ConflictException('Existing UserEntity');
       } else {
+        console.log(error);
         throw new InternalServerErrorException();
       }
     }
