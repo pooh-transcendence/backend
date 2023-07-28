@@ -129,6 +129,8 @@ export class AuthController {
         httpOnly: true,
         secure: true,
       });
+      user.secret = null;
+      user.token = null;
       res.send(user);
     } else {
       throw new UnauthorizedException();

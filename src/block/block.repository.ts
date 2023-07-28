@@ -30,8 +30,8 @@ export class BlockRepository extends Repository<BlockEntity> {
   }
 
   async deleteBlock(deleteBlockDto: BlockDto) {
-    const result = await this.delete(deleteBlockDto);
-    if (result.affected === 0)
+    const result = await this.softDelete(deleteBlockDto);
+    if (result.affected !== 1)
       throw new NotFoundException(`Block ${deleteBlockDto} not found`);
   }
 
