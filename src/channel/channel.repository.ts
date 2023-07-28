@@ -43,7 +43,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
         throw new ConflictException('Channel is already exists');
       } else {
         this.logger.debug(error);
-        throw new InternalServerErrorException();
+        throw new InternalServerErrorException(error.message);
       }
     }
     return channel;
@@ -72,5 +72,13 @@ export class ChannelRepository extends Repository<ChannelEntity> {
 
   async getChannelByChannelId(channelId: number): Promise<ChannelEntity> {
     return await this.findOneBy({ id: channelId });
+  }
+
+  async deleteChannelByChannelId(channelId: number) {
+    const result = await this.softDelete({ id: channelId });
+    if (result.affected !== 1)
+      throw new InternalServerErrorException(
+        `Channel delete failed. Channel id: ${channelId}`,
+      );
   }
 }

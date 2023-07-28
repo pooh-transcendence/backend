@@ -20,10 +20,13 @@ export class UserRepository extends Repository<UserEntity> {
     return await this.findOne({
       where: { id: userId },
       select: {
-        accessToken: false,
-        refreshToken: false,
-        token: false,
-        secret: false,
+        id: true,
+        nickname: true,
+        avatar: true,
+        winScore: true,
+        loseScore: true,
+        userState: true,
+        secret: true,
       },
     });
   }
@@ -44,18 +47,19 @@ export class UserRepository extends Repository<UserEntity> {
       await this.save(user);
     } catch (error) {
       if (error.code === '23505') {
-        throw new ConflictException('Existing UserEntity');
+        throw new ConflictException(error.message);
       } else {
-        console.log(error);
-        throw new InternalServerErrorException();
+        throw new InternalServerErrorException(error.message);
       }
     }
     return user;
   }
 
   async deleteUser(userId: number) {
-    const result = await this.delete({ id: userId });
-    if (result.affected != 0) throw new InternalServerErrorException();
+    const result = await this.softDelete({ id: userId });
+    if (result.affected !== 1)
+      throw new InternalServerErrorException(`
+      UserEntity delete failed. UserEntity id: ${userId}`);
   }
 
   async updateUserAcessToken(userId: number, accessToken?: string | null) {
@@ -63,7 +67,7 @@ export class UserRepository extends Repository<UserEntity> {
       { id: userId },
       { accessToken: accessToken },
     );
-    if (result.affected != 1) throw new InternalServerErrorException();
+    if (result.affected !== 1) throw new InternalServerErrorException();
   }
 
   async updateUserRefreshToken(userId: number, refreshToken?: string | null) {
@@ -71,17 +75,17 @@ export class UserRepository extends Repository<UserEntity> {
       { id: userId },
       { refreshToken: refreshToken },
     );
-    if (result.affected != 1) throw new InternalServerErrorException();
+    if (result.affected !== 1) throw new InternalServerErrorException();
   }
 
   async updateUserState(userId: number, userState: UserState) {
     const result = await this.update({ id: userId }, { userState: userState });
-    if (result.affected != 1) throw new InternalServerErrorException();
+    if (result.affected !== 1) throw new InternalServerErrorException();
   }
 
   async updateUserElements(userId: number, elements: any) {
     const result = await this.update({ id: userId }, elements);
-    if (result.affected != 1) throw new InternalServerErrorException();
+    if (result.affected !== 1) throw new InternalServerErrorException();
   }
 
   async getUserElementsById(userId: number, elements: any) {

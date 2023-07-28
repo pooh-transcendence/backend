@@ -1,7 +1,5 @@
 import { CommonEntity } from 'src/common/common.entity';
-import { UserEntity } from 'src/user/user.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
-import { ChannelUserEntity } from './channel-user.entity';
+import { Column, Entity } from 'typeorm';
 import {
   IsIn,
   IsNotEmpty,
