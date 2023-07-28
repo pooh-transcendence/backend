@@ -18,6 +18,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
 import { FortyTwoApiService } from './fortytwo.service';
 import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @Controller('auth')
 @UseInterceptors(TransformInterceptor)
@@ -108,10 +109,10 @@ export class AuthController {
     return { qrCodeURL, userId: user.id };
   }
 
-  @Post('signInWithVerficationCode')
+  @Post('signInWithVerificationCode')
   async verifyTwoFactorAuth(
-    @Body('verficationCode') verificationCode: any,
-    @Body('userId', ParseIntPipe) userId: number,
+    @Body('verificationCode') verificationCode: any,
+    @Body('userId', ParseIntPipe, PositiveIntPipe) userId: number,
     @Res() res,
   ) {
     const userElements = await this.userService.getUserById(userId);
