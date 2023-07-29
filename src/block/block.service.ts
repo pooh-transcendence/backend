@@ -23,16 +23,16 @@ export class BlockService {
     // validation
     const fromUser = await this.userRepository.findOneBy({ id: from });
     const toUser = await this.userRepository.findOneBy({ id: to });
-    if (!fromUser) throw new NotFoundException(`From user ${from} not found`);
-    if (!toUser) throw new NotFoundException(`To user ${to} not found`);
-    if (from === to) throw new NotFoundException('Cannot block yourself');
+    if (!fromUser) throw new NotFoundException(`fromUser ${from} not found`);
+    if (!toUser) throw new NotFoundException(`toUser ${to} not found`);
     if (await this.isBlocked(from, to))
       throw new HttpException(
         `Already blocked user ${to}`,
         HttpStatus.BAD_REQUEST,
       );
-    if (await this.friendRepository.isFriend(from, to))
-      throw new NotFoundException(`Friend user ${to}`);
+    if (await this.friendRepository.isFriend(from, to)) {
+      this.friendRepository.deleteFriend({ from, to });
+    }
 
     return await this.blockRepository.createBlock(createBlockDto);
   }
@@ -48,9 +48,4 @@ export class BlockService {
   async getBlockListByFromId(id: number): Promise<{ to: number }[]> {
     return await this.blockRepository.getBlockListByFromId(id);
   }
-
-  // // TODO: 필요한가?
-  // async getAllBlock(): Promise<BlockEntity[]> {
-  //   return this.blockRepository.getAllBlock();
-  // }
 }

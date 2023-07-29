@@ -33,8 +33,9 @@ export class FriendService {
         `Already friend with user ${to}`,
         HttpStatus.BAD_REQUEST,
       );
-    if (await this.blockRepository.isBlocked(from, to))
-      throw new HttpException(`Blocked user ${to}`, HttpStatus.BAD_REQUEST);
+    if (await this.blockRepository.isBlocked(from, to)) {
+      this.blockRepository.deleteBlock({ from, to });
+    }
 
     return await this.friendRepository.createFriend(createFriendDto);
   }
