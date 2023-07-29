@@ -14,6 +14,7 @@ import { GetUser } from 'src/auth/get-user.decostor';
 import { UserEntity } from './user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { UserProfileDto } from './user.dto';
+import { ChannelEntity } from 'src/channel/channel.entity';
 
 @Controller('user')
 @UseInterceptors(TransformInterceptor)
@@ -31,13 +32,17 @@ export class UserController {
 
   // 유저의 친구 목록을 가져온다.
   @Get('/friend')
-  async getFriendListByUserId(@GetUser() user: UserEntity) {
+  async getFriendListByUserId(
+    @GetUser() user: UserEntity,
+  ): Promise<UserEntity[]> {
     return await this.userService.getFriendListByUserId(user.id);
   }
 
   // 유저의 채널 목록을 가져온다.
   @Get('/channel')
-  async getChannelListByUserId(@GetUser() user: UserEntity) {
+  async getChannelListByUserId(
+    @GetUser() user: UserEntity,
+  ): Promise<ChannelEntity[]> {
     return await this.userService.getChannelListByUserId(user.id);
   }
 
@@ -62,8 +67,4 @@ export class UserController {
   ): Promise<UserProfileDto> {
     return await this.userService.getUserProfileById(requestUser.id, userId);
   }
-
-  // async createUser(@Body() createUserDto: CreateUserDto) {
-  //   return await this.userService.createUser(createUserDto);
-  // }
 }
