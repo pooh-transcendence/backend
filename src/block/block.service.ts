@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { BlockRepository } from './block.repository';
 import { BlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
@@ -22,16 +27,18 @@ export class BlockService {
     if (!toUser) throw new NotFoundException(`To user ${to} not found`);
     if (from === to) throw new NotFoundException('Cannot block yourself');
     if (await this.isBlocked(from, to))
-      throw new NotFoundException(`Already blocked user ${to}`);
+      throw new HttpException(
+        `Already blocked user ${to}`,
+        HttpStatus.BAD_REQUEST,
+      );
     if (await this.friendRepository.isFriend(from, to))
       throw new NotFoundException(`Friend user ${to}`);
 
     return await this.blockRepository.createBlock(createBlockDto);
   }
 
-  async deleteBlock(deleteBlockDto: BlockDto): Promise<string> {
-    await this.blockRepository.deleteBlock(deleteBlockDto);
-    return `Successfully unblocked user ${deleteBlockDto.to}`;
+  async deleteBlock(deleteBlockDto: BlockDto) {
+    return await this.blockRepository.deleteBlock(deleteBlockDto);
   }
 
   async isBlocked(from: number, to: number): Promise<boolean> {
