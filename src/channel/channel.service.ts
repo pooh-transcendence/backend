@@ -123,20 +123,6 @@ export class ChannelService {
     );
   }
 
-  async getChannelListByUserId(userId: number): Promise<ChannelEntity[]> {
-    const channelUserList =
-      await this.channelUserRepository.findChannelUserByUserId(userId);
-    const channelList: ChannelEntity[] = [];
-    for (const channelUser of channelUserList) {
-      const channel = await this.channelRepository.getChannelByChannelId(
-        channelUser.channelId,
-      );
-      channel.password = undefined;
-      channelList.push(channel);
-    }
-    return channelList;
-  }
-
   async leaveChannel(userId: number, channelId: number): Promise<any> {
     const channelUser = await this.channelUserRepository.findChannelUserByIds(
       userId,
@@ -187,9 +173,7 @@ export class ChannelService {
         `User ${requestUserId} is not owner in Channel ${channelId}`,
         HttpStatus.BAD_REQUEST,
       );
-    const channel = await this.channelRepository.getChannelByChannelId(
-      channelId,
-    );
+    const channel = await this.getChannelByChannelId(channelId);
     // password가 있다면 password 변경
     if (password) {
       // ChannelType 변경
@@ -202,6 +186,16 @@ export class ChannelService {
     }
     await this.channelRepository.update(channelId, channel);
     channel.password = undefined;
+    return channel;
+  }
+
+  // channel 정보 반환
+  async getChannelByChannelId(channelId: number): Promise<ChannelEntity> {
+    const channel = await this.channelRepository.getChannelByChannelId(
+      channelId,
+    );
+    if (!channel)
+      throw new NotFoundException(`There is no Channel ${channelId}`);
     return channel;
   }
 
@@ -229,9 +223,7 @@ export class ChannelService {
   // channel 검사
   async verifyChannelForChannelJoin(channelId: number, password: string) {
     // Channel 존재 여부 확인
-    const channel = await this.channelRepository.getChannelByChannelId(
-      channelId,
-    );
+    const channel = await this.getChannelByChannelId(channelId);
     if (!channel || channel.channelType == ChannelType.PRIVATE)
       throw new NotFoundException(`There is no Channel ${channelId}`);
     // ChannelType이 PROTECTED인 경우 password 필수
@@ -280,10 +272,7 @@ export class ChannelService {
   // channelUser 존재 여부 검사
   verifyChannelUserExists(channelUser: ChannelUserEntity) {
     if (!channelUser)
-      throw new HttpException(
-        `ChannelUser is not exists`,
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new NotFoundException(`There is no ChannelUser ${channelUser.id}`);
   }
 
   // channelUser가 이미 banned인지 검사
@@ -297,14 +286,7 @@ export class ChannelService {
 
   // channel owner 여부 반환
   async isChannelOwner(userId: number, channelId: number): Promise<boolean> {
-    const channel = await this.channelRepository.getChannelByChannelId(
-      channelId,
-    );
-    if (!channel)
-      throw new HttpException(
-        `Channel ${channelId} is not exists`,
-        HttpStatus.BAD_REQUEST,
-      );
+    const channel = await this.getChannelByChannelId(channelId);
     return channel.ownerId === userId;
   }
 }
