@@ -203,9 +203,9 @@ export class ChannelService {
 
   // channelUser 검사
   async verifyUserForChannelJoin(user: UserEntity, channelId: number) {
-    const userId = user.id;
     // User 존재 여부 확인
-    if (!user) throw new NotFoundException(`There is no User ${userId}`);
+    if (!user) throw new NotFoundException(`user not found`);
+    const userId = user.id;
     const channelUser = await this.channelUserRepository.findChannelUserByIds(
       userId,
       channelId,
@@ -256,9 +256,9 @@ export class ChannelService {
   }
 
   async verifyTargetUser(channelUser: ChannelUserEntity, channelId: number) {
-    const userId = channelUser.userId;
     // channelUser 존재 여부 검사
     this.verifyChannelUserExists(channelUser);
+    const userId = channelUser.userId;
     // channelUser가 이미 banned인지 검사
     this.verifyAlreadyBannedUser(channelUser);
     // channelUser가 owner가 아닌지 검사
@@ -271,8 +271,7 @@ export class ChannelService {
 
   // channelUser 존재 여부 검사
   verifyChannelUserExists(channelUser: ChannelUserEntity) {
-    if (!channelUser)
-      throw new NotFoundException(`There is no ChannelUser ${channelUser.id}`);
+    if (!channelUser) throw new NotFoundException(`channelUser not found`);
   }
 
   // channelUser가 이미 banned인지 검사
