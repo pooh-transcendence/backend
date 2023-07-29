@@ -20,13 +20,6 @@ export class FriendController {
 
   private logger = new Logger(FriendController.name);
 
-  // @Get()
-  // async getFriendList(
-  //   @GetUser('id') userId: number,
-  // ): Promise<UserProfileDto[]> {
-  //   return await this.friendService.getFriendListByUserId(userId);
-  // }
-
   @Delete()
   async deleteFriend(
     @GetUser() user: UserEntity,
