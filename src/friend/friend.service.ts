@@ -1,5 +1,11 @@
 import { BlockRepository } from 'src/block/block.repository';
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { FriendEntity } from './friend.entity';
 import { FriendRepository } from './friend.respository';
 import { UserRepository } from 'src/user/user.repository';
@@ -20,14 +26,15 @@ export class FriendService {
     // validation
     const fromUser = await this.userRepository.findOneBy({ id: from });
     const toUser = await this.userRepository.findOneBy({ id: to });
-    if (!fromUser) throw new NotFoundException(`From user ${from} not found`);
-    if (!toUser) throw new NotFoundException(`To user ${to} not found`);
-    if (from === to)
-      throw new NotFoundException('Cannot be friend with yourself');
+    if (!fromUser) throw new NotFoundException(`fromUser ${from} not found`);
+    if (!toUser) throw new NotFoundException(`toUser ${to} not found`);
     if (await this.isFriend(from, to))
-      throw new NotFoundException(`Already friend with user ${to}`);
+      throw new HttpException(
+        `Already friend with user ${to}`,
+        HttpStatus.BAD_REQUEST,
+      );
     if (await this.blockRepository.isBlocked(from, to))
-      throw new NotFoundException(`Blocked user ${to}`);
+      throw new HttpException(`Blocked user ${to}`, HttpStatus.BAD_REQUEST);
 
     return await this.friendRepository.createFriend(createFriendDto);
   }
