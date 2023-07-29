@@ -62,12 +62,6 @@ export class ChannelController {
     return await this.channelService.getVisibleChannel();
   }
 
-  @Get()
-  @UseGuards(AuthGuard())
-  async getChannels(@GetUser() user: UserEntity) {
-    return await this.channelService.getChannelListByUserId(user.id);
-  }
-
   @Patch('/ban')
   @UseGuards(AuthGuard())
   async banChannelUser(
@@ -112,18 +106,18 @@ export class ChannelController {
   }
 
   @Patch('/password')
-  // @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard())
   async updatePassword(
     @GetUser() user: UserEntity,
     @Body() channelInfo: UpdateChannelDto,
   ) {
-    return await this.channelService.updatePassword(1, channelInfo);
+    return await this.channelService.updatePassword(user.id, channelInfo);
   }
 
   verifyRequestIdMatch(userId: number, requestBodyUserId: number) {
     if (userId !== requestBodyUserId)
-      return new HttpException(
-        `Id in request body doesn't match with id in request header`,
+      throw new HttpException(
+        `Id in request body doesn't match with your id`,
         HttpStatus.BAD_REQUEST,
       );
   }
