@@ -1,5 +1,5 @@
 import { Exclude } from 'class-transformer';
-import { IsEmail, IsIn, IsNumber, IsString } from 'class-validator';
+import { IsEmail, IsIn, IsNumber, IsString, Length } from 'class-validator';
 import { CommonEntity } from 'src/common/common.entity';
 import { GameEntity } from 'src/game/game.entity';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
@@ -20,6 +20,7 @@ export class UserEntity extends CommonEntity {
 
   @Column()
   @IsString()
+  @Length(2, 10)
   nickname: string;
 
   @Column({ default: 0 })

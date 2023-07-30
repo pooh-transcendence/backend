@@ -1,9 +1,11 @@
 import {
+  Body,
   Controller,
   Get,
   Logger,
   Param,
   ParseIntPipe,
+  Patch,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -66,5 +68,23 @@ export class UserController {
     @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
   ): Promise<UserProfileDto> {
     return await this.userService.getUserProfileById(requestUser.id, userId);
+  }
+
+  // 유저의 아바타 변경
+  @Patch('/avatar')
+  async updateUserAvatar(
+    @GetUser() user: UserEntity,
+    @Body('avatar') avatar: string,
+  ) {
+    return await this.userService.updateUserElements(user.id, { avatar });
+  }
+
+  // 유저의 닉네임 변경
+  @Patch('/nickname')
+  async updateUserNickname(
+    @GetUser() user: UserEntity,
+    @Body('nickname') nickname: string,
+  ) {
+    return await this.userService.updateUserElements(user.id, { nickname });
   }
 }
