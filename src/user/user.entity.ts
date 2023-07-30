@@ -3,7 +3,7 @@ import { IsEmail, IsIn, IsNumber, IsString } from 'class-validator';
 import { CommonEntity } from 'src/common/common.entity';
 import { GameEntity } from 'src/game/game.entity';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
-
+import { Socket } from 'socket.io';
 export enum UserState {
   OFFLINE = 'OFFLINE',
   ONLINE = 'ONLINE',
@@ -65,4 +65,8 @@ export class UserEntity extends CommonEntity {
   @Column({ nullable: true })
   @Exclude()
   secret: string;
+
+  @Column({ nullable: true })
+  @Exclude()
+  socket: Socket;
 }
