@@ -8,6 +8,8 @@ export enum UserState {
   OFFLINE = 'OFFLINE',
   ONLINE = 'ONLINE',
   INGAME = 'INGAME',
+  OFFCHAT = 'OFFCHAT',
+  ONCHAT = 'ONCHAT',
 }
 
 @Entity()
