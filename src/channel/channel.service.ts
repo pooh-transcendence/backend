@@ -288,4 +288,28 @@ export class ChannelService {
     const channel = await this.getChannelByChannelId(channelId);
     return channel.ownerId === userId;
   }
+
+  async isUserInChannel(userId: number, channelId: number): Promise<boolean> {
+    const result = await this.channelUserRepository.findChannelUserByIds(
+      userId,
+      channelId,
+    );
+    if (!result || result.isBanned) return false;
+    return true;
+  }
+
+  async getChannellUserSocketByChannelId(channelId: number): Promise<string[]> {
+    const channelUser =
+      await this.channelUserRepository.findChannelUserByChannelId(channelId);
+    const userSocketId = [];
+    for (const user of channelUser) {
+      userSocketId.push(
+        await this.userRepository.findOne({
+          where: { id: user.userId },
+          select: ['socketId'],
+        }),
+      );
+    }
+    return userSocketId;
+  }
 }

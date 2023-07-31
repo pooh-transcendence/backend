@@ -8,6 +8,8 @@ export enum UserState {
   OFFLINE = 'OFFLINE',
   ONLINE = 'ONLINE',
   INGAME = 'INGAME',
+  OFFCHAT = 'OFFCHAT',
+  ONCHAT = 'ONCHAT',
 }
 
 @Entity()
@@ -66,4 +68,8 @@ export class UserEntity extends CommonEntity {
   @Column({ nullable: true })
   @Exclude()
   secret: string;
+
+  @Column({ nullable: true })
+  @Exclude()
+  socketId: string;
 }
