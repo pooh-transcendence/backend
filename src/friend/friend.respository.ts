@@ -47,8 +47,10 @@ export class FriendRepository extends Repository<FriendEntity> {
 
   async deleteFriend(deleteFriendDto: FriendDto) {
     const result = await this.delete(deleteFriendDto);
-    if (result.affected === 0)
-      throw new ConflictException(`Friend ${deleteFriendDto} not found`);
+    if (result.affected !== 1)
+      throw new ConflictException(
+        `Friend ${deleteFriendDto.from}, ${deleteFriendDto.to} not found`,
+      );
   }
 
   async isFriend(from: number, to: number): Promise<boolean> {

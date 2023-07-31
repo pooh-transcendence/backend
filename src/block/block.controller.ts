@@ -7,6 +7,8 @@ import {
   ParseIntPipe,
   UseGuards,
   UseInterceptors,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { BlockService } from './block.service';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
@@ -33,6 +35,8 @@ export class BlockController {
     @GetUser() user: UserEntity,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
+    if (user.id === bannedUserId)
+      throw new HttpException(`Can't unblock yourself`, HttpStatus.BAD_REQUEST);
     return await this.blockService.deleteBlock({
       from: user.id,
       to: bannedUserId,
@@ -44,6 +48,8 @@ export class BlockController {
     @GetUser() user: UserEntity,
     @Body('bannedUserId', ParseIntPipe, PositiveIntPipe) bannedUserId: number,
   ) {
+    if (user.id === bannedUserId)
+      throw new HttpException(`Can't block yourself`, HttpStatus.BAD_REQUEST);
     return await this.blockService.createBlock({
       from: user.id,
       to: bannedUserId,

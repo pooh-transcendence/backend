@@ -31,7 +31,7 @@ export class BlockRepository extends Repository<BlockEntity> {
 
   async deleteBlock(deleteBlockDto: BlockDto) {
     const result = await this.delete(deleteBlockDto);
-    if (result.affected === 0)
+    if (result.affected !== 1)
       throw new NotFoundException(`Block ${deleteBlockDto} not found`);
   }
 
@@ -48,7 +48,4 @@ export class BlockRepository extends Repository<BlockEntity> {
     const block = await this.findOne({ where: { from, to } });
     return block ? true : false;
   }
-  // async getAllBlock(): Promise<BlockEntity[]> {
-  //   return await this.find({ order: { id: 'DESC' } });
-  // }
 }

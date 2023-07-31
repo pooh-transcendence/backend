@@ -1,5 +1,4 @@
 import {
-  Body,
   Controller,
   Get,
   Logger,
@@ -9,12 +8,13 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto, UserProfileDto } from './user.dto';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { UserEntity } from './user.entity';
 import { AuthGuard } from '@nestjs/passport';
+import { UserProfileDto } from './user.dto';
+import { ChannelEntity } from 'src/channel/channel.entity';
 
 @Controller('user')
 @UseInterceptors(TransformInterceptor)
@@ -30,27 +30,41 @@ export class UserController {
     return await this.userService.getUserById(user.id);
   }
 
+  // 유저의 친구 목록을 가져온다.
+  @Get('/friend')
+  async getFriendListByUserId(
+    @GetUser() user: UserEntity,
+  ): Promise<UserEntity[]> {
+    return await this.userService.getFriendListByUserId(user.id);
+  }
+
+  // 유저의 채널 목록을 가져온다.
+  @Get('/channel')
+  async getChannelListByUserId(
+    @GetUser() user: UserEntity,
+  ): Promise<ChannelEntity[]> {
+    return await this.userService.getChannelListByUserId(user.id);
+  }
+
   // 유저의 닉네임으로 유저 정보를 가져온다.
   @Get('/search/:nickname')
   async getUserProfileByNickname(
-    @GetUser() owner: UserEntity,
+    @GetUser() requestUser: UserEntity,
     @Param('nickname') nickname: string,
   ): Promise<UserProfileDto> {
     const user = await this.userService.getUserProfileByNickname(
-      owner.id,
+      requestUser.id,
       nickname,
     );
     return user;
   }
 
+  // 유저의 아이디로 유저 정보를 가져온다.
   @Get('/:userId')
   async getUserProfileById(
+    @GetUser() requestUser: UserEntity,
     @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
   ): Promise<UserProfileDto> {
-    return await this.userService.getUserProfileById(userId);
-  }
-
-  async createUser(@Body() createUserDto: CreateUserDto) {
-    return await this.userService.createUser(createUserDto);
+    return await this.userService.getUserProfileById(requestUser.id, userId);
   }
 }
