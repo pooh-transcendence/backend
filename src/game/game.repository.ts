@@ -49,8 +49,8 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async deleteGameByGameId(gameId: number): Promise<void> {
-    const result = await this.delete({ id: gameId });
-    if (result.affected === 0)
+    const result = await this.softDelete({ id: gameId });
+    if (result.affected !== 1)
       throw new NotFoundException(`there is no game id ${gameId}`);
   }
 }

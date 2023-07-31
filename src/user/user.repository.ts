@@ -58,8 +58,9 @@ export class UserRepository extends Repository<UserEntity> {
   async deleteUser(userId: number) {
     const result = await this.softDelete({ id: userId });
     if (result.affected !== 1)
-      throw new InternalServerErrorException(`
-      UserEntity delete failed. UserEntity id: ${userId}`);
+      throw new InternalServerErrorException(
+        `UserEntity delete failed. UserEntity id: ${userId}`,
+      );
   }
 
   async updateUserAcessToken(userId: number, accessToken?: string | null) {
@@ -89,6 +90,6 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async getUserElementsById(userId: number, elements: any) {
-    return this.findOne({ where: { id: userId }, select: elements });
+    return await this.findOne({ where: { id: userId }, select: elements });
   }
 }
