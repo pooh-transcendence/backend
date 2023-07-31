@@ -115,7 +115,7 @@ export class ChannelService {
   ): Promise<ChannelUserEntity> {
     const { userId, channelId, password } = createChannelUserDto;
     const user = await this.userRepository.getUserByUserId(userId);
-    await this.verifyUserForChannelJoin(user, channelId);
+    if (!user) throw new NotFoundException();
     await this.verifyChannelForChannelJoin(channelId, password);
     createChannelUserDto.password = undefined;
     return await this.channelUserRepository.createChannelUser(
