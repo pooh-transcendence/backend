@@ -16,7 +16,6 @@ export class FortyTwoApiService {
     params?: Record<string, any>,
   ) {
     try {
-      console.log('token', token);
       const response = await axios.get(`${this.baseUrl}${endpoint}`, {
         params,
         headers: {

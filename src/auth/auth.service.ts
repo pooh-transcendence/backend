@@ -1,9 +1,7 @@
 import {
-  ConsoleLogger,
   HttpException,
   HttpStatus,
   Injectable,
-  Req,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -13,6 +11,8 @@ import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
 import * as speakeasy from 'speakeasy';
+import { Socket } from 'socket.io';
+import { JwtModuleConfig } from 'src/configs/jwt.config';
 
 @Injectable()
 export class AuthService {
@@ -100,5 +100,23 @@ export class AuthService {
 
   verifyToken(secret: string, token: string) {
     return speakeasy.totp.verify({ secret, encoding: 'base32', token });
+  }
+
+  async getUserFromSocket(socket: Socket): Promise<any> {
+    const authorization = socket.handshake.headers.authorization;
+    const token = authorization; /*&& authorization.split(' ')[1]*/
+    if (!token) return null;
+
+    const payload = this.jwtService.verify(token, {
+      secret: JwtModuleConfig.secret,
+      ignoreExpiration: true,
+    });
+    if (!payload) return null;
+
+    const user = await this.userService
+      .getUserById(payload.id)
+      .catch(() => null);
+    if (!user) return null;
+    return user;
   }
 }

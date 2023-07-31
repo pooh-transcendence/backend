@@ -71,11 +71,6 @@ export class AuthController {
       token: token,
     };
     const { user } = await this.authService.signIn(createUserDto);
-    /*
-    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
-    res.send(user);
-    */
     const secret = this.authService.generateSecret();
     await this.userService.updateUserElements(user.id, {
       secret: secret.base32,
@@ -95,10 +90,6 @@ export class AuthController {
     await this.userService.updateUserElements(user.id, {
       secret: secret.base32,
     });
-
-    //const user = await this.userService.getUserById(userId);
-    //if (!user) throw new NotFoundException('User not found.');
-
     const userEmail = user.email;
     const issuer = user.nickname;
     const qrCodeURL = this.authService.generateQRCodeURL(
@@ -129,8 +120,8 @@ export class AuthController {
         httpOnly: true,
         secure: true,
       });
-      user.secret = null;
-      user.token = null;
+      user.secret = undefined;
+      user.token = undefined;
       res.send(user);
     } else {
       throw new UnauthorizedException();

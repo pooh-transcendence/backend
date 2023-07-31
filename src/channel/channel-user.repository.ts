@@ -47,10 +47,17 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     channelId: number,
   ): Promise<ChannelUserEntity[]> {
     return await this.find({
-      where: { id: channelId },
+      where: { id: channelId, isBanned: false },
     });
   }
 
+  async findAllChannelUserByChannelId(
+    channelId: number,
+  ): Promise<ChannelUserEntity[]> {
+    return await this.find({
+      where: { id: channelId },
+    });
+  }
   async findChannelUserByIds(
     userId: number,
     channelId: number,
