@@ -9,13 +9,22 @@ import {
 } from '@nestjs/websockets';
 import { ChannelService } from './channel.service';
 import { Socket } from 'socket.io';
-import { Logger, NotFoundException } from '@nestjs/common';
+import {
+  Logger,
+  NotFoundException,
+  UseFilters,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { UserService } from 'src/user/user.service';
 import { UserState } from 'src/user/user.entity';
 import { CreateChanneUserDto } from './channel-user.dto';
+import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
 
 @WebSocketGateway({ namespace: 'channel' })
+@UseFilters(AllExceptionsSocketFilter)
+@UsePipes(new ValidationPipe({ transform: true }))
 export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -60,13 +69,21 @@ export class ChannelGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() createChannelUserDto: CreateChanneUserDto,
   ) {
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) client.disconnect();
-    //this.channelService.verifyRequestIdMatch(user.id, channelUserInfo.userId);
-    const result = await this.channelService.joinChannelUser(
-      createChannelUserDto,
-    );
-    if (!result) throw new NotFoundException();
-    client.rooms.add(result.channelId.toString());
+    try {
+      const user = await this.authService.getUserFromSocket(client);
+      if (!user) {
+        client.disconnect();
+      }
+      //this.channelService.verifyRequestIdMatch(user.id, channelUserInfo.userId);
+      const result = await this.channelService.joinChannelUser(
+        createChannelUserDto,
+      );
+      if (!result) throw new NotFoundException();
+      client.rooms.add(result.channelId.toString());
+    } catch (err) {
+      this.logger.log(err);
+      return err;
+    }
+    return 'FUCK YOU';
   }
 }
