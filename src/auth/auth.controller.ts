@@ -85,6 +85,13 @@ export class AuthController {
     return { qrCodeURL, userId: user.id };
   }
 
+  @Post('TestForSignIn')
+  async testForSignIn(@Body() createUserDto: CreateUserDto) {
+    const user = await this.userService.createUser(createUserDto);
+    const accessToken = await this.authService.generateAccessTokenFree(user);
+    return { user, accessToken };
+  }
+
   async setupTwoFactorAuth(user: UserEntity) {
     const secret = this.authService.generateSecret();
     await this.userService.updateUserElements(user.id, {
