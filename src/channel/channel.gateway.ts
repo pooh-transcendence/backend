@@ -6,6 +6,7 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { ChannelService } from './channel.service';
 import { Socket } from 'socket.io';
@@ -18,9 +19,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
 import { UserService } from 'src/user/user.service';
-import { UserState } from 'src/user/user.entity';
+import { UserEntity, UserState } from 'src/user/user.entity';
 import { CreateChanneUserDto } from './channel-user.dto';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
+import { Server } from 'ws';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -33,6 +35,9 @@ export class ChannelGateway
     private authService: AuthService,
     private userService: UserService,
   ) {}
+
+  @WebSocketServer()
+  server: Server;
   private logger = new Logger('ChannelGateway');
 
   @SubscribeMessage('join')
@@ -84,6 +89,10 @@ export class ChannelGateway
       this.logger.log(err);
       return err;
     }
-    return 'FUCK YOU';
+  }
+
+  async emitToChannel(user: any, channelId: number, event: string, ...arg) {
+    const channel = this.server.to(channelId.toString());
+    channel.emit(event, ...arg);
   }
 }

@@ -312,4 +312,10 @@ export class ChannelService {
     }
     return userSocketId;
   }
+
+  async getChannelUser(channelId: number): Promise<ChannelUserEntity[]> {
+    return await this.channelUserRepository.findChannelUserByChannelId(
+      channelId,
+    );
+  }
 }
