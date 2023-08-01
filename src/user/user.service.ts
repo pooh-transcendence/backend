@@ -4,7 +4,7 @@ import { UserRepository } from './user.repository';
 import { UserEntity, UserState } from './user.entity';
 import { BlockService } from 'src/block/block.service';
 import { FriendService } from 'src/friend/friend.service';
-import { UserProfileDto } from './user.dto';
+import { CreateUserDto, UserProfileDto } from './user.dto';
 import { ChannelService } from 'src/channel/channel.service';
 import { ChannelEntity } from 'src/channel/channel.entity';
 
@@ -87,13 +87,13 @@ export class UserService {
     return channelList;
   }
 
-  // async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
-  //   return await this.userRepository.createUser(createUserDto);
-  // }
+  async createUser(createUserDto: CreateUserDto): Promise<UserEntity> {
+    return await this.userRepository.createUser(createUserDto);
+  }
 
-  // async deleteUser(userId: number) {
-  //   return await this.userRepository.deleteUser(userId);
-  // }
+  async deleteUser(userId: number) {
+    return await this.userRepository.deleteUser(userId);
+  }
 
   async updateUserAcessToken(userId: number, accessToken: string) {
     return await this.userRepository.updateUserAcessToken(userId, accessToken);
