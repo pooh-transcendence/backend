@@ -7,6 +7,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { ChannelService } from './channel.service';
 import { Socket } from 'socket.io';
@@ -23,6 +24,7 @@ import { UserEntity, UserState } from 'src/user/user.entity';
 import { CreateChanneUserDto } from './channel-user.dto';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
 import { Server } from 'ws';
+import { MessageDto } from './channel.dto';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -43,8 +45,8 @@ export class ChannelGateway
   @SubscribeMessage('join')
   async handleJoin(client: Socket, payload: { channelName: string }) {}
 
-  afterInit(server: any) {
-    this.logger.log('Initiated!');
+  afterInit(server: Server) {
+    this.logger.log('Initialized');
   }
 
   async handleConnection(client: Socket, ...args: any[]) {
@@ -83,16 +85,56 @@ export class ChannelGateway
       const result = await this.channelService.joinChannelUser(
         createChannelUserDto,
       );
-      if (!result) throw new NotFoundException();
-      client.rooms.add(result.channelId.toString());
+      if (!result) throw new WsException('Channel not found');
+      client.join(result.channelId.toString());
+      client.to(result.channelId.toString()).emit('joinChannel', {
+        message: `${user.username}님이 입장하셨습니다.`,
+      });
     } catch (err) {
-      this.logger.log(err);
       return err;
     }
   }
 
-  async emitToChannel(user: any, channelId: number, event: string, ...arg) {
-    const channel = this.server.to(channelId.toString());
-    channel.emit(event, ...arg);
+  @SubscribeMessage('message')
+  async handleMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() messageDto: MessageDto,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new NotFoundException({ error: ' User not found' });
+    const { userId, channelId, message } = messageDto;
+    if (!userId && channelId)
+      this.emitToChannel(user, channelId, 'channelMessage', {
+        channelId,
+        userId: user.id,
+        message,
+      });
+    else if (userId && !channelId)
+      this.emitToUser(user, userId, 'userMessage', { userId, message });
+    else throw new NotFoundException({ error: 'User or Channel not found' });
+  }
+
+  async emitToUser(
+    user: any,
+    targetUserId: number,
+    event: string,
+    ...data: any
+  ) {
+    if (user.blocks.includes(targetUserId)) return;
+    const targetUser = await this.userService.getUserById(targetUserId);
+    const userSocket = this.server.sockets.get(user.socketId);
+    if (!targetUser || !targetUser.socketId || !userSocket) return;
+    this.server.to(targetUser.socketId).emit(event, data);
+  }
+
+  async emitToChannel(
+    user: UserEntity,
+    channelId: number,
+    event: string,
+    ...data: any
+  ) {
+    const userSocket = this.server.sockets.get(user.socketId);
+    if (!userSocket) return;
+    userSocket.to(channelId.toString()).emit(event, data);
   }
 }

@@ -52,6 +52,7 @@ export class AuthService {
       user.refreshToken || (await this.generateRefreshToken(user));
     user.accessToken = undefined;
     user.refreshToken = undefined;
+    user.socketId = undefined;
     return { user, accessToken, refreshToken };
   }
 

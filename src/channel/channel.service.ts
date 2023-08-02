@@ -28,6 +28,10 @@ export class ChannelService {
 
   private logger = new Logger(ChannelService.name);
 
+  async getAllChannels(): Promise<ChannelEntity[]> {
+    return await this.channelRepository.find();
+  }
+
   async createChannel(
     createChannelDto: CreateChannelDto,
     createChannelUserIds: number[],
@@ -50,6 +54,7 @@ export class ChannelService {
       user.winnerGame = undefined;
       user.loserGame = undefined;
       user.secret = undefined;
+      user.socketId = undefined;
       // channelUser 배열에 추가
       channelUser.push(user);
     }
@@ -317,5 +322,9 @@ export class ChannelService {
     return await this.channelUserRepository.findChannelUserByChannelId(
       channelId,
     );
+  }
+
+  async getAllChannelUser(): Promise<ChannelUserEntity[]> {
+    return await this.channelUserRepository.find();
   }
 }
