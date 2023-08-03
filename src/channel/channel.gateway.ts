@@ -14,6 +14,7 @@ import { Socket } from 'socket.io';
 import {
   Logger,
   NotFoundException,
+  ParseIntPipe,
   UseFilters,
   UsePipes,
   ValidationPipe,
@@ -33,6 +34,8 @@ import {
 import { channel } from 'diagnostics_channel';
 import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
 import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
+import { catchError } from 'rxjs';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -49,9 +52,6 @@ export class ChannelGateway
   @WebSocketServer()
   server: Server;
   private logger = new Logger('ChannelGateway');
-
-  @SubscribeMessage('join')
-  async handleJoin(client: Socket, payload: { channelName: string }) {}
 
   afterInit(server: Server) {
     this.logger.log('Initialized');
@@ -95,11 +95,12 @@ export class ChannelGateway
         createChannelUserDto,
       );
       if (!result) throw new WsException('Channel not found');
-      client.join(result.channelId.toString());
-      client.to(result.channelId.toString()).emit('joinChannel', {
-        message: `${user.username}님이 입장하셨습니다.`,
+      client.join(channelId.toString());
+      client.to(channelId.toString()).emit('channelMessage', {
+        message: `${user.nickname}님이 입장하셨습니다.`,
       });
     } catch (err) {
+      this.logger.log(err);
       return err;
     }
   }
@@ -116,10 +117,15 @@ export class ChannelGateway
       this.emitToChannel(user, channelId, 'channelMessage', {
         channelId,
         userId: user.id,
+        nickname: user.nickname,
         message,
-      });
+      }).catch((err) => {});
     else if (userId && !channelId)
-      this.emitToUser(user, userId, 'userMessage', { userId, message });
+      this.emitToUser(user, userId, 'userMessage', {
+        userId,
+        nickname: user.nickname,
+        message,
+      }).catch((err) => {});
     else throw new NotFoundException({ error: 'User or Channel not found' });
   }
 
@@ -135,18 +141,25 @@ export class ChannelGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() channelUserInfo: UpdateChannelUserDto,
   ) {
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new NotFoundException({ error: ' User not found' });
     try {
-      this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
-      client
-        .to(channelUserInfo.channelId.toString())
-        .emit('kick', { message: 'you are kicked' });
-      client.leave(channelUserInfo.channelId.toString());
-      return await this.channelService.kickChannelUser(
-        user.id,
-        channelUserInfo,
+      const user = await this.authService.getUserFromSocket(client);
+      const { userId, channelId } = channelUserInfo;
+      if (!user) throw new NotFoundException({ error: ' User not found' });
+      this.verifyNotSelfBanOrKick(user.id, userId);
+      const targetUser = await this.userService.getUserById(
+        channelUserInfo.userId,
       );
+      if (!targetUser) throw new NotFoundException({ error: 'User not found' });
+      await this.channelService.kickChannelUser(user.id, channelUserInfo);
+      if (targetUser.socketId) {
+        const targetUserSocket: Socket = this.server.sockets.get(
+          targetUser.socketId,
+        );
+        targetUserSocket.to(channelId.toString()).emit('channelMessage', {
+          message: `${user.username}님이 강퇴당하셨습니다.`,
+        });
+        targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
+      }
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -164,7 +177,6 @@ export class ChannelGateway
       this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
       return await this.channelService.banChannelUser(user.id, channelUserInfo);
     } catch (err) {
-      this.logger.log(err);
       return err;
     }
   }
@@ -178,9 +190,8 @@ export class ChannelGateway
     if (user.id === channelUserInfo.userId)
       throw new WsException(`You can't set yourself as admin`);
     try {
-      await this.channelService.setAdmin(user.id, channelUserInfo);
+      return await this.channelService.setAdmin(user.id, channelUserInfo);
     } catch (err) {
-      this.logger.log(err);
       return err;
     }
   }
@@ -195,7 +206,6 @@ export class ChannelGateway
     try {
       return await this.channelService.updatePassword(user.id, channelInfo);
     } catch (err) {
-      this.logger.log(err);
       return err;
     }
   }
@@ -212,14 +222,36 @@ export class ChannelGateway
     if (!user) throw new WsException('create Error');
     try {
       this.verifyRequestIdMatch(user.id, channelInfo.ownerId);
-      return await this.channelService.createChannel(
+      const result = await this.channelService.createChannel(
         channelInfo,
         channelUserIds,
       );
+      if (!result) throw new WsException('create Error');
+      const channelUsers = await this.channelService.getChannelUser(result.id);
+      for (const channelUser of channelUsers) {
+        const user = await this.userService.getUserById(channelUser.userId);
+        const userSocket = this.server.sockets.get(user.socketId);
+        if (!userSocket) continue;
+        userSocket.join(result.id.toString());
+      }
+      return result;
     } catch (err) {
-      this.logger.log(err);
       return err;
     }
+  }
+
+  @SubscribeMessage('leave')
+  async leaveChannel(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('leaveA Error');
+    await this.channelService.leaveChannel(user.id, channelId);
+    client.to(channelId.toString()).emit('channelMessage', {
+      message: `${user.nickname}님이 나가셨습니다.`,
+    });
+    client.rooms.delete(channelId.toString());
   }
 
   async emitToUser(
@@ -229,14 +261,10 @@ export class ChannelGateway
     ...data: any
   ) {
     if (user.blocks.includes(targetUserId)) return;
-    try {
-      const targetUser = await this.userService.getUserById(targetUserId);
-      const userSocket = this.server.sockets.get(user.socketId);
-      if (!targetUser || !targetUser.socketId || !userSocket) return;
-      this.server.to(targetUser.socketId).emit(event, data);
-    } catch (err) {
-      this.logger.error(err);
-    }
+    const targetUser = await this.userService.getUserById(targetUserId);
+    const userSocket = this.server.sockets.get(user.socketId);
+    if (!targetUser || !targetUser.socketId || !userSocket) return;
+    this.server.to(targetUser.socketId).emit(event, data);
   }
 
   async emitToChannel(
@@ -245,9 +273,28 @@ export class ChannelGateway
     event: string,
     ...data: any
   ) {
+    const userChannel = await this.channelService.getChannelUserByIds(
+      channelId,
+      user.id,
+    );
+    if (!(await this.channelService.getChannelUserByIds(channelId, user.id)))
+      throw new WsException({ error: 'You are not in this channel' });
+    if (!userChannel)
+      throw new WsException({ error: 'You are not in this channel' });
+    // 만약에 안쓸거면 controller 를 사용하지 않으면 상관없음
+    const channelUsers = await this.channelService.getChannelUser(channelId);
+    for (const channelUser of channelUsers) {
+      const user = await this.userService.getUserById(channelUser.userId);
+      const userSocket = this.server.sockets.get(user.socketId);
+      if (!userSocket) continue;
+      userSocket.join(channelId.toString());
+    }
+    // 여기까지
     const userSocket = this.server.sockets.get(user.socketId);
     if (!userSocket) return;
-    userSocket.to(channelId.toString()).emit(event, data);
+    if (await this.channelService.getChannelUserByIds(channelId, user.id)) {
+      userSocket.to(channelId.toString()).emit(event, data);
+    }
   }
 
   verifyRequestIdMatch(userId: number, requestBodyUserId: number) {

@@ -104,20 +104,22 @@ export class AuthService {
   }
 
   async getUserFromSocket(socket: Socket): Promise<any> {
-    const authorization = socket.handshake.headers.authorization;
-    const token = authorization; /*&& authorization.split(' ')[1]*/
-    if (!token) return null;
-
-    const payload = this.jwtService.verify(token, {
-      secret: JwtModuleConfig.secret,
-      ignoreExpiration: true,
-    });
-    if (!payload) return null;
-
-    const user = await this.userService
-      .getUserById(payload.id)
-      .catch(() => null);
-    if (!user) return null;
-    return user;
+    try {
+      const authorization = socket.handshake.headers.authorization;
+      const token = authorization; /*&& authorization.split(' ')[1]*/
+      if (!token) return null;
+      const payload = this.jwtService.verify(token, {
+        secret: JwtModuleConfig.secret,
+        ignoreExpiration: true,
+      });
+      if (!payload) return null;
+      const user = await this.userService
+        .getUserById(payload.id)
+        .catch(() => null);
+      if (!user) return null;
+      return user;
+    } catch (err) {
+      return null;
+    }
   }
 }

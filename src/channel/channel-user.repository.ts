@@ -47,7 +47,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
     channelId: number,
   ): Promise<ChannelUserEntity[]> {
     return await this.find({
-      where: { id: channelId, isBanned: false },
+      where: { channelId, isBanned: false },
     });
   }
 
@@ -68,11 +68,11 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
   }
 
   async deleteChannelUserByIds(userId: number, channelId: number) {
-    const result = await this.softDelete({
+    const result = await this.delete({
       userId,
       channelId,
     });
-    if (result.affected !== 1)
+    if (!result.affected)
       throw new InternalServerErrorException(
         `ChannelUser delete failed. userId: ${userId}, channelId: ${channelId}`,
       );
