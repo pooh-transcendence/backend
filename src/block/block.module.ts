@@ -17,6 +17,9 @@ import { ChannelRepository } from 'src/channel/channel.repository';
 import { ChannelUserRepository } from 'src/channel/channel-user.repository';
 import { ChannelEntity } from 'src/channel/channel.entity';
 import { ChannelUserEntity } from 'src/channel/channel-user.entity';
+import { BlockGateway } from './block.gateway';
+import { AuthService } from 'src/auth/auth.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -41,6 +44,9 @@ import { ChannelUserEntity } from 'src/channel/channel-user.entity';
     ChannelService,
     ChannelRepository,
     ChannelUserRepository,
+    BlockGateway,
+    AuthService,
+    JwtService,
   ],
   exports: [BlockService],
 })

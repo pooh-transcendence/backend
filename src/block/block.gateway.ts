@@ -1,7 +1,16 @@
-import { Logger, ParseIntPipe } from '@nestjs/common';
+import {
+  Logger,
+  ParseIntPipe,
+  UseFilters,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
@@ -12,10 +21,15 @@ import { AuthService } from 'src/auth/auth.service';
 import { Server } from 'ws';
 import { Socket } from 'socket.io';
 import { UserService } from 'src/user/user.service';
+import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @WebSocketGateway({ namespace: 'block' })
-export class BlockGateway {
+@UseFilters(AllExceptionsSocketFilter)
+@UsePipes(new ValidationPipe({ transform: true }))
+export class BlockGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   constructor(
     private blockService: BlockService,
     private authService: AuthService,
@@ -24,6 +38,14 @@ export class BlockGateway {
   private logger = new Logger(BlockGateway.name);
   @WebSocketServer()
   private server: Server;
+
+  afterInit(server: Server) {
+    this.logger.log('Init');
+  }
+
+  handleConnection(client: Socket, ...args: any[]) {}
+
+  handleDisconnect(client: Socket) {}
 
   @SubscribeMessage('get')
   async getBlockList(@ConnectedSocket() client: Socket) {
@@ -41,6 +63,7 @@ export class BlockGateway {
     }
     return blockList;
   }
+
   @SubscribeMessage('create')
   async createFriendList(
     @ConnectedSocket() client: Socket,
@@ -52,10 +75,15 @@ export class BlockGateway {
     const userId = user.id;
     if (userId === followingUserId)
       throw new WsException(`Can't be block with yourself`);
-    return await this.blockService.createBlock({
-      from: userId,
-      to: followingUserId,
-    });
+    return await this.blockService
+      .createBlock({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        throw new WsException(err);
+      });
   }
 
   @SubscribeMessage('delete')
@@ -69,9 +97,14 @@ export class BlockGateway {
     const userId = user.id;
     if (userId === followingUserId)
       throw new WsException(`Can't be block with yourself`);
-    return await this.blockService.deleteBlock({
-      from: userId,
-      to: followingUserId,
-    });
+    return await this.blockService
+      .deleteBlock({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        throw new WsException(err);
+      });
   }
 }

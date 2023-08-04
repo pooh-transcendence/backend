@@ -1,4 +1,10 @@
-import { Logger, ParseIntPipe } from '@nestjs/common';
+import {
+  Logger,
+  ParseIntPipe,
+  UseFilters,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -11,10 +17,13 @@ import { Server } from 'ws';
 import { Socket } from 'socket.io';
 import { FriendService } from './friend.service';
 import { AuthService } from 'src/auth/auth.service';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserService } from 'src/user/user.service';
+import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 
 @WebSocketGateway({ namespace: 'friend' })
+@UseFilters(AllExceptionsSocketFilter)
+@UsePipes(new ValidationPipe({ transform: true }))
 export class FriendGateway {
   constructor(
     private friendService: FriendService,
@@ -23,10 +32,11 @@ export class FriendGateway {
   ) {}
 
   private readonly logger = new Logger(FriendGateway.name);
+
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage('getFriends')
+  @SubscribeMessage('get')
   async getFriendList(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
@@ -40,6 +50,7 @@ export class FriendGateway {
         ]),
       );
     }
+    return friendList;
   }
 
   @SubscribeMessage('create')
@@ -51,12 +62,18 @@ export class FriendGateway {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     const userId = user.id;
+    this.logger.log(`User ${userId} is trying to add ${followingUserId}`);
     if (userId === followingUserId)
       throw new WsException(`Can't be friend with yourself`);
-    return await this.friendService.creatFriend({
-      from: userId,
-      to: followingUserId,
-    });
+    return await this.friendService
+      .creatFriend({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.log(err);
+        throw new WsException(err);
+      });
   }
 
   @SubscribeMessage('delete')
@@ -70,9 +87,14 @@ export class FriendGateway {
     const userId = user.id;
     if (userId === followingUserId)
       throw new WsException(`Can't remove yourself from your friend list`);
-    await this.friendService.deleteFriend({
-      from: userId,
-      to: followingUserId,
-    });
+    await this.friendService
+      .deleteFriend({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        throw new WsException(err);
+      });
   }
 }
