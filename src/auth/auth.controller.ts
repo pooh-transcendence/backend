@@ -129,6 +129,7 @@ export class AuthController {
       });
       user.secret = undefined;
       user.token = undefined;
+      user.socketId = undefined;
       res.send(user);
     } else {
       throw new UnauthorizedException();

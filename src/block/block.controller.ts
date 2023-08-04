@@ -9,6 +9,7 @@ import {
   UseInterceptors,
   HttpException,
   HttpStatus,
+  Get,
 } from '@nestjs/common';
 import { BlockService } from './block.service';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
@@ -16,19 +17,33 @@ import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
 import { UserEntity } from 'src/user/user.entity';
 import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { UserProfileDto } from 'src/user/user.dto';
+import { UserService } from 'src/user/user.service';
 
 @Controller('block')
 @UseGuards(AuthGuard())
 @UseInterceptors(TransformInterceptor)
 export class BlockController {
-  constructor(private blockService: BlockService) {}
+  constructor(
+    private blockService: BlockService,
+    private userSerivce: UserService,
+  ) {}
 
   private logger = new Logger(BlockController.name);
 
-  // @Get()
-  // async getBlockList(@GetUser('id') userId: number): Promise<UserProfileDto[]> {
-  //   return await this.blockService.getBlockListByFromId(userId);
-  // }
+  @Get()
+  async getBlockList(@GetUser('id') userId: number): Promise<UserProfileDto[]> {
+    const blockIds = await this.blockService.getBlockListByFromId(userId);
+    const blockList = [];
+    for (const id of blockIds) {
+      blockList.push(
+        await this.userSerivce.getUserElementsById(id.to, [
+          'id, username, avatar',
+        ]),
+      );
+    }
+    return blockList;
+  }
 
   @Delete()
   async deleteBlock(

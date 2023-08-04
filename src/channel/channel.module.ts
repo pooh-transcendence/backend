@@ -19,6 +19,8 @@ import { BlockRepository } from 'src/block/block.repository';
 import { BlockService } from 'src/block/block.service';
 import { BlockEntity } from 'src/block/block.entity';
 import { FriendEntity } from 'src/friend/friend.entity';
+import { MesssageRepository } from './message.repository';
+import { MessageEntity } from './message.entity';
 
 @Module({
   imports: [
@@ -28,6 +30,7 @@ import { FriendEntity } from 'src/friend/friend.entity';
       UserEntity,
       BlockEntity,
       FriendEntity,
+      MessageEntity,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
@@ -45,6 +48,7 @@ import { FriendEntity } from 'src/friend/friend.entity';
     FriendRepository,
     BlockRepository,
     BlockService,
+    MesssageRepository,
   ],
   exports: [ChannelService],
 })

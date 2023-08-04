@@ -75,7 +75,7 @@ export class ChannelRepository extends Repository<ChannelEntity> {
   }
 
   async deleteChannelByChannelId(channelId: number) {
-    const result = await this.softDelete({ id: channelId });
+    const result = await this.delete({ id: channelId });
     if (result.affected !== 1)
       throw new InternalServerErrorException(
         `Channel delete failed. Channel id: ${channelId}`,
