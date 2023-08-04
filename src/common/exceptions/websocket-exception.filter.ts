@@ -53,7 +53,7 @@ export class WebSocketFilter implements BaseWsExceptionFilter {
 */
 
 import { ArgumentsHost, Catch } from '@nestjs/common';
-import { BaseWsExceptionFilter, WsException } from '@nestjs/websockets';
+import { BaseWsExceptionFilter } from '@nestjs/websockets';
 import { PacketType } from 'socket.io-parser';
 
 @Catch()
