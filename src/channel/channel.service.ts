@@ -109,6 +109,10 @@ export class ChannelService {
 
   async getVisibleChannel(): Promise<ChannelEntity[]> {
     const channels = await this.channelRepository.getAllVisibleChannel();
+    for (const channel of channels) {
+      channel['channelUser'] =
+        await this.channelUserRepository.findChannelUserByChannelId(channel.id);
+    }
     channels.forEach((channel) => {
       channel.password = undefined;
     });
@@ -326,5 +330,17 @@ export class ChannelService {
 
   async getAllChannelUser(): Promise<ChannelUserEntity[]> {
     return await this.channelUserRepository.find();
+  }
+
+  async getChannelUserByIds(
+    channelId: number,
+    userId: number,
+  ): Promise<ChannelUserEntity> {
+    const channelUser = await this.channelUserRepository.findChannelUserByIds(
+      userId,
+      channelId,
+    );
+    if (!channelUser || channelUser.isBanned) return null;
+    return channelUser;
   }
 }

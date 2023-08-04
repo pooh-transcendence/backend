@@ -57,7 +57,7 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async deleteUser(userId: number) {
-    const result = await this.softDelete({ id: userId });
+    const result = await this.delete({ id: userId });
     if (result.affected !== 1)
       throw new InternalServerErrorException(
         `UserEntity delete failed. UserEntity id: ${userId}`,

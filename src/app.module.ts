@@ -10,9 +10,12 @@ import { BlockModule } from './block/block.module';
 import { FriendModule } from './friend/friend.module';
 import { MiddlewareConsumer } from '@nestjs/common/interfaces';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
+import { CacheModule } from '@nestjs/cache-manager';
+import { cacheModuleConfig } from './configs/cache.config';
 
 @Module({
   imports: [
+    CacheModule.register(cacheModuleConfig),
     TypeOrmModule.forRoot(typeOrmConfig),
     ChannelModule,
     UserModule,

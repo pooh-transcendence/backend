@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   HttpException,
   HttpStatus,
   Logger,
@@ -16,12 +17,16 @@ import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { UserEntity } from 'src/user/user.entity';
 import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { UserService } from 'src/user/user.service';
 
 @Controller('friend')
 @UseInterceptors(TransformInterceptor)
 @UseGuards(AuthGuard())
 export class FriendController {
-  constructor(private friendService: FriendService) {}
+  constructor(
+    private friendService: FriendService,
+    private userSerivce: UserService,
+  ) {}
 
   private logger = new Logger(FriendController.name);
 
@@ -59,5 +64,20 @@ export class FriendController {
       from: userId,
       to: followingUserId,
     });
+  }
+
+  @Get()
+  async getFriendList(@GetUser() user: UserEntity) {
+    const userId = user.id;
+    const friendIds = await this.friendService.getFriendListByFromId(userId);
+    const friendList = [];
+    for (const id of friendIds) {
+      friendList.push(
+        await this.userSerivce.getUserElementsById(id.to, [
+          'id, username, avatar',
+        ]),
+      );
+    }
+    return friendList;
   }
 }
