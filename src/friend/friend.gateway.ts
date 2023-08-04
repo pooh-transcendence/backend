@@ -46,7 +46,9 @@ export class FriendGateway {
     for (const id of friendIds) {
       friendList.push(
         await this.userSerivce.getUserElementsById(id.to, [
-          'id, username, avatar',
+          'id',
+          'nickname',
+          'avatar',
         ]),
       );
     }

@@ -57,7 +57,9 @@ export class BlockGateway
     for (const id of blockIds) {
       blockList.push(
         await this.userService.getUserElementsById(id.to, [
-          'id, username, avatar',
+          'id',
+          'username',
+          'avatar',
         ]),
       );
     }
