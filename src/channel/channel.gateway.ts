@@ -12,6 +12,7 @@ import {
 import { ChannelService } from './channel.service';
 import { Socket } from 'socket.io';
 import {
+  Inject,
   Logger,
   NotFoundException,
   ParseIntPipe,
@@ -31,11 +32,12 @@ import {
   UpdateChannelDto,
   UpdateChannelUserDto,
 } from './channel.dto';
-import { channel } from 'diagnostics_channel';
 import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
 import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
-import { catchError } from 'rxjs';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { MesssageRepository } from './message.repository';
+import { Cache } from 'cache-manager';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -47,6 +49,8 @@ export class ChannelGateway
     private channelService: ChannelService,
     private authService: AuthService,
     private userService: UserService,
+    private messageRepository: MesssageRepository,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   @WebSocketServer()
@@ -76,6 +80,14 @@ export class ChannelGateway
       socketId: null,
       userState: UserState.OFFCHAT,
     });
+    for (const friend of user.friends) {
+      const friendSocketId = await this.cacheManager.get(friend.id.toString());
+      if (!friendSocketId) continue;
+      this.server.to(friendSocketId).emit('ChangefriendState', {
+        friendId: user.id,
+        userState: UserState.OFFCHAT,
+      });
+    }
     client.rooms.clear();
   }
 
@@ -265,6 +277,7 @@ export class ChannelGateway
     const userSocket = this.server.sockets.get(user.socketId);
     if (!targetUser || !targetUser.socketId || !userSocket) return;
     this.server.to(targetUser.socketId).emit(event, data);
+    //this.cacheMessages(data);
   }
 
   async emitToChannel(
@@ -294,9 +307,40 @@ export class ChannelGateway
     if (!userSocket) return;
     if (await this.channelService.getChannelUserByIds(channelId, user.id)) {
       userSocket.to(channelId.toString()).emit(event, data);
+      //this.cacheMessages(data);
+    }
+  }
+  /*
+  private async cacheMessages(data: any): Promise<void> {
+    this.cacheManager.store.lpush(`cachedMessages`, JSON.stringify(data));
+    const cachedMessages = await this.cacheManager.store
+      .getClient()
+      .lrange('cachedMessages', 0, -1);
+    if (cachedMessages.length >= 100) {
+      await this.flushCachedMessages(cachedMessages);
     }
   }
 
+  private async flushCachedMessages(messages: string[]): Promise<void> {
+    const entities = messages.map((message) => {
+      const data = JSON.parse(message);
+      const messageData: MessageEntity = {
+        fromId: data.fromId,
+        toChannelId: data.channelId,
+        message: data.message,
+        toUserId: data.toUserId,
+        fromNickname: data.fromNickname,
+        id: undefined,
+        createdAt: undefined,
+        updatedAt: undefined,
+      };
+      return this.messageRepository.create(messageData);
+    });
+    await this.messageRepository.save(entities);
+    // Redis에서 캐싱된 메시지들을 삭제
+    await this.cacheManager.del('cachedMessages');
+  }
+  */
   verifyRequestIdMatch(userId: number, requestBodyUserId: number) {
     if (userId !== requestBodyUserId)
       throw new WsException(`Id in request body doesn't match with your id`);

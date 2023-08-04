@@ -1,11 +1,12 @@
 # ARGS
 
-DIRS	=	./datas/{db,pgadmin}
+DIRS	=	./datas/{db,pgadmin,redis}
 
 # CMD
 
 all:
 		mkdir -p ./datas/db
+		mkdir -p ./datas/redis
 		mkdir -p ./datas/pgadmin
 		@docker compose -f ./docker-compose.yml up --build -d
 
