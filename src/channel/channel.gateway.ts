@@ -63,7 +63,9 @@ export class ChannelGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || user.socketId) return client.disconnect();
+    if (!user || user.socketId) {
+      return client.disconnect();
+    }
     await this.userService.updateUserElements(user.id, {
       socketId: client.id,
       userState: UserState.ONCHAT,
@@ -134,7 +136,7 @@ export class ChannelGateway
       }).catch((err) => {});
     else if (userId && !channelId)
       this.emitToUser(user, userId, 'userMessage', {
-        userId,
+        userId: user.id,
         nickname: user.nickname,
         message,
       }).catch((err) => {});

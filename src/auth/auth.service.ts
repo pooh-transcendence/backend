@@ -5,7 +5,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { isIBAN } from 'class-validator';
 import { CreateUserDto } from 'src/user/user.dto';
 import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
@@ -105,8 +104,7 @@ export class AuthService {
 
   async getUserFromSocket(socket: Socket): Promise<any> {
     try {
-      const authorization = socket.handshake.headers.authorization;
-      const token = authorization; /*&& authorization.split(' ')[1]*/
+      const token = socket.handshake.auth.authorization;
       if (!token) return null;
       const payload = this.jwtService.verify(token, {
         secret: JwtModuleConfig.secret,
