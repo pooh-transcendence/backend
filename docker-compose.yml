@@ -17,13 +17,13 @@ volumes:
       o: bind
       device: ./datas/pgadmin
 
-  redisDB:
-    name: redis
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device : ./datas/redis
+        #  redisDB:
+        #    name: redis
+        #    driver: local
+        #    driver_opts:
+        #      type: none
+        #      o: bind
+        #      device : ./datas/redis
 
 services:
   postgres:
@@ -70,22 +70,22 @@ services:
       - ./env/postgres.env
       - ./env/backend.env
     depends_on:
-      - redis
+      #- redis
       - postgres
 
-  redis :
-    image: redis:alpine
-    container_name : redis
-    ports:
-      - '6379:6379'
-    tty : true
-    networks:
-      - dream
-    volumes :
-      - redisDB:/data
-    command: /bin/sh -c "redis-server --requirepass $$REDIS_HOST_PASSWORD"
-    env_file :
-      ./env/redis.env
+        #  redis :
+        #    image: redis:alpine
+        #    container_name : redis
+        #    ports:
+        #      - '6379:6379'
+        #    tty : true
+        #    networks:
+        #      - dream
+        #    volumes :
+        #      - redisDB:/data
+        #    command: /bin/sh -c "redis-server --requirepass $$REDIS_HOST_PASSWORD"
+        #    env_file :
+        #      ./env/redis.env
 networks:
   dream:
     name: dream
