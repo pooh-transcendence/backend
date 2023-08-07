@@ -47,7 +47,7 @@ export class BlockGateway
 
   handleDisconnect(client: Socket) {}
 
-  @SubscribeMessage('get')
+  @SubscribeMessage('getBlockList')
   async getBlockList(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
@@ -66,21 +66,21 @@ export class BlockGateway
     return blockList;
   }
 
-  @SubscribeMessage('create')
+  @SubscribeMessage('createBlock')
   async createFriendList(
     @ConnectedSocket() client: Socket,
-    @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
-    followingUserId: number,
+    @MessageBody('blockUserId', ParseIntPipe, PositiveIntPipe)
+    blockUserId: number,
   ) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     const userId = user.id;
-    if (userId === followingUserId)
+    if (userId === blockUserId)
       throw new WsException(`Can't be block with yourself`);
     return await this.blockService
       .createBlock({
         from: userId,
-        to: followingUserId,
+        to: blockUserId,
       })
       .catch((err) => {
         this.logger.error(err);
@@ -88,21 +88,21 @@ export class BlockGateway
       });
   }
 
-  @SubscribeMessage('delete')
+  @SubscribeMessage('deleteBlock')
   async deleteFriendList(
     @ConnectedSocket() client: Socket,
-    @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
-    followingUserId: number,
+    @MessageBody('blockedUserId', ParseIntPipe, PositiveIntPipe)
+    blockedUserId: number,
   ) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     const userId = user.id;
-    if (userId === followingUserId)
+    if (userId === blockedUserId)
       throw new WsException(`Can't be block with yourself`);
     return await this.blockService
       .deleteBlock({
         from: userId,
-        to: followingUserId,
+        to: blockedUserId,
       })
       .catch((err) => {
         this.logger.error(err);

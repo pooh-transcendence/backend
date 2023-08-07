@@ -36,7 +36,7 @@ export class FriendGateway {
   @WebSocketServer()
   server: Server;
 
-  @SubscribeMessage('get')
+  @SubscribeMessage('getFriendList')
   async getFriendList(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
@@ -49,13 +49,14 @@ export class FriendGateway {
           'id',
           'nickname',
           'avatar',
+          'userState',
         ]),
       );
     }
     return friendList;
   }
 
-  @SubscribeMessage('create')
+  @SubscribeMessage('createFriend')
   async createFriendList(
     @ConnectedSocket() client: Socket,
     @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
@@ -78,7 +79,7 @@ export class FriendGateway {
       });
   }
 
-  @SubscribeMessage('delete')
+  @SubscribeMessage('deleteFriend')
   async deleteFriend(
     @ConnectedSocket() client: Socket,
     @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
