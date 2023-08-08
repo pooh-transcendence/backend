@@ -22,6 +22,7 @@ export class UpdateChannelDto extends PickType(ChannelEntity, [
 export class UpdateChannelUserDto extends PickType(ChannelUserEntity, [
   'userId',
   'channelId',
+  'isBanned',
 ] as const) {}
 
 export class MessageDto {

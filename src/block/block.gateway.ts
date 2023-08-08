@@ -46,8 +46,8 @@ export class BlockGateway
   handleConnection(client: Socket, ...args: any[]) {}
 
   handleDisconnect(client: Socket) {}
-
-  @SubscribeMessage('getBlockList')
+  /*
+  @SubscribeMessage('get')
   async getBlockList(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
@@ -109,4 +109,5 @@ export class BlockGateway
         throw new WsException(err);
       });
   }
+  */
 }

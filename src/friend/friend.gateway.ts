@@ -35,8 +35,8 @@ export class FriendGateway {
 
   @WebSocketServer()
   server: Server;
-
-  @SubscribeMessage('getFriendList')
+  /*
+  @SubscribeMessage('get')
   async getFriendList(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
@@ -100,4 +100,5 @@ export class FriendGateway {
         throw new WsException(err);
       });
   }
+  */
 }

@@ -75,7 +75,7 @@ export class ChannelService {
     requestUserId: number,
     updateChannelDto: UpdateChannelUserDto,
   ): Promise<ChannelUserEntity> {
-    const { userId, channelId } = updateChannelDto;
+    const { userId, channelId, isBanned } = updateChannelDto;
     // requestUser Admin 여부 검사
     await this.verifyAdminUser(requestUserId, channelId);
     const channelUser = await this.channelUserRepository.findChannelUserByIds(
@@ -85,7 +85,7 @@ export class ChannelService {
     // ChannelUser 유효성 검사
     await this.verifyTargetUser(channelUser, channelId);
     // ban 처리
-    channelUser.isBanned = true;
+    channelUser.isBanned = isBanned || false;
     await this.channelUserRepository.update(channelUser.id, channelUser);
     return channelUser;
   }

@@ -6,3 +6,4 @@ RUN npm i -g @nestjs/cli
 
 #CMD ["npm", "run", "start:dev"]
 CMD ["sleep", "infinity"]
+

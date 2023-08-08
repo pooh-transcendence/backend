@@ -36,8 +36,9 @@ import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
 import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { MesssageRepository } from './message.repository';
 import { Cache } from 'cache-manager';
+import { BlockService } from 'src/block/block.service';
+import { FriendService } from 'src/friend/friend.service';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -49,7 +50,8 @@ export class ChannelGateway
     private channelService: ChannelService,
     private authService: AuthService,
     private userService: UserService,
-    private messageRepository: MesssageRepository,
+    private blockService: BlockService,
+    private friendService: FriendService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -93,16 +95,14 @@ export class ChannelGateway
     client.rooms.clear();
   }
 
-  @SubscribeMessage('join')
+  @SubscribeMessage('joinChannel')
   async joinChannel(
     @ConnectedSocket() client: Socket,
     @MessageBody() createChannelUserDto: CreateChanneUserDto,
   ) {
     try {
       const user = await this.authService.getUserFromSocket(client);
-      if (!user) {
-        client.disconnect();
-      }
+      if (!user) client.disconnect();
       const { userId, channelId } = createChannelUserDto;
       this.verifyRequestIdMatch(user.id, userId);
       const result = await this.channelService.joinChannelUser(
@@ -143,14 +143,14 @@ export class ChannelGateway
     else throw new NotFoundException({ error: 'User or Channel not found' });
   }
 
-  @SubscribeMessage('visible')
+  @SubscribeMessage('visibleChannel')
   async getVisibleChannel(@ConnectedSocket() client: Socket) {
     const channels = await this.channelService.getVisibleChannel();
     this.server.to(client.id).emit('visible', channels);
     return channels;
   }
 
-  @SubscribeMessage('kick')
+  @SubscribeMessage('kickChannelUser')
   async kickChannelUser(
     @ConnectedSocket() client: Socket,
     @MessageBody() channelUserInfo: UpdateChannelUserDto,
@@ -180,8 +180,8 @@ export class ChannelGateway
     }
   }
 
-  @SubscribeMessage('ban')
-  async banChannelUser(
+  @SubscribeMessage('updateChannelUser')
+  async updateBanChannelUser(
     @ConnectedSocket() client: Socket,
     @MessageBody() channelUserInfo: UpdateChannelUserDto,
   ) {
@@ -224,7 +224,7 @@ export class ChannelGateway
     }
   }
 
-  @SubscribeMessage('channelCreate')
+  @SubscribeMessage('createChannel')
   async createChannel(
     @ConnectedSocket() client: Socket,
     @MessageBody('channelInfo', ChannelTypePipe)
@@ -254,7 +254,7 @@ export class ChannelGateway
     }
   }
 
-  @SubscribeMessage('leave')
+  @SubscribeMessage('leaveChannel')
   async leaveChannel(
     @ConnectedSocket() client: Socket,
     @MessageBody('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
@@ -351,5 +351,135 @@ export class ChannelGateway
   verifyNotSelfBanOrKick(fromUserId: number, toUserId: number) {
     if (fromUserId === toUserId)
       throw new WsException(`You can't ban or kick yourself`);
+  }
+
+  // Block
+  @SubscribeMessage('getBlock')
+  async getBlockList(@ConnectedSocket() client: Socket) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const userId = user.id;
+    const blockIds = await this.blockService.getBlockListByFromId(userId);
+    const blockList = [];
+    for (const id of blockIds) {
+      blockList.push(
+        await this.userService.getUserElementsById(id.to, [
+          'id',
+          'username',
+          'avatar',
+        ]),
+      );
+    }
+    return blockList;
+  }
+
+  @SubscribeMessage('createBlock')
+  async createBlockList(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
+    followingUserId: number,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const userId = user.id;
+    if (userId === followingUserId)
+      throw new WsException(`Can't be block with yourself`);
+    return await this.blockService
+      .createBlock({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        throw new WsException(err);
+      });
+  }
+
+  @SubscribeMessage('deleteBlock')
+  async deleteFriendList(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
+    followingUserId: number,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const userId = user.id;
+    if (userId === followingUserId)
+      throw new WsException(`Can't be block with yourself`);
+    return await this.blockService
+      .deleteBlock({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        throw new WsException(err);
+      });
+  }
+
+  // Friend
+
+  @SubscribeMessage('getFriend')
+  async getFriendList(@ConnectedSocket() client: Socket) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const userId = user.id;
+    const friendIds = await this.friendService.getFriendListByFromId(userId);
+    const friendList = [];
+    for (const id of friendIds) {
+      friendList.push(
+        await this.userService.getUserElementsById(id.to, [
+          'id',
+          'nickname',
+          'avatar',
+        ]),
+      );
+    }
+    return friendList;
+  }
+
+  @SubscribeMessage('createFriend')
+  async createFriendList(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
+    followingUserId: number,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const userId = user.id;
+    this.logger.log(`User ${userId} is trying to add ${followingUserId}`);
+    if (userId === followingUserId)
+      throw new WsException(`Can't be friend with yourself`);
+    return await this.friendService
+      .creatFriend({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.log(err);
+        throw new WsException(err);
+      });
+  }
+
+  @SubscribeMessage('deleteFriend')
+  async deleteFriend(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('followingUserId', ParseIntPipe, PositiveIntPipe)
+    followingUserId: number,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const userId = user.id;
+    if (userId === followingUserId)
+      throw new WsException(`Can't remove yourself from your friend list`);
+    await this.friendService
+      .deleteFriend({
+        from: userId,
+        to: followingUserId,
+      })
+      .catch((err) => {
+        this.logger.error(err);
+        throw new WsException(err);
+      });
   }
 }
