@@ -35,7 +35,7 @@ export class FriendGateway {
 
   @WebSocketServer()
   server: Server;
-
+  /*
   @SubscribeMessage('get')
   async getFriendList(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
@@ -99,4 +99,5 @@ export class FriendGateway {
         throw new WsException(err);
       });
   }
+  */
 }

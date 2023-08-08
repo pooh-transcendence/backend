@@ -1,4 +1,4 @@
-import { IsIn, IsNumber } from 'class-validator';
+import { IsIn, IsNumber, isNumber } from 'class-validator';
 import { CommonEntity } from 'src/common/common.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
@@ -39,4 +39,11 @@ export class GameEntity extends CommonEntity {
   @Column({ default: 1 })
   @IsNumber()
   racketSize: number;
+
+  @Column({ default: null })
+  isGiveUp: boolean;
+
+  @Column({ default: null })
+  @IsNumber()
+  giveUpUser: number;
 }
