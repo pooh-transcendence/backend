@@ -13,7 +13,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ChannelService } from './channel.service';
-import { CreateChanneUserDto } from './channel-user.dto';
+import { CreateChannelUserDto } from './channel-user.dto';
 import { ChannelTypePipe as ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
 import {
   CreateChannelDto,
@@ -51,7 +51,7 @@ export class ChannelController {
   @UseGuards(AuthGuard())
   async joinChannel(
     @GetUser() user: UserEntity,
-    @Body() channelUserInfo: CreateChanneUserDto,
+    @Body() channelUserInfo: CreateChannelUserDto,
   ) {
     this.verifyRequestIdMatch(user.id, channelUserInfo.userId);
     return await this.channelService.joinChannelUser(channelUserInfo);

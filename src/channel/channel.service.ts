@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { ChannelRepository } from './channel.repository';
 import { ChannelUserRepository } from './channel-user.repository';
-import { CreateChanneUserDto } from './channel-user.dto';
+import { CreateChannelUserDto } from './channel-user.dto';
 import {
   CreateChannelDto,
   UpdateChannelDto,
@@ -45,7 +45,7 @@ export class ChannelService {
       const user = await this.userRepository.getUserByUserId(userId);
       await this.verifyUserForChannelJoin(user, channel.id);
       // ChannelUser 생성
-      const channelUserDto = new CreateChanneUserDto();
+      const channelUserDto = new CreateChannelUserDto();
       channelUserDto.userId = userId;
       channelUserDto.channelId = channel.id;
       channelUserDto.password = undefined;
@@ -92,7 +92,7 @@ export class ChannelService {
 
   async kickChannelUser(
     requestUserId: number,
-    updateChannelDto: UpdateChannelUserDto,
+    updateChannelDto: CreateChannelUserDto,
   ) {
     const { userId, channelId } = updateChannelDto;
     // requestUser Admin 여부 검사
@@ -120,7 +120,7 @@ export class ChannelService {
   }
 
   async joinChannelUser(
-    createChannelUserDto: CreateChanneUserDto,
+    createChannelUserDto: CreateChannelUserDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId, password } = createChannelUserDto;
     const user = await this.userRepository.getUserByUserId(userId);
@@ -150,7 +150,7 @@ export class ChannelService {
 
   async setAdmin(
     requestUserId: number,
-    updateChannelDto: UpdateChannelUserDto,
+    updateChannelDto: CreateChannelUserDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
     // owner만 admin 설정 가능

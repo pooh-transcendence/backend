@@ -7,7 +7,7 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import { CreateChanneUserDto } from './channel-user.dto';
+import { CreateChannelUserDto } from './channel-user.dto';
 
 @Injectable()
 export class ChannelUserRepository extends Repository<ChannelUserEntity> {
@@ -20,7 +20,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
   logger = new Logger(ChannelUserRepository.name);
 
   async createChannelUser(
-    createChannelUserDto: CreateChanneUserDto,
+    createChannelUserDto: CreateChannelUserDto,
   ): Promise<ChannelUserEntity> {
     const channelUser = this.create(createChannelUserDto);
     try {
