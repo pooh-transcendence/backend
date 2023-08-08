@@ -120,10 +120,6 @@ class Game {
     } else {
       this.winner = this.giveUpUser === p1 ? this.player2 : this.player1;
       this.loser = this.giveUpUser === p1 ? this.player1 : this.player2;
-      // gameEntity.winner = this.giveUpUser === p1 ? this.player2 : this.player1;
-      // gameEntity.loser = this.giveUpUser === p1 ? this.player1 : this.player2;
-      // gameEntity.winScore = this.score[gameEntity.winner.id];
-      // gameEntity.loseScore = this.score[gameEntity.loser.id];
     }
     gameEntity.winner = this.winner;
     gameEntity.loser = this.loser;
@@ -139,11 +135,11 @@ class Game {
     let ret = false;
     this.racket.forEach((racket) => {
       if (
-        // TODO: 원의 반지름 고려
-        ball[0] >= racket[0] &&
-        ball[0] <= racket[0] + this.racketWidth &&
-        ball[1] >= racket[1] &&
-        ball[1] <= racket[1] + this.racketHeight / 2
+        // 원의 중심 기준
+        ball[0] - this.ballRadius >= racket[0] &&
+        ball[0] + this.ballRadius <= racket[0] + this.racketWidth &&
+        ball[1] - this.ballRadius >= racket[1] &&
+        ball[1] + this.ballRadius <= racket[1] + this.racketHeight / 2
       ) {
         ret = true;
       }
@@ -182,15 +178,18 @@ class Game {
     for (let i = 0; i < this.ballCount; i++) {
       this.ball[i][0] += this.ballSpeed * Math.cos(this.ball[i][2]);
       this.ball[i][1] += this.ballSpeed * Math.sin(this.ball[i][2]);
-      if (this.ball[i][1] < 0 || this.ball[i][1] > this.canvasHeight) {
+      if (
+        this.ball[i][1] - this.ballRadius < 0 ||
+        this.ball[i][1] + this.ballRadius > this.canvasHeight
+      ) {
         // x축 벽에 부딪힐 때
         this.ball[i][2] = -this.ball[i][2];
       } else if (this.isInRacket(this.ball[i])) {
         // racket에 부딪힐 때
         this.ball[i][2] = Math.PI - this.ball[i][2];
-      } else if (this.ball[i][0] <= 0)
+      } else if (this.ball[i][0] - this.ballRadius <= 0)
         ret = 2; // 왼쪽 벽에 부딪힐 때 : player2 승
-      else if (this.ball[i][0] >= this.canvasWidth) ret = 1; // 오른쪽 벽에 부딪힐 때 : player1 승
+      else if (this.ball[i][0] + this.ballRadius >= this.canvasWidth) ret = 1; // 오른쪽 벽에 부딪힐 때 : player1 승
       if (ret !== 0) break;
     }
     return ret;
