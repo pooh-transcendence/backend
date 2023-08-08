@@ -3,7 +3,6 @@ import { GameRepository } from './game.repository';
 import { CreateGameDto } from './game.dto';
 import { GameEntity, GameType } from './game.entity';
 import { UserRepository } from 'src/user/user.repository';
-import { NumberSchema } from 'joi';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 
@@ -40,8 +39,6 @@ export class GameService {
   async deleteGameByGameId(gameId: number): Promise<void> {
     await this.gameRepository.deleteGameByGameId(gameId);
   }
-
-  //
 }
 
 export enum GameStatus {
@@ -53,13 +50,13 @@ export enum GameStatus {
 
 class Game {
   private id: number;
-  private ballVelocity: number;
-  private racketVelocity: number;
+  private ballSpeed: number;
+  private racketHeight: number;
   private status: GameStatus;
   private ball; // [x, y, radion]
   private score;
-  private winner: number;
-  private loser: number;
+  private winner: UserEntity;
+  private loser: UserEntity;
   private type: GameType;
   private ballCount: number;
   private isGiveUp: boolean;
@@ -74,14 +71,15 @@ class Game {
 
     private readonly canvasWidth = 1150,
     private readonly canvasHeight = 600,
-    private readonly racketHeight = 150,
     private readonly racketWidth = 30,
+    private readonly racketSpeed = 10,
+    private readonly ballRadius = 10,
     private readonly maxScore = 6,
   ) {
     this.player1 = gameInfo.winner;
     this.player2 = gameInfo.loser;
-    this.ballVelocity = 10;
-    this.racketVelocity = 10;
+    this.ballSpeed = gameInfo.ballSpeed;
+    this.racketHeight = gameInfo.racketSize;
     this.score[this.player1.id] = 0;
     this.score[this.player2.id] = 0;
     this.ballCount = gameInfo.ballCount;
@@ -90,48 +88,50 @@ class Game {
     this.ball = new Array(gameInfo.ballCount);
     for (let i = 0; gameInfo.ballCount; i++) {
       this.ball[i] = [
-        canvasHeight / 2 + Math.random() * 100,
-        canvasWidth / 2 + Math.random() * 30,
-        Math.random() * 2 * Math.PI,
+        canvasHeight / 2 + Math.random() * 100, // x
+        canvasWidth / 2 + Math.random() * 30, // y
+        Math.random() * 2 * Math.PI, // radian
       ];
     }
     this.racket[this.player1.id] = [
-      0,
-      this.canvasHeight / 2 - this.racketHeight / 2,
+      0, // x
+      this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
     this.racket[this.player2.id] = [
-      this.canvasWidth,
-      this.canvasHeight / 2 - this.racketHeight / 2,
+      this.canvasWidth, // x
+      this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
-    this.ballVelocity = gameInfo.ballSpeed;
+    this.ballSpeed = gameInfo.ballSpeed;
   }
 
   private init() {}
 
-  exportToGameEnetity() {
+  exportToGameEntity() {
     const gameEntity = new GameEntity();
     gameEntity.id = this.id;
     const p1 = this.player1.id,
       p2 = this.player2.id;
     gameEntity.gameType = this.type;
     if (!this.isGiveUp) {
-      gameEntity.winScore =
-        this.score[p1] > this.score[p2] ? this.score[p1] : this.score[p2];
-      gameEntity.loseScore =
-        this.score[p1] < this.score[p2] ? this.score[p1] : this.score[p2];
-      gameEntity.winner =
-        this.score[p1] === this.winner ? this.player1 : this.player2;
-      gameEntity.loser =
-        this.score[p2] === this.loser ? this.player1 : this.player2;
+      this.winner =
+        this.score[p1] > this.score[p2] ? this.player1 : this.player2;
+      this.loser =
+        this.score[p1] > this.score[p2] ? this.player2 : this.player1;
     } else {
-      gameEntity.winner = this.giveUpUser === p1 ? this.player2 : this.player1;
-      gameEntity.loser = this.giveUpUser === p1 ? this.player1 : this.player2;
-      gameEntity.winScore = this.score[gameEntity.winner.id];
-      gameEntity.loseScore = this.score[gameEntity.loser.id];
+      this.winner = this.giveUpUser === p1 ? this.player2 : this.player1;
+      this.loser = this.giveUpUser === p1 ? this.player1 : this.player2;
+      // gameEntity.winner = this.giveUpUser === p1 ? this.player2 : this.player1;
+      // gameEntity.loser = this.giveUpUser === p1 ? this.player1 : this.player2;
+      // gameEntity.winScore = this.score[gameEntity.winner.id];
+      // gameEntity.loseScore = this.score[gameEntity.loser.id];
     }
-    gameEntity.ballSpeed = this.ballVelocity;
+    gameEntity.winner = this.winner;
+    gameEntity.loser = this.loser;
+    gameEntity.winScore = this.score[this.winner.id];
+    gameEntity.loseScore = this.score[this.loser.id];
+    gameEntity.ballSpeed = this.ballSpeed;
     gameEntity.ballCount = this.ballCount;
-    gameEntity.racketSize = this.racketHeight / 2;
+    gameEntity.racketSize = this.racketHeight;
     return gameEntity;
   }
 
@@ -139,6 +139,7 @@ class Game {
     let ret = false;
     this.racket.forEach((racket) => {
       if (
+        // TODO: 원의 반지름 고려
         ball[0] >= racket[0] &&
         ball[0] <= racket[0] + this.racketWidth &&
         ball[1] >= racket[1] &&
@@ -151,25 +152,45 @@ class Game {
   }
 
   racketUpdate(racketUpdate: any) {
-    if (racketUpdate.userId === this.player1.id) {
-      this.racket[this.player1.id][1] += racketUpdate.direction;
-    } else if (racketUpdate.userId === this.player2.id) {
-      this.racket[this.player2.id][1] += racketUpdate.direction;
+    // if (racketUpdate.userId === this.player1.id) {
+    //   this.racket[this.player1.id][1] += racketUpdate.direction;
+    // } else if (racketUpdate.userId === this.player2.id) {
+    //   this.racket[this.player2.id][1] += racketUpdate.direction;
+    // }
+    // // userId 예외처리
+    // if (
+    //   racketUpdate.userId !== this.player1.id &&
+    //   racketUpdate.userId !== this.player2.id
+    // ) {
+    //   throw new Error('Invalid user');
+    // }
+    this.racket[racketUpdate.userId][1] += racketUpdate.direction;
+    // canvas height check
+    if (this.racket[racketUpdate.userId][1] < 0) {
+      this.racket[racketUpdate.userId][1] = 0;
+    } else if (
+      this.racket[racketUpdate.userId][1] >
+      this.canvasHeight - this.racketHeight
+    ) {
+      this.racket[racketUpdate.userId][1] =
+        this.canvasHeight - this.racketHeight;
     }
-    if (this.racket[this.])
   }
 
-  ballUpdate() {
+  ballUpdate(): number {
     let ret = 0;
     for (let i = 0; i < this.ballCount; i++) {
-      this.ball[i][0] += this.ballVelocity * Math.cos(this.ball[i][2]);
-      this.ball[i][1] += this.ballVelocity * Math.sin(this.ball[i][2]);
+      this.ball[i][0] += this.ballSpeed * Math.cos(this.ball[i][2]);
+      this.ball[i][1] += this.ballSpeed * Math.sin(this.ball[i][2]);
       if (this.ball[i][1] < 0 || this.ball[i][1] > this.canvasHeight) {
-        this.ball[i][2] = Math.PI - this.ball[i][2];
-      } else if (this.isInRacket(this.ball[i])) {
+        // x축 벽에 부딪힐 때
         this.ball[i][2] = -this.ball[i][2];
-      } else if (this.ball[i][0] <= 0) ret = 1;
-      else if (this.ball[i][0] >= this.canvasWidth) ret = 2;
+      } else if (this.isInRacket(this.ball[i])) {
+        // racket에 부딪힐 때
+        this.ball[i][2] = Math.PI - this.ball[i][2];
+      } else if (this.ball[i][0] <= 0)
+        ret = 2; // 왼쪽 벽에 부딪힐 때 : player2 승
+      else if (this.ball[i][0] >= this.canvasWidth) ret = 1; // 오른쪽 벽에 부딪힐 때 : player1 승
       if (ret !== 0) break;
     }
     return ret;
