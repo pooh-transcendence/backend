@@ -260,7 +260,7 @@ export class ChannelGateway
     @MessageBody('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
   ) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('leaveA Error');
+    if (!user) throw new WsException('leave Error');
     await this.channelService.leaveChannel(user.id, channelId);
     client.to(channelId.toString()).emit('channelMessage', {
       message: `${user.nickname}님이 나가셨습니다.`,

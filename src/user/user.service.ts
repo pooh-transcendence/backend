@@ -108,6 +108,9 @@ export class UserService {
   }
 
   async updateUserElements(userId: number, elements: any) {
+    const user = await this.userRepository.getUserByUserId(userId);
+    if (!user)
+      throw new NotFoundException(`There is no user with id ${userId}`);
     return await this.userRepository.updateUserElements(userId, elements);
   }
 
