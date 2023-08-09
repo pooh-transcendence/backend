@@ -41,7 +41,7 @@ export class GameGateway
   async handleDisconnect(client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) return;
-    this.queueSocketMap.filter((u) => u.userId !== user.userId);
+    this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
     //this.gameSocketMap.delete(user.userId);
     this.userService.updateUserElements(user.userId, { socketId: null });
   }
