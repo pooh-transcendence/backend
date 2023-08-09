@@ -139,7 +139,7 @@ class Game {
         ball[0] - this.ballRadius >= racket[0] &&
         ball[0] + this.ballRadius <= racket[0] + this.racketWidth &&
         ball[1] - this.ballRadius >= racket[1] &&
-        ball[1] + this.ballRadius <= racket[1] + this.racketHeight / 2
+        ball[1] + this.ballRadius <= racket[1] + this.racketHeight
       ) {
         ret = true;
       }
