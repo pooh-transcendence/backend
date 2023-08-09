@@ -21,7 +21,7 @@ export class GameGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private gameSocketMap: Map<number, Socket>;
-  private queueSocketMap: any[];
+  private queueUser: UserEntity[];
 
   constructor(
     private userService: UserService,
@@ -29,7 +29,7 @@ export class GameGateway
     private authService: AuthService,
   ) {
     this.gameSocketMap = new Map<number, Socket>();
-    this.queueSocketMap = [];
+    this.queueUser = [];
   }
 
   @WebSocketServer()
@@ -41,7 +41,7 @@ export class GameGateway
   async handleDisconnect(client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) return;
-    this.queueSocketMap.filter((u) => u.userId !== user.userId);
+    this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
     //this.gameSocketMap.delete(user.userId);
     this.userService.updateUserElements(user.userId, { socketId: null });
   }
@@ -50,10 +50,10 @@ export class GameGateway
   async handleJoinQueue(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) client.disconnect();
-    this.queueSocketMap.push(user);
+    this.queueUser.push(user);
     this.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
-    if (this.queueSocketMap.length >= 2) {
+    while (this.queueUser.length >= 2) {
       await this.startGame();
     }
   }
@@ -70,9 +70,9 @@ export class GameGateway
     let user2SocketId;
 
     // user1 pop
-    while (this.queueSocketMap.length >= 2) {
+    while (this.queueUser.length >= 2) {
       // user1 socket 연결 확인
-      user1 = this.queueSocketMap.pop();
+      user1 = this.queueUser.shift();
       // socketId 확인
       user1SocketId = await this.userService.getUserElementsById(user1.id, [
         'socketId',
@@ -86,9 +86,9 @@ export class GameGateway
     }
     if (gameUserCount < 1) return; // user1이 없을 때
     // user2 pop
-    while (this.queueSocketMap.length >= 1) {
+    while (this.queueUser.length >= 1) {
       // user2 socket 연결 확인
-      user2 = this.queueSocketMap.pop();
+      user2 = this.queueUser.shift();
       // socketId 확인
       user2SocketId = await this.userService.getUserElementsById(user2.id, [
         'socketId',
@@ -101,8 +101,9 @@ export class GameGateway
       }
     }
 
-    // user1과 user2가 모두 socket 연결이 되어있을 때
-    if (gameUserCount !== 2) {
+    // user1 연결 후 user2 연결이 안됐을 때
+    if (gameUserCount === 1) {
+      this.queueUser.push(user1);
       return;
     }
     // createGameDto 생성
@@ -118,13 +119,10 @@ export class GameGateway
     // user1과 user2에게 game start emit
     this.server
       .to(user1SocketId)
-      .emit('startGame', { status: 'success', gameInfo: createGameDto });
+      .emit('startGame', { gameInfo: createGameDto });
     this.server
       .to(user2SocketId)
-      .emit('startGame', { status: 'success', gameInfo: createGameDto });
-    // user1, user2 queue에서 제거
-    this.queueSocketMap.shift();
-    this.queueSocketMap.shift();
+      .emit('startGame', { gameInfo: createGameDto });
   }
 
   // socket 연결 여부 확인
