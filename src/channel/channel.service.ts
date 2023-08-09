@@ -92,7 +92,7 @@ export class ChannelService {
 
   async kickChannelUser(
     requestUserId: number,
-    updateChannelDto: CreateChannelUserDto,
+    updateChannelDto: UpdateChannelUserDto,
   ) {
     const { userId, channelId } = updateChannelDto;
     // requestUser Admin 여부 검사
@@ -150,7 +150,7 @@ export class ChannelService {
 
   async setAdmin(
     requestUserId: number,
-    updateChannelDto: CreateChannelUserDto,
+    updateChannelDto: UpdateChannelUserDto,
   ): Promise<ChannelUserEntity> {
     const { userId, channelId } = updateChannelDto;
     // owner만 admin 설정 가능

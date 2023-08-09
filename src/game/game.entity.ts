@@ -1,4 +1,4 @@
-import { IsIn, IsNumber, isNumber } from 'class-validator';
+import { IsIn, IsNumber, IsPositive } from 'class-validator';
 import { CommonEntity } from 'src/common/common.entity';
 import { UserEntity } from 'src/user/user.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
@@ -30,14 +30,20 @@ export class GameEntity extends CommonEntity {
 
   @Column({ default: 1 })
   @IsNumber()
+  @IsPositive()
+  @IsIn([1, 2, 3])
   ballSpeed: number;
 
   @Column({ default: 1 })
   @IsNumber()
+  @IsPositive()
+  @IsIn([1, 2, 3])
   ballCount: number;
 
   @Column({ default: 1 })
   @IsNumber()
+  @IsPositive()
+  @IsIn([1, 2, 3])
   racketSize: number;
 
   @Column({ default: null })
@@ -46,16 +52,4 @@ export class GameEntity extends CommonEntity {
   @Column({ default: null })
   @IsNumber()
   giveUpUser: number;
-}
-
-export enum Direction {
-  UP = 'UP',
-  DOWN = 'DOWN',
-}
-
-export class RacketUpdates {
-  @IsNumber()
-  userId: number;
-
-  direction: number;
 }

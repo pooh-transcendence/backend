@@ -154,7 +154,7 @@ export class ChannelGateway
   @SubscribeMessage('kickChannelUser')
   async kickChannelUser(
     @ConnectedSocket() client: Socket,
-    @MessageBody() channelUserInfo: CreateChannelUserDto,
+    @MessageBody() channelUserInfo: UpdateChannelUserDto,
   ) {
     try {
       const user = await this.authService.getUserFromSocket(client);
@@ -199,7 +199,7 @@ export class ChannelGateway
   @SubscribeMessage('admin')
   async setAdmin(
     @ConnectedSocket() client: Socket,
-    @MessageBody() channelUserInfo: CreateChannelUserDto,
+    @MessageBody() channelUserInfo: UpdateChannelUserDto,
   ) {
     const user = await this.authService.getUserFromSocket(client);
     if (user.id === channelUserInfo.userId)

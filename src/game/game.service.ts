@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { GameRepository } from './game.repository';
-import { CreateGameDto } from './game.dto';
+import { CreateGameDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameType } from './game.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserEntity } from 'src/user/user.entity';
@@ -157,7 +157,7 @@ export class Game {
         ball[0] - this.ballRadius >= racket[0] &&
         ball[0] + this.ballRadius <= racket[0] + this.racketWidth &&
         ball[1] - this.ballRadius >= racket[1] &&
-        ball[1] + this.ballRadius <= racket[1] + this.racketHeight / 2
+        ball[1] + this.ballRadius <= racket[1] + this.racketHeight
       ) {
         ret = true;
       }
@@ -165,7 +165,7 @@ export class Game {
     return ret;
   }
 
-  private racketUpdate(racketUpdateDtos: any[]) {
+  private racketUpdate(racketUpdateDtos: RacketUpdatesDto[]) {
     // if (racketUpdate.userId === this.player1.id) {
     //   this.racket[this.player1.id][1] += racketUpdate.direction;
     // } else if (racketUpdate.userId === this.player2.id) {
