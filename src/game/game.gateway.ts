@@ -58,8 +58,14 @@ export class GameGateway
     }
   }
 
+  // 랜덤매칭 로딩 중 취소
   @SubscribeMessage('leaveQueue')
-  async handleLeaveQueue() {}
+  async handleLeaveQueue(@ConnectedSocket() client: Socket) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) client.disconnect();
+    this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
+    this.server.to(client.id).emit('leaveQueue', { status: 'success' });
+  }
 
   // game 시작
   async startGame() {
