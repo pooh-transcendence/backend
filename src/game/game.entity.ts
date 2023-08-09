@@ -47,3 +47,15 @@ export class GameEntity extends CommonEntity {
   @IsNumber()
   giveUpUser: number;
 }
+
+export enum Direction {
+  UP = 'UP',
+  DOWN = 'DOWN',
+}
+
+export class RacketUpdates {
+  @IsNumber()
+  userId: number;
+
+  direction: number;
+}
