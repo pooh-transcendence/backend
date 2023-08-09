@@ -120,4 +120,15 @@ export class AuthService {
       return null;
     }
   }
+
+  getUserIdFromSocket(socket: Socket): number {
+    const token = socket.handshake.auth.authorization;
+    if (!token) return null;
+    const payload = this.jwtService.verify(token, {
+      secret: JwtModuleConfig.secret,
+      ignoreExpiration: true,
+    });
+    if (!payload) return null;
+    return payload.id;
+  }
 }

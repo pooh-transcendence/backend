@@ -1,12 +1,19 @@
 import { UserEntity } from 'src/user/user.entity';
 import { GameEntity, GameType } from './game.entity';
 import { UserService } from 'src/user/user.service';
+import { RacketUpdatesDto } from './game.dto';
 
 export enum GameStatus {
   DEFAULT = 'DEFAULT',
   WAITING = 'WAITING',
   PLAYING = 'PLAYING',
   FINISHED = 'FINISHED',
+}
+
+export enum PlayerStatus {
+  NONE = 0,
+  UP = 1,
+  DOWN = 2,
 }
 
 export class Game {
@@ -25,6 +32,7 @@ export class Game {
   private player1: UserEntity;
   private player2: UserEntity;
   private racket; // = new Array(2);
+  private playersStatus: object;
 
   constructor(
     private gameInfo: GameEntity,
@@ -63,6 +71,8 @@ export class Game {
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
     this.ballSpeed = gameInfo.ballSpeed;
+    this.playersStatus[this.player1.id] = PlayerStatus.NONE;
+    this.playersStatus[this.player2.id] = PlayerStatus.NONE;
   }
 
   init() {
@@ -118,7 +128,7 @@ export class Game {
         ball[0] - this.ballRadius >= racket[0] &&
         ball[0] + this.ballRadius <= racket[0] + this.racketWidth &&
         ball[1] - this.ballRadius >= racket[1] &&
-        ball[1] + this.ballRadius <= racket[1] + this.racketHeight / 2
+        ball[1] + this.ballRadius <= racket[1] + this.racketHeight
       ) {
         ret = true;
       }
@@ -126,7 +136,7 @@ export class Game {
     return ret;
   }
 
-  private racketUpdate(racketUpdateDtos: any[]) {
+  racketUpdate(racketUpdateDtos: RacketUpdatesDto[]) {
     // if (racketUpdate.userId === this.player1.id) {
     //   this.racket[this.player1.id][1] += racketUpdate.direction;
     // } else if (racketUpdate.userId === this.player2.id) {
@@ -139,6 +149,14 @@ export class Game {
     // ) {
     //   throw new Error('Invalid user');
     // }
+    /*
+    const racketUpdateDtos: RacketUpdatesDto[] = [];
+    this.playersStatus.forEach((playerStatus, userId) => {
+      if (playerStatus !== PlayerStatus.NONE) {
+        racketUpdateDtos.push({ userId, direction: playerStatus });
+      }
+    });
+    */
     racketUpdateDtos.forEach((racketUpdateDto) => {
       this.racket[racketUpdateDto.userId][1] += racketUpdateDto.direction;
       // canvas height check
@@ -176,7 +194,7 @@ export class Game {
     return ret;
   }
 
-  update(racketUpdates: any[]) {
+  update(racketUpdates: RacketUpdatesDto[]) {
     this.racketUpdate(racketUpdates);
     const ret = this.ballUpdate();
     if (ret === 0) return { racket: this.racket, ball: this.ball };
