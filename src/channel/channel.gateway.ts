@@ -40,6 +40,7 @@ import { Cache } from 'cache-manager';
 import { BlockService } from 'src/block/block.service';
 import { FriendService } from 'src/friend/friend.service';
 import { ChannelUserEntity } from './channel-user.entity';
+import { freemem } from 'os';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -76,6 +77,12 @@ export class ChannelGateway
     user.channels.forEach((channel) => {
       client.join(channel.id.toString());
     });
+
+    const toFriendList = await this.friendService.getFriendListByToId(user.id);
+    for (const toFriend of toFriendList) {
+      const friend = await this.userService.getUserById(toFriend.from);
+      if (!friend.socketId) continue;
+    }
   }
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
@@ -83,14 +90,17 @@ export class ChannelGateway
     if (!user) return;
     await this.userService.updateUserElements(user.id, {
       socketId: null,
-      userState: UserState.OFFCHAT,
+      userState: UserState.OFFLINE,
     });
     for (const friend of user.friends) {
-      const friendSocketId = await this.cacheManager.get(friend.id.toString());
-      if (!friendSocketId) continue;
-      this.server.to(friendSocketId).emit('ChangefriendState', {
+      const friendSocketId = await this.userService.getUserElementsById(
+        friend as number,
+        ['socketId'],
+      );
+      if (!friendSocketId.socketId) continue;
+      this.server.to(friendSocketId.socketId).emit('ChangefriendState', {
         friendId: user.id,
-        userState: UserState.OFFCHAT,
+        userState: UserState.OFFLINE,
       });
     }
     client.rooms.clear();
