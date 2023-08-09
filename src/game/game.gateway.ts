@@ -16,7 +16,7 @@ import { GameType } from './game.entity';
 import { randomInt } from 'crypto';
 import { UserEntity } from 'src/user/user.entity';
 
-@WebSocketGateway()
+@WebSocketGateway({ namespace: 'game' })
 export class GameGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
@@ -25,8 +25,8 @@ export class GameGateway
 
   constructor(
     private userService: UserService,
-    private authService: AuthService,
     private gameService: GameService,
+    private authService: AuthService,
   ) {
     this.gameSocketMap = new Map<number, Socket>();
     this.queueSocketMap = [];
@@ -37,8 +37,14 @@ export class GameGateway
 
   afterInit(server: any) {}
 
-  handleConnection(client: any, ...args: any[]) {}
-  handleDisconnect(client: any) {}
+  handleConnection(client: any) {}
+  async handleDisconnect(client: Socket) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) return;
+    this.queueSocketMap.filter((u) => u.userId !== user.userId);
+    //this.gameSocketMap.delete(user.userId);
+    this.userService.updateUserElements(user.userId, { socketId: null });
+  }
 
   @SubscribeMessage('joinQueue')
   async handleJoinQueue(@ConnectedSocket() client: Socket) {

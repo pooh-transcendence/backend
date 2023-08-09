@@ -1,5 +1,6 @@
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsIn, IsNumber, IsString, Length } from 'class-validator';
+import { ChannelEntity } from 'src/channel/channel.entity';
 import { CommonEntity } from 'src/common/common.entity';
 import { GameEntity } from 'src/game/game.entity';
 import { Column, Entity, OneToMany, Unique } from 'typeorm';
@@ -15,6 +16,9 @@ export enum UserState {
 @Entity()
 @Unique(['nickname'])
 export class UserEntity extends CommonEntity {
+  freinds(arg0: string, freinds: any) {
+    throw new Error('Method not implemented.');
+  }
   @Column()
   @IsString()
   // @Exclude()
