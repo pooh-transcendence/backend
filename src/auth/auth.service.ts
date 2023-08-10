@@ -104,7 +104,8 @@ export class AuthService {
 
   async getUserFromSocket(socket: Socket): Promise<any> {
     try {
-      const token = socket.handshake.auth.authorization;
+      const token = socket.handshake.headers.authorization;
+      //const token = socket.handshake.auth.authorization;
       if (!token) return null;
       const payload = this.jwtService.verify(token, {
         secret: JwtModuleConfig.secret,
@@ -119,5 +120,16 @@ export class AuthService {
     } catch (err) {
       return null;
     }
+  }
+
+  getUserIdFromSocket(socket: Socket): number {
+    const token = socket.handshake.auth.authorization;
+    if (!token) return null;
+    const payload = this.jwtService.verify(token, {
+      secret: JwtModuleConfig.secret,
+      ignoreExpiration: true,
+    });
+    if (!payload) return null;
+    return payload.id;
   }
 }
