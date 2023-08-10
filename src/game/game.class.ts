@@ -13,7 +13,7 @@ export enum GameStatus {
 export enum PlayerStatus {
   NONE = 0,
   UP = 1,
-  DOWN = 2,
+  DOWN = -1,
 }
 
 export class Game {
@@ -32,7 +32,7 @@ export class Game {
   private player1: UserEntity;
   private player2: UserEntity;
   private racket; // = new Array(2);
-  private playersStatus: object;
+  private playersStatus;
 
   constructor(
     private gameInfo: GameEntity,
@@ -91,6 +91,8 @@ export class Game {
       this.canvasWidth, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
+    this.playersStatus[this.player1.id] = PlayerStatus.NONE;
+    this.playersStatus[this.player2.id] = PlayerStatus.NONE;
   }
 
   exportToGameEntity() {
@@ -136,40 +138,35 @@ export class Game {
     return ret;
   }
 
-  racketUpdate(racketUpdateDtos: RacketUpdatesDto[]) {
-    // if (racketUpdate.userId === this.player1.id) {
-    //   this.racket[this.player1.id][1] += racketUpdate.direction;
-    // } else if (racketUpdate.userId === this.player2.id) {
-    //   this.racket[this.player2.id][1] += racketUpdate.direction;
-    // }
-    // // userId 예외처리
-    // if (
-    //   racketUpdate.userId !== this.player1.id &&
-    //   racketUpdate.userId !== this.player2.id
-    // ) {
-    //   throw new Error('Invalid user');
-    // }
-    /*
-    const racketUpdateDtos: RacketUpdatesDto[] = [];
-    this.playersStatus.forEach((playerStatus, userId) => {
-      if (playerStatus !== PlayerStatus.NONE) {
-        racketUpdateDtos.push({ userId, direction: playerStatus });
-      }
-    });
-    */
-    racketUpdateDtos.forEach((racketUpdateDto) => {
-      this.racket[racketUpdateDto.userId][1] += racketUpdateDto.direction;
-      // canvas height check
-      if (this.racket[racketUpdateDto.userId][1] < 0) {
-        this.racket[racketUpdateDto.userId][1] = 0;
+  getUpdateRacket(racketUpdate: RacketUpdatesDto) {
+    if (racketUpdate.userId === this.player1.id) {
+      this.racket[this.player1.id][1] += racketUpdate.direction;
+    } else if (racketUpdate.userId === this.player2.id) {
+      this.racket[this.player2.id][1] += racketUpdate.direction;
+    }
+    // userId 예외처리
+    if (
+      racketUpdate.userId !== this.player1.id &&
+      racketUpdate.userId !== this.player2.id
+    ) {
+      throw new Error('Invalid user');
+    }
+  }
+
+  racketUpdate() {
+    this.playersStatus.forEach((status, userId) => {
+      this.racket[userId][1] += status;
+      if (this.racket[userId][1] < 0) {
+        this.racket[userId][1] = 0;
       } else if (
-        this.racket[racketUpdateDto.userId][1] >
+        this.racket[userId][1] >
         this.canvasHeight - this.racketHeight
       ) {
-        this.racket[racketUpdateDto.userId][1] =
-          this.canvasHeight - this.racketHeight;
+        this.racket[userId][1] = this.canvasHeight - this.racketHeight;
       }
     });
+    this.playersStatus[this.player1.id] = PlayerStatus.NONE;
+    this.playersStatus[this.player2.id] = PlayerStatus.NONE;
   }
 
   private ballUpdate(): number {
@@ -194,12 +191,27 @@ export class Game {
     return ret;
   }
 
-  update(racketUpdates: RacketUpdatesDto[]) {
-    this.racketUpdate(racketUpdates);
+  update() {
+    this.racketUpdate();
     const ret = this.ballUpdate();
-    if (ret === 0) return { racket: this.racket, ball: this.ball };
-    const getScorePlayer = ret === 2 ? this.player1 : this.player2;
-    this.score[getScorePlayer.id]++;
-    return { racket: this.racket, ball: this.ball, score: this.score };
+    const winplayerId = ret === 1 ? this.player1.id : this.player2.id;
+    if (ret !== 0) this.score[winplayerId]++;
+    return {
+      racket: this.racket,
+      ball: this.ball,
+      score: this.score,
+      isGetScore: ret !== 0,
+    };
+  }
+
+  getRoomId() {
+    return 'game: ' + this.id.toString();
+  }
+
+  isGameOver() {
+    return (
+      this.score[this.player1.id] === this.maxScore ||
+      this.score[this.player2.id] === this.maxScore
+    );
   }
 }

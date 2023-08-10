@@ -46,6 +46,7 @@ export class GameGateway
   afterInit(server: any) {}
 
   handleConnection(client: any) {}
+
   async handleDisconnect(client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) return;
@@ -125,8 +126,14 @@ export class GameGateway
     };
     const gameEntity = await this.gameService.createGame(createGameDto);
     // user1과 user2에게 game start emit
-    this.server.to(user1SocketId).emit('getGame', { gameInfo: createGameDto });
-    this.server.to(user2SocketId).emit('getGame', { gameInfo: createGameDto });
+    this.server.to(user1SocketId).emit('getGame', {
+      gameInfo: createGameDto,
+      whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
+    });
+    this.server.to(user2SocketId).emit('getGame', {
+      gameInfo: createGameDto,
+      whoAmI: user2.id === gameEntity.winner.id ? 'left' : 'right',
+    });
     const socket1 = this.server.sockets.sockets.get(user1SocketId);
     const socket2 = this.server.sockets.sockets.get(user2SocketId);
     socket1.join('game : ' + gameEntity.id.toString());
@@ -152,6 +159,25 @@ export class GameGateway
     if (!gameId) return;
     const game: Game = this.gameMap.get(gameId);
     if (!game) return;
-    game.racketUpdate([racketUpdate]);
+    game.getUpdateRacket(racketUpdate);
+  }
+
+  private gameStart(game: Game) {
+    game.init();
+    let gameEntity;
+    while (1) {
+      const ret = game.update();
+      this.server.to(game.getRoomId()).emit('gameUpdate', ret);
+      if (ret.isGetScore) game.init();
+      if (game.isGameOver()) {
+        gameEntity = game.exportToGameEntity();
+        break;
+      }
+    }
+
+    this.gameMap.delete(gameEntity.id);
+    this.gameToUserMap.delete(gameEntity.participants[0].id);
+    this.gameToUserMap.delete(gameEntity.participants[1].id);
+    //this.gameService.updateGame(gameEntity.id, gameEntity);
   }
 }
