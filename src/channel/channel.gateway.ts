@@ -1,3 +1,14 @@
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import {
+  Inject,
+  Logger,
+  NotFoundException,
+  ParseIntPipe,
+  UseFilters,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -9,42 +20,32 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { ChannelService } from './channel.service';
+import { Cache } from 'cache-manager';
 import { Socket } from 'socket.io';
-import {
-  ConsoleLogger,
-  Inject,
-  Logger,
-  NotFoundException,
-  ParseIntPipe,
-  UseFilters,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
 import { AuthService } from 'src/auth/auth.service';
-import { UserService } from 'src/user/user.service';
-import { UserEntity, UserState } from 'src/user/user.entity';
-import { CreateChannelUserDto } from './channel-user.dto';
+import { BlockService } from 'src/block/block.service';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
+import { SocketTransformInterceptor } from 'src/common/interceptors/socket-tranform.interceptor';
+import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
+import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { FriendService } from 'src/friend/friend.service';
+import { UserEntity, UserState } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
+import { CreateChannelUserDto } from './channel-user.dto';
+import { ChannelUserEntity } from './channel-user.entity';
 import {
   CreateChannelDto,
   MessageDto,
   UpdateChannelDto,
   UpdateChannelUserDto,
 } from './channel.dto';
-import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
-import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
-import { BlockService } from 'src/block/block.service';
-import { FriendService } from 'src/friend/friend.service';
-import { ChannelUserEntity } from './channel-user.entity';
-import { freemem } from 'os';
+import { ChannelService } from './channel.service';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
+@UseInterceptors(SocketTransformInterceptor)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect

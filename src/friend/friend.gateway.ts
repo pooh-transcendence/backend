@@ -1,25 +1,10 @@
-import {
-  Logger,
-  ParseIntPipe,
-  UseFilters,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
-import {
-  ConnectedSocket,
-  MessageBody,
-  SubscribeMessage,
-  WebSocketGateway,
-  WebSocketServer,
-  WsException,
-} from '@nestjs/websockets';
-import { Server } from 'ws';
-import { Socket } from 'socket.io';
-import { FriendService } from './friend.service';
+import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { AuthService } from 'src/auth/auth.service';
-import { UserService } from 'src/user/user.service';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { UserService } from 'src/user/user.service';
+import { Server } from 'ws';
+import { FriendService } from './friend.service';
 
 @WebSocketGateway({ namespace: 'friend' })
 @UseFilters(AllExceptionsSocketFilter)

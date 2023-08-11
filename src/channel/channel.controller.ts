@@ -12,20 +12,20 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { ChannelService } from './channel.service';
+import { AuthGuard } from '@nestjs/passport';
+import { GetUser } from 'src/auth/get-user.decostor';
+import { TransformInterceptor } from 'src/common/interceptors/tranform.interceptor';
+import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
+import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { UserEntity } from 'src/user/user.entity';
 import { CreateChannelUserDto } from './channel-user.dto';
-import { ChannelTypePipe as ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
 import {
   CreateChannelDto,
   UpdateChannelDto,
   UpdateChannelUserDto,
 } from './channel.dto';
-import { GetUser } from 'src/auth/get-user.decostor';
-import { AuthGuard } from '@nestjs/passport';
-import { UserEntity } from 'src/user/user.entity';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
-import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
-import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { ChannelService } from './channel.service';
 
 @Controller('/channel')
 @UseInterceptors(TransformInterceptor)
