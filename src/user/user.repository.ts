@@ -13,7 +13,17 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async getAllUser(): Promise<UserEntity[]> {
-    return await this.find({ order: { id: 'ASC' } });
+    return await this.find({
+      order: { id: 'ASC' },
+      select: [
+        'id',
+        'nickname',
+        'avatar',
+        'winScore',
+        'loseScore',
+        'userState',
+      ],
+    });
   }
 
   async getUserByUserId(userId: number): Promise<UserEntity> {
