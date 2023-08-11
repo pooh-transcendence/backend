@@ -1,4 +1,9 @@
-import { GameService } from './game.service';
+import {
+  UseFilters,
+  UseInterceptors,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -9,20 +14,23 @@ import {
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { UserService } from 'src/user/user.service';
-import { Server } from 'ws';
+import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
-import { GameType } from './game.entity';
-import { randomInt } from 'crypto';
+import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
+import { SocketTransformInterceptor } from 'src/common/interceptors/socket-tranform.interceptor';
 import { UserEntity } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
+import { Server } from 'ws';
 import { Game } from './game.class';
-import { subscribe } from 'diagnostics_channel';
-import { use } from 'passport';
 import { RacketUpdatesDto } from './game.dto';
-import { ConfigurableModuleBuilder } from '@nestjs/common';
+import { GameType } from './game.entity';
+import { GameService } from './game.service';
 
 @WebSocketGateway({ namespace: 'game' })
+@UseInterceptors(SocketTransformInterceptor)
+@UseFilters(AllExceptionsSocketFilter)
+@UsePipes(new ValidationPipe({ transform: true }))
 export class GameGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {

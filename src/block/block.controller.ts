@@ -2,23 +2,23 @@ import {
   Body,
   Controller,
   Delete,
-  Logger,
-  Post,
-  ParseIntPipe,
-  UseGuards,
-  UseInterceptors,
+  Get,
   HttpException,
   HttpStatus,
-  Get,
+  Logger,
+  ParseIntPipe,
+  Post,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { BlockService } from './block.service';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
-import { GetUser } from 'src/auth/get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
-import { UserEntity } from 'src/user/user.entity';
-import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { GetUser } from 'src/auth/get-user.decostor';
+import { TransformInterceptor } from 'src/common/interceptors/tranform.interceptor';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserProfileDto } from 'src/user/user.dto';
+import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { BlockService } from './block.service';
 
 @Controller('block')
 @UseGuards(AuthGuard())

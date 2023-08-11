@@ -1,32 +1,29 @@
 import {
   Logger,
-  ParseIntPipe,
   UseFilters,
+  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import {
-  ConnectedSocket,
-  MessageBody,
   OnGatewayConnection,
   OnGatewayDisconnect,
   OnGatewayInit,
-  SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
-  WsException,
 } from '@nestjs/websockets';
-import { BlockService } from './block.service';
-import { AuthService } from 'src/auth/auth.service';
-import { Server } from 'ws';
 import { Socket } from 'socket.io';
-import { UserService } from 'src/user/user.service';
+import { AuthService } from 'src/auth/auth.service';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { UserService } from 'src/user/user.service';
+import { Server } from 'ws';
+import { SocketTransformInterceptor } from 'src/common/interceptors/socket-tranform.interceptor';
+import { BlockService } from './block.service';
 
 @WebSocketGateway({ namespace: 'block' })
 @UseFilters(AllExceptionsSocketFilter)
 @UsePipes(new ValidationPipe({ transform: true }))
+@UseInterceptors(SocketTransformInterceptor)
 export class BlockGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {

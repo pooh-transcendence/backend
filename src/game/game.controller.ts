@@ -10,10 +10,10 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { GameService } from './game.service';
+import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { CreateGameDto } from './game.dto';
 import { GameEntity } from './game.entity';
-import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { GameService } from './game.service';
 
 @Controller('game')
 export class GameController {

@@ -10,15 +10,15 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { CreateUserDto } from 'src/user/user.dto';
-import { AuthService } from './auth.service';
-import { UserService } from 'src/user/user.service';
-import { GetUser } from './get-user.decostor';
 import { AuthGuard } from '@nestjs/passport';
-import { UserEntity } from 'src/user/user.entity';
-import { FortyTwoApiService } from './fortytwo.service';
-import { TransformInterceptor } from 'src/common/tranfrom.interceptor';
+import { TransformInterceptor } from 'src/common/interceptors/tranform.interceptor';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { CreateUserDto } from 'src/user/user.dto';
+import { UserEntity } from 'src/user/user.entity';
+import { UserService } from 'src/user/user.service';
+import { AuthService } from './auth.service';
+import { FortyTwoApiService } from './fortytwo.service';
+import { GetUser } from './get-user.decostor';
 
 @Controller('auth')
 @UseInterceptors(TransformInterceptor)
