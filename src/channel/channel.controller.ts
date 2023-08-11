@@ -105,6 +105,18 @@ export class ChannelController {
     return await this.channelService.setAdmin(user.id, channelUserInfo);
   }
 
+  @Post('/GetAdmin')
+  @UseGuards(AuthGuard())
+  async getAdmin(
+    @GetUser() user: UserEntity,
+    @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
+  ) {
+    const channel = await this.channelService.getChannelByChannelId(channelId);
+    if (!channel)
+      throw new HttpException(`Channel not found`, HttpStatus.BAD_REQUEST);
+    return await this.channelService.getChannelAdminId(channelId);
+  }
+
   @Patch('/password')
   @UseGuards(AuthGuard())
   async updatePassword(
@@ -112,6 +124,18 @@ export class ChannelController {
     @Body() channelInfo: UpdateChannelDto,
   ) {
     return await this.channelService.updatePassword(user.id, channelInfo);
+  }
+
+  @Patch('/invite')
+  @UseGuards(AuthGuard())
+  async inviteUser(
+    @GetUser() user: UserEntity,
+    @Body() createChannelUserDto: CreateChannelUserDto,
+  ) {
+    return await this.channelService.inviteUserToChannel(
+      user.id,
+      createChannelUserDto,
+    );
   }
 
   verifyRequestIdMatch(userId: number, requestBodyUserId: number) {

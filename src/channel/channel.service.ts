@@ -17,6 +17,8 @@ import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelUserEntity } from './channel-user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserEntity } from 'src/user/user.entity';
+import { channel } from 'diagnostics_channel';
+import { CreateUserDto } from 'src/user/user.dto';
 
 @Injectable()
 export class ChannelService {
@@ -342,5 +344,54 @@ export class ChannelService {
     );
     if (!channelUser || channelUser.isBanned) return null;
     return channelUser;
+  }
+
+  async getChannelAdminId(channelId: number): Promise<UserEntity[]> {
+    const adminID = await this.channelUserRepository.find({
+      where: { channelId: channelId, isAdmin: true },
+    });
+    const adminUser: UserEntity[] = [];
+    for (const admin of adminID) {
+      adminUser.push(
+        await this.userRepository.findOne({
+          where: { id: admin.userId },
+          select: ['id', 'nickname', 'avatar'],
+        }),
+      );
+    }
+    return adminUser;
+  }
+
+  async inviteUserToChannel(
+    hostId: number,
+    createChannelUserDto: CreateChannelUserDto,
+  ): Promise<ChannelUserEntity> {
+    const { channelId, userId } = createChannelUserDto;
+    const channelUsers = await this.getChannelUser(channelId);
+    this.verifyChannelUserInChannel(hostId, channelUsers);
+    const user = await this.userRepository.getUserByUserId(userId);
+    if (!user) throw new NotFoundException(`There is no User ${userId}`);
+    createChannelUserDto.password = undefined;
+    return await this.channelUserRepository.createChannelUser(
+      createChannelUserDto,
+    );
+  }
+
+  verifyChannelUserInChannel(
+    userId: number,
+    channelUsers: ChannelUserEntity[],
+  ) {
+    let ret = false;
+    for (const channelUser of channelUsers) {
+      if (channelUser.userId === userId && !channelUser.isBanned) {
+        ret = true;
+        break;
+      }
+    }
+    if (!ret)
+      throw new HttpException(
+        `User ${userId} is not in Channel`,
+        HttpStatus.BAD_REQUEST,
+      );
   }
 }

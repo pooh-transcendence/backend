@@ -87,4 +87,9 @@ export class UserController {
   ) {
     return await this.userService.updateUserElements(user.id, { nickname });
   }
+
+  @Get('/AllUser')
+  async getAllUser() {
+    return this.userService.getAllUser();
+  }
 }

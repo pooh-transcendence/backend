@@ -12,6 +12,7 @@ import {
 import { ChannelService } from './channel.service';
 import { Socket } from 'socket.io';
 import {
+  ConsoleLogger,
   Inject,
   Logger,
   NotFoundException,
@@ -181,7 +182,7 @@ export class ChannelGateway
           targetUser.socketId,
         );
         targetUserSocket.to(channelId.toString()).emit('channelMessage', {
-          message: `${user.username}님이 강퇴당하셨습니다.`,
+          message: `${targetUser.nickname}님이 강퇴당하셨습니다.`,
         });
         targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
       }
@@ -202,6 +203,7 @@ export class ChannelGateway
       this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
       return await this.channelService.banChannelUser(user.id, channelUserInfo);
     } catch (err) {
+      this.logger.log(err);
       return err;
     }
   }
@@ -217,6 +219,7 @@ export class ChannelGateway
     try {
       return await this.channelService.setAdmin(user.id, channelUserInfo);
     } catch (err) {
+      this.logger.log(err);
       return err;
     }
   }
@@ -231,6 +234,7 @@ export class ChannelGateway
     try {
       return await this.channelService.updatePassword(user.id, channelInfo);
     } catch (err) {
+      this.logger.log(err);
       return err;
     }
   }
@@ -261,6 +265,7 @@ export class ChannelGateway
       }
       return result;
     } catch (err) {
+      this.logger.log(err);
       return err;
     }
   }
@@ -376,7 +381,7 @@ export class ChannelGateway
       blockList.push(
         await this.userService.getUserElementsById(id.to, [
           'id',
-          'username',
+          'nickname',
           'avatar',
         ]),
       );
@@ -493,5 +498,50 @@ export class ChannelGateway
         this.logger.error(err);
         throw new WsException(err);
       });
+  }
+
+  @SubscribeMessage('getChannelAdmin')
+  async getChannelAdmin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('channelId', ParseIntPipe, PositiveIntPipe)
+    channelId: number,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const channel = await this.channelService.getChannelByChannelId(channelId);
+    if (!channel) throw new WsException('Channel not found');
+    const channelAdmin = await this.channelService.getChannelAdminId(channelId);
+    return channelAdmin;
+  }
+
+  @SubscribeMessage('inviteUser')
+  async inviteUser(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() createChannelUserDto: CreateChannelUserDto,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const { userId } = createChannelUserDto;
+    const ret = await this.channelService.inviteUserToChannel(
+      user.id,
+      createChannelUserDto,
+    );
+    const targetUser = await this.userService.getUserById(userId);
+    if (targetUser.socketId) {
+      const targetSocket: Socket = this.server.sockets.get(targetUser.socketId);
+      targetSocket.join(ret.channelId.toString());
+      targetSocket.to(ret.channelId.toString()).emit('channelMessage', {
+        message: `${user.nickname} has invited ${targetUser.nickname} to join this channel`,
+      });
+    }
+    return ret;
+  }
+
+  @SubscribeMessage('allUser')
+  async getAllUser(@ConnectedSocket() client: Socket) {
+    this.logger.log('Get all user');
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    return await this.userService.getAllUser();
   }
 }
