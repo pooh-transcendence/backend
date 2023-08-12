@@ -68,9 +68,9 @@ export class ChannelGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || user.socketId) {
-      return client.disconnect();
-    }
+    // if (!user || user.socketId) {
+    //   return client.disconnect();
+    // }
     await this.userService.updateUserElements(user.id, {
       socketId: client.id,
       userState: UserState.ONCHAT,
@@ -290,8 +290,15 @@ export class ChannelGateway
     event: string,
     ...data: any
   ) {
-    if (user.blocks.includes(targetUserId)) return;
     const targetUser = await this.userService.getUserById(targetUserId);
+    let isBlocked = false;
+    targetUser.blocks.forEach((block) => {
+      if (block.id === user.id) {
+        isBlocked = true;
+        return;
+      }
+    });
+    if (isBlocked) return;
     const userSocket = this.server.sockets.get(user.socketId);
     if (!targetUser || !targetUser.socketId || !userSocket) return;
     this.server.to(targetUser.socketId).emit(event, data);
@@ -386,7 +393,8 @@ export class ChannelGateway
         ]),
       );
     }
-    return blockList;
+    this.server.to(client.id).emit('getBlockList', blockList);
+    return { sucess: true, blockList };
   }
 
   @SubscribeMessage('createBlock')
@@ -400,7 +408,7 @@ export class ChannelGateway
     const userId = user.id;
     if (userId === blockUserId)
       throw new WsException(`Can't be block with yourself`);
-    return await this.blockService
+    const createBlock = await this.blockService
       .createBlock({
         from: userId,
         to: blockUserId,
@@ -409,6 +417,8 @@ export class ChannelGateway
         this.logger.error(err);
         throw new WsException(err);
       });
+    this.server.to(client.id).emit('createBlock', createBlock);
+    return { sucess: true, createBlock };
   }
 
   @SubscribeMessage('deleteBlock')
@@ -422,7 +432,7 @@ export class ChannelGateway
     const userId = user.id;
     if (userId === blockedUserId)
       throw new WsException(`Can't be block with yourself`);
-    return await this.blockService
+    const deleteBlock = await this.blockService
       .deleteBlock({
         from: userId,
         to: blockedUserId,
@@ -431,6 +441,8 @@ export class ChannelGateway
         this.logger.error(err);
         throw new WsException(err);
       });
+    this.server.to.client.id.emit('deleteBlock', deleteBlock);
+    return { sucess: true, deleteBlock };
   }
 
   // Friend
@@ -452,7 +464,8 @@ export class ChannelGateway
         ]),
       );
     }
-    return friendList;
+    this.server.to(client.id).emit('getFriendList', friendList);
+    //return friendList;
   }
 
   @SubscribeMessage('createFriend')
@@ -467,7 +480,7 @@ export class ChannelGateway
     this.logger.log(`User ${userId} is trying to add ${followingUserId}`);
     if (userId === followingUserId)
       throw new WsException(`Can't be friend with yourself`);
-    return await this.friendService
+    const friend = await this.friendService
       .creatFriend({
         from: userId,
         to: followingUserId,
@@ -476,6 +489,8 @@ export class ChannelGateway
         this.logger.log(err);
         throw new WsException(err);
       });
+    this.server.to(client.id).emit('createFriend', friend);
+    return { success: true, friend };
   }
 
   @SubscribeMessage('deleteFriend')
