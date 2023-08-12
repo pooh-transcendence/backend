@@ -24,7 +24,7 @@ export class UserService {
     return await this.userRepository.getAllUser();
   }
 
-  async getUserById(userId: number): Promise<UserEntity> {
+  async getUserById(userId: number): Promise<any> {
     const user = await this.userRepository.getUserByUserId(userId);
     if (!user)
       throw new NotFoundException(`There is no user with id ${userId}`);
