@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Get,
   ParseIntPipe,
   Post,
   Req,
@@ -28,18 +27,7 @@ export class AuthController {
     private userService: UserService,
     private fortyTwoApiService: FortyTwoApiService,
   ) {}
-  /*
-  @Post('signin')
-  async signIn(@Body() createUserDto: CreateUserDto, @Res() res) {
-    const { user, accessToken, refreshToken } = await this.authService.signIn(
-      createUserDto,
-      false,
-    );
-    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true });
-    res.send(user);
-  }
-  */
+
   @Post('signout')
   @UseGuards(AuthGuard())
   async signOut(@GetUser('id') user: UserEntity, @Req() req) {
@@ -66,7 +54,7 @@ export class AuthController {
   }
 
   @Post('signIn')
-  async signUp(@Body('ftToken') token: string) {
+  async signIn(@Body('ftToken') token: string) {
     const data = await this.fortyTwoApiService.getDataFrom42API(
       token,
       '/v2/me',
@@ -92,7 +80,7 @@ export class AuthController {
     return { qrCodeURL, userId: user.id };
   }
 
-  @Post('TestForSignIn')
+  @Post('testForSignIn')
   async testForSignIn(@Body() createUserDto: CreateUserDto) {
     const user = await this.userService.createUser(createUserDto);
     const accessToken = await this.authService.generateAccessTokenFree(user);
