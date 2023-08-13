@@ -107,15 +107,18 @@ export class ChannelService {
     await this.channelUserRepository.deleteChannelUserByIds(userId, channelId);
   }
 
-  async getVisibleChannel(): Promise<ChannelEntity[]> {
+  async getVisibleChannel() {
     const channels = await this.channelRepository.getAllVisibleChannel();
     for (const channel of channels) {
+      channel.password = undefined;
+      const owner = await this.userRepository.getUserByUserId(channel.ownerId);
+      if (owner) {
+        channel['ownerNickname'] = owner.nickname; // owner nickname
+      }
       channel['channelUser'] =
         await this.channelUserRepository.findChannelUserByChannelId(channel.id);
+      channel['userCount'] = channel['channelUser'].length; // channelUser 수
     }
-    channels.forEach((channel) => {
-      channel.password = undefined;
-    });
     return channels;
   }
 
