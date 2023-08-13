@@ -94,7 +94,7 @@ export class AuthService {
     return speakeasy.generateSecret();
   }
 
-  generateQRCodeURL(secret: string, user: string, issuer: string) {
+  generateQRCodeURL(secret: string, user: string, issuer: string): string {
     return speakeasy.otpauthURL({ secret, label: user, issuer });
   }
 

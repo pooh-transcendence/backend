@@ -50,12 +50,19 @@ export class AuthController {
   }
 
   @Get('accessToken')
-  async getAccessToken(@Body('id', ParseIntPipe) userId: number, @Req() req) {
+  async getAccessToken(
+    @Body('id', ParseIntPipe, PositiveIntPipe) userId: number,
+    @Req() req,
+  ) {
     const refreshToken = req.headers.cookie
       .split('; ')
       .find((x) => x.startsWith('refreshToken'))
       .split('=')[1];
-    return await this.authService.generateAccessToken(userId, refreshToken);
+    const accessToken = await this.authService.generateAccessToken(
+      userId,
+      refreshToken,
+    );
+    return { accessToken };
   }
 
   @Post('signIn')

@@ -12,7 +12,6 @@ import { MiddlewareConsumer } from '@nestjs/common/interfaces';
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { CacheModule } from '@nestjs/cache-manager';
 import { cacheModuleConfig } from './configs/cache.config';
-import { SocketLoggerMiddleware } from './common/middlewares/socket-logger.middleware';
 
 @Module({
   imports: [
@@ -35,6 +34,6 @@ import { SocketLoggerMiddleware } from './common/middlewares/socket-logger.middl
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
-    consumer.apply(SocketLoggerMiddleware).forRoutes('*');
+    // consumer.apply(SocketLoggerMiddleware).forRoutes('*');
   }
 }
