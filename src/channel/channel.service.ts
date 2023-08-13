@@ -5,20 +5,18 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { ChannelRepository } from './channel.repository';
-import { ChannelUserRepository } from './channel-user.repository';
+import { UserEntity } from 'src/user/user.entity';
+import { UserRepository } from 'src/user/user.repository';
 import { CreateChannelUserDto } from './channel-user.dto';
+import { ChannelUserEntity } from './channel-user.entity';
+import { ChannelUserRepository } from './channel-user.repository';
 import {
   CreateChannelDto,
   UpdateChannelDto,
   UpdateChannelUserDto,
 } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
-import { ChannelUserEntity } from './channel-user.entity';
-import { UserRepository } from 'src/user/user.repository';
-import { UserEntity } from 'src/user/user.entity';
-import { channel } from 'diagnostics_channel';
-import { CreateUserDto } from 'src/user/user.dto';
+import { ChannelRepository } from './channel.repository';
 
 @Injectable()
 export class ChannelService {
