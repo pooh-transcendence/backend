@@ -49,7 +49,7 @@ export class AuthController {
     req.res.send();
   }
 
-  @Get('accessToken')
+  @Post('accessToken')
   async getAccessToken(
     @Body('id', ParseIntPipe, PositiveIntPipe) userId: number,
     @Req() req,
