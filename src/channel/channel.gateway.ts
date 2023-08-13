@@ -83,7 +83,7 @@ export class ChannelGateway
     for (const toFriendFrom of toFriendList) {
       const toFriend = await this.userService.getUserById(toFriendFrom.from);
       if (!toFriend.socketId) continue;
-      this.server.to(toFriend.socketId).emit('ChangefriendState', {
+      this.server.to(toFriend.socketId).emit('changeFriendState', {
         friendId: user.id,
         userState: UserState.ONLINE,
       });
@@ -100,7 +100,7 @@ export class ChannelGateway
     for (const friend of user.friends) {
       const friendSocketId = await this.userService.getUserById(friend.id);
       if (!friendSocketId?.socketId) continue;
-      this.server.to(friendSocketId.socketId).emit('ChangefriendState', {
+      this.server.to(friendSocketId.socketId).emit('changeFriendState', {
         friendId: user.id,
         userState: UserState.OFFLINE,
       });
