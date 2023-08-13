@@ -6,6 +6,7 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  Param,
   ParseIntPipe,
   Patch,
   Post,
@@ -105,11 +106,9 @@ export class ChannelController {
     return await this.channelService.setAdmin(user.id, channelUserInfo);
   }
 
-  @Post('/GetAdmin')
-  @UseGuards(AuthGuard())
+  @Get('/admin/:channelId')
   async getAdmin(
-    @GetUser() user: UserEntity,
-    @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
+    @Param('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
   ) {
     const channel = await this.channelService.getChannelByChannelId(channelId);
     if (!channel)
