@@ -61,6 +61,12 @@ export class UserController {
     return user;
   }
 
+  @Get('/AllUser')
+  async getAllUser() {
+    this.logger.log('getAllUser');
+    return await this.userService.getAllUser();
+  }
+
   // 유저의 아이디로 유저 정보를 가져온다.
   @Get('/:userId')
   async getUserProfileById(
@@ -86,10 +92,5 @@ export class UserController {
     @Body('nickname') nickname: string,
   ) {
     return await this.userService.updateUserElements(user.id, { nickname });
-  }
-
-  @Get('/AllUser')
-  async getAllUser() {
-    return this.userService.getAllUser();
   }
 }

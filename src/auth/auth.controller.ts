@@ -106,7 +106,7 @@ export class AuthController {
   async verifyTwoFactorAuth(
     @Body('verificationCode') verificationCode: any,
     @Body('userId', ParseIntPipe, PositiveIntPipe) userId: number,
-    @Res() res,
+    @Res() res: any,
   ) {
     const userElements = await this.userService.getUserById(userId);
     const isVerified = this.authService.verifyToken(
@@ -117,7 +117,11 @@ export class AuthController {
       const { user, accessToken, refreshToken } =
         await this.authService.signInByUserId(userId);
       await this.userService.updateUserElements(userId, { secret: null });
-      res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
+      res.cookie('accessToken', accessToken, {
+        httpOnly: true,
+        secure: true,
+        samesite: 'none',
+      });
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true,
@@ -125,7 +129,7 @@ export class AuthController {
       user.secret = undefined;
       user.token = undefined;
       user.socketId = undefined;
-      res.send(user);
+      return res.send(user);
     } else {
       throw new UnauthorizedException();
     }

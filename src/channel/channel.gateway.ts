@@ -553,9 +553,8 @@ export class ChannelGateway
     return ret;
   }
 
-  @SubscribeMessage('allUser')
+  @SubscribeMessage('AllUser')
   async getAllUser(@ConnectedSocket() client: Socket) {
-    this.logger.log('Get all user');
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     return await this.userService.getAllUser();
