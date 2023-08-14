@@ -77,4 +77,10 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
         `ChannelUser delete failed. userId: ${userId}, channelId: ${channelId}`,
       );
   }
+
+  async countChannelUserByChannelId(channelId: number): Promise<number> {
+    return await this.count({
+      where: { channelId },
+    });
+  }
 }
