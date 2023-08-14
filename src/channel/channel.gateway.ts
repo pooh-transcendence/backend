@@ -63,17 +63,19 @@ export class ChannelGateway
   server: Server;
   private logger = new Logger('ChannelGateway');
 
-  afterInit(server: Server) {
-    this.logger.log('Initialized');
+  async afterInit(server: Server) {
+    const alluser: UserEntity[] = await this.userService.getAllUser();
+    for (const user of alluser) {
+      await this.userService.updateUserElements(user.id, { socketId: null });
+    }
   }
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || !client.id) {
-      this.logger.log('FUCK');
+    if (!user || !client.id || user.socketId) {
       return client.disconnect();
     }
-    this.logger.log(`Client connected: ${client.id}`);
+    this.logger.log(`Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       socketId: client.id,
       userState: UserState.ONCHAT,
@@ -94,8 +96,8 @@ export class ChannelGateway
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user) return;
-    this.logger.log(`Client disconnected: ${client.id}`);
+    if (!user || client.id !== user.socketId) return;
+    this.logger.log(`Client distconnected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       socketId: null,
       userState: UserState.OFFLINE,
