@@ -82,6 +82,12 @@ export class UserService {
         channelUser.channelId,
       );
       channel.password = undefined;
+      // channel에 속한 유저 정보
+      const userCount =
+        await this.channelUserRepository.countChannelUserByChannelId(
+          channel.id,
+        );
+      channel['userCount'] = userCount;
       channelList.push(channel);
     }
     return channelList;
