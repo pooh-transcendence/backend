@@ -1,9 +1,4 @@
-import {
-  UseFilters,
-  UseInterceptors,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -18,7 +13,6 @@ import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
-import { SocketTransformInterceptor } from 'src/common/interceptors/socket-tranform.interceptor';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
@@ -28,7 +22,6 @@ import { GameType } from './game.entity';
 import { GameService } from './game.service';
 
 @WebSocketGateway({ namespace: 'game' })
-@UseInterceptors(SocketTransformInterceptor)
 @UseFilters(AllExceptionsSocketFilter)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class GameGateway
