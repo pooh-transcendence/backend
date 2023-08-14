@@ -61,7 +61,7 @@ export class UserController {
     return user;
   }
 
-  @Get('/AllUser')
+  @Get('/allUser')
   async getAllUser() {
     this.logger.log('getAllUser');
     return await this.userService.getAllUser();
