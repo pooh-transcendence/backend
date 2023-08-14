@@ -2,10 +2,14 @@ import {
   Body,
   Controller,
   Get,
+  HttpStatus,
   Logger,
   Param,
+  ParseFilePipeBuilder,
   ParseIntPipe,
   Patch,
+  Post,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,6 +21,7 @@ import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserProfileDto } from './user.dto';
 import { UserEntity } from './user.entity';
 import { UserService } from './user.service';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('user')
 @UseInterceptors(TransformInterceptor)
@@ -61,14 +66,14 @@ export class UserController {
     return user;
   }
 
-  @Get('/allUser')
+  @Get('/AllUser')
   async getAllUser() {
     this.logger.log('getAllUser');
     return await this.userService.getAllUser();
   }
 
   // 유저의 아이디로 유저 정보를 가져온다.
-  @Get('/:userId')
+  @Get('/:i')
   async getUserProfileById(
     @GetUser() requestUser: UserEntity,
     @Param('userId', ParseIntPipe, PositiveIntPipe) userId: number,
@@ -92,5 +97,26 @@ export class UserController {
     @Body('nickname') nickname: string,
   ) {
     return await this.userService.updateUserElements(user.id, { nickname });
+  }
+
+  @Post('avatorUpload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({
+          fileType: 'jpeg',
+        })
+        .addMaxSizeValidator({
+          maxSize: 1000,
+        })
+        .build({
+          errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        }),
+    )
+    file: Express.Multer.File,
+    @GetUser() user: UserEntity,
+  ) {
+    this.userService.updateUserElements(user.id, { avator: file });
   }
 }

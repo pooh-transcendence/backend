@@ -125,10 +125,11 @@ export class AuthController {
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true,
+        samesite: 'none',
       });
       user.secret = undefined;
-      user.token = undefined;
-      user.socketId = undefined;
+      user['accessToken'] = accessToken;
+      user['refreshToken'] = refreshToken;
       return res.send(user);
     } else {
       throw new UnauthorizedException();
