@@ -10,7 +10,7 @@ import { map, tap } from 'rxjs/operators';
 @Injectable()
 export class SocketTransformInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const clientCallback = context.switchToWs().getData().args[1];
+    const clientCallback = context.switchToWs().getData().args;
     const event = context.switchToWs().getData().event;
 
     return next.handle().pipe(
