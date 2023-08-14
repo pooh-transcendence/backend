@@ -45,7 +45,7 @@ import { ChannelService } from './channel.service';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
-@UseInterceptors(SocketTransformInterceptor)
+//@UseInterceptors(SocketTransformInterceptor)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -63,15 +63,19 @@ export class ChannelGateway
   server: Server;
   private logger = new Logger('ChannelGateway');
 
-  afterInit(server: Server) {
-    this.logger.log('Initialized');
+  async afterInit(server: Server) {
+    const alluser: UserEntity[] = await this.userService.getAllUser();
+    for (const user of alluser) {
+      await this.userService.updateUserElements(user.id, { socketId: null });
+    }
   }
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || !client.id) {
+    if (!user || !client.id || user.socketId) {
       return client.disconnect();
     }
+    this.logger.log(`Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       socketId: client.id,
       userState: UserState.ONCHAT,
@@ -92,7 +96,8 @@ export class ChannelGateway
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user) return;
+    if (!user || client.id !== user.socketId) return;
+    this.logger.log(`Client distconnected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       socketId: null,
       userState: UserState.OFFLINE,
@@ -478,7 +483,6 @@ export class ChannelGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     const userId = user.id;
-    this.logger.log(`User ${userId} is trying to add ${followingUserId}`);
     if (userId === followingUserId)
       throw new WsException(`Can't be friend with yourself`);
     const friend = await this.friendService
