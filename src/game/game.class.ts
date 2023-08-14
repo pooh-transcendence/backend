@@ -197,10 +197,10 @@ export class Game {
     const winplayerId = ret === 1 ? this.player1.id : this.player2.id;
     if (ret !== 0) this.score[winplayerId]++;
     return {
-      racket: this.racket,
-      ball: this.ball,
-      score: this.score,
-      isGetScore: ret !== 0,
+      racket: this.racket, // [x,y] ,[x, y] // 2개
+      ball: this.ball, // [[], [], []] // 3개 이상일 수 있음
+      score: this.score, // {player1: 0, player2: 0}
+      isGetScore: ret !== 0, // true, false
     };
   }
 

@@ -45,7 +45,7 @@ import { ChannelService } from './channel.service';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
-@UseInterceptors(SocketTransformInterceptor)
+//@UseInterceptors(SocketTransformInterceptor)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -70,8 +70,10 @@ export class ChannelGateway
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user || !client.id) {
+      this.logger.log('FUCK');
       return client.disconnect();
     }
+    this.logger.log(`Client connected: ${client.id}`);
     await this.userService.updateUserElements(user.id, {
       socketId: client.id,
       userState: UserState.ONCHAT,
@@ -93,6 +95,7 @@ export class ChannelGateway
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) return;
+    this.logger.log(`Client disconnected: ${client.id}`);
     await this.userService.updateUserElements(user.id, {
       socketId: null,
       userState: UserState.OFFLINE,
@@ -478,7 +481,6 @@ export class ChannelGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     const userId = user.id;
-    this.logger.log(`User ${userId} is trying to add ${followingUserId}`);
     if (userId === followingUserId)
       throw new WsException(`Can't be friend with yourself`);
     const friend = await this.friendService

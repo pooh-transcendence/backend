@@ -15,7 +15,10 @@ async function bootstrap() {
   // });
   const app = await NestFactory.create(AppModule);
   //app.use(cookieParser());
-  app.enableCors({ credentials: true });
+  app.enableCors({
+    credentials: true,
+    origin: process.env.FRONTEND_URL || 'http://localhost:6002',
+  });
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalFilters(new HttpExceptionFilter());
   await app.listen(3000);
