@@ -5,7 +5,6 @@ import {
   NotFoundException,
   ParseIntPipe,
   UseFilters,
-  UseInterceptors,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -25,7 +24,6 @@ import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import { BlockService } from 'src/block/block.service';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
-import { SocketTransformInterceptor } from 'src/common/interceptors/socket-tranform.interceptor';
 import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
 import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
