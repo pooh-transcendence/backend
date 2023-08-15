@@ -7,6 +7,7 @@ import {
   UseFilters,
   UsePipes,
   ValidationPipe,
+  forwardRef,
 } from '@nestjs/common';
 import {
   ConnectedSocket,
@@ -40,6 +41,8 @@ import {
   UpdateChannelUserDto,
 } from './channel.dto';
 import { ChannelService } from './channel.service';
+import { resourceLimits } from 'worker_threads';
+import { ChannelType } from './channel.entity';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -49,12 +52,15 @@ export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
+    @Inject(forwardRef(() => ChannelService))
     private channelService: ChannelService,
     private authService: AuthService,
-    private userService: UserService,
+    @Inject(forwardRef(() => BlockService))
     private blockService: BlockService,
+    @Inject(forwardRef(() => FriendService))
     private friendService: FriendService,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    @Inject(forwardRef(() => UserService))
+    private userService: UserService,
   ) {}
 
   @WebSocketServer()
@@ -76,7 +82,7 @@ export class ChannelGateway
     this.logger.log(`Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       socketId: client.id,
-      userState: UserState.ONCHAT,
+      userState: UserState.ONLINE,
     });
     user.channels.forEach((channel) => {
       client.join(channel.id.toString());
@@ -86,8 +92,8 @@ export class ChannelGateway
       const toFriend = await this.userService.getUserById(toFriendFrom.from);
       if (!toFriend.socketId) continue;
       this.server.to(toFriend.socketId).emit('changeFriendState', {
-        friendId: user.id,
-        userState: UserState.ONLINE,
+        method: 'MODIFY',
+        user: { id: user.id, userState: UserState.ONLINE },
       });
     }
   }
@@ -104,8 +110,11 @@ export class ChannelGateway
       const friendSocketId = await this.userService.getUserById(friend.id);
       if (!friendSocketId?.socketId) continue;
       this.server.to(friendSocketId.socketId).emit('changeFriendState', {
-        friendId: user.id,
-        userState: UserState.OFFLINE,
+        method: 'MODIFY',
+        user: {
+          id: user.id,
+          userState: UserState.OFFLINE,
+        },
       });
     }
     client.rooms.clear();
@@ -129,6 +138,10 @@ export class ChannelGateway
       client.to(channelId.toString()).emit('channelMessage', {
         message: `${user.nickname}님이 입장하셨습니다.`,
       });
+      const channel = await this.channelService.getChannelByChannelId(
+        channelId,
+      );
+      this.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -190,6 +203,10 @@ export class ChannelGateway
         });
         targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
       }
+      const channel = await this.channelService.getChannelByChannelId(
+        channelId,
+      );
+      this.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -267,6 +284,12 @@ export class ChannelGateway
         if (!userSocket) continue;
         userSocket.join(result.id.toString());
       }
+      // 서버에있는 소켓들 에게 이벤트 보내기
+      if (result.channelType !== ChannelType.PRIVATE)
+        this.server.emit('changeChannelState', {
+          method: 'ADD',
+          channel: result,
+        });
       return result;
     } catch (err) {
       this.logger.log(err);
