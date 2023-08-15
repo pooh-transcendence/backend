@@ -9,8 +9,6 @@ export enum UserState {
   OFFLINE = 'OFFLINE',
   ONLINE = 'ONLINE',
   INGAME = 'INGAME',
-  OFFCHAT = 'OFFCHAT',
-  ONCHAT = 'ONCHAT',
 }
 
 @Entity()
@@ -45,7 +43,7 @@ export class UserEntity extends CommonEntity {
   @IsEmail()
   email: string;
 
-  @Column({ default: UserState.ONLINE, nullable: true })
+  @Column({ default: UserState.OFFLINE, nullable: true })
   @IsIn([UserState.OFFLINE, UserState.ONLINE, UserState.INGAME])
   userState: UserState;
 
@@ -66,8 +64,6 @@ export class UserEntity extends CommonEntity {
   @Column({ nullable: true })
   @IsString()
   refreshToken!: string | null;
-  //@OneToMany(() => ChannelUserEntity, (channelUser)=>channelUser.user)
-  //Join :
 
   @Column({ nullable: true })
   @Exclude()

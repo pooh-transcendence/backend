@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   HttpStatus,
+  Inject,
   Logger,
   Param,
   ParseFilePipeBuilder,
@@ -12,6 +13,7 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  forwardRef,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -22,12 +24,17 @@ import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserProfileDto } from './user.dto';
 import { UserEntity } from './user.entity';
 import { UserService } from './user.service';
+import { ChannelGateway } from 'src/channel/channel.gateway';
 
 @Controller('user')
 @UseInterceptors(TransformInterceptor)
 @UseGuards(AuthGuard())
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    @Inject(forwardRef(() => ChannelGateway))
+    private channelGateway: ChannelGateway,
+  ) {}
 
   private logger = new Logger(UserController.name);
 

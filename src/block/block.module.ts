@@ -17,9 +17,13 @@ import { ChannelRepository } from 'src/channel/channel.repository';
 import { ChannelUserRepository } from 'src/channel/channel-user.repository';
 import { ChannelEntity } from 'src/channel/channel.entity';
 import { ChannelUserEntity } from 'src/channel/channel-user.entity';
-import { BlockGateway } from './block.gateway';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
+import { ChannelGateway } from 'src/channel/channel.gateway';
+import { GameGateway } from 'src/game/game.gateway';
+import { GameService } from 'src/game/game.service';
+import { GameEntity } from 'src/game/game.entity';
+import { GameRepository } from 'src/game/game.repository';
 
 @Module({
   imports: [
@@ -29,6 +33,7 @@ import { JwtService } from '@nestjs/jwt';
       FriendEntity,
       ChannelEntity,
       ChannelUserEntity,
+      GameEntity,
     ]),
     AuthModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -44,7 +49,6 @@ import { JwtService } from '@nestjs/jwt';
     ChannelService,
     ChannelRepository,
     ChannelUserRepository,
-    BlockGateway,
     AuthService,
     JwtService,
   ],
