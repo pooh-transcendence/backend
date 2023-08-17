@@ -1,17 +1,14 @@
 import {
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common';
 import { BlockRepository } from './block.repository';
 import { BlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { FriendRepository } from 'src/friend/friend.respository';
-import { ChannelGateway } from 'src/channel/channel.gateway';
 
 @Injectable()
 export class BlockService {

@@ -39,7 +39,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
 
   async findChannelUserByUserId(userId: number): Promise<ChannelUserEntity[]> {
     return await this.find({
-      where: { userId },
+      where: { userId, isBanned: false },
     });
   }
 
@@ -80,7 +80,7 @@ export class ChannelUserRepository extends Repository<ChannelUserEntity> {
 
   async countChannelUserByChannelId(channelId: number): Promise<number> {
     return await this.count({
-      where: { channelId },
+      where: { channelId, isBanned: false },
     });
   }
 }

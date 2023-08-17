@@ -52,14 +52,10 @@ export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    @Inject(forwardRef(() => ChannelService))
     private channelService: ChannelService,
     private authService: AuthService,
-    @Inject(forwardRef(() => BlockService))
     private blockService: BlockService,
-    @Inject(forwardRef(() => FriendService))
     private friendService: FriendService,
-    @Inject(forwardRef(() => UserService))
     private userService: UserService,
   ) {}
 
