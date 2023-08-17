@@ -32,7 +32,7 @@ import { ChannelGateway } from 'src/channel/channel.gateway';
 export class UserController {
   constructor(
     private userService: UserService,
-    @Inject(forwardRef(() => ChannelGateway))
+    //@Inject(forwardRef(() => ChannelGateway))
     private channelGateway: ChannelGateway,
   ) {}
 

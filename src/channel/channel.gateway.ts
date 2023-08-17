@@ -52,14 +52,14 @@ export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   constructor(
-    @Inject(forwardRef(() => ChannelService))
+    //@Inject(forwardRef(() => ChannelService))
     private channelService: ChannelService,
     private authService: AuthService,
-    @Inject(forwardRef(() => BlockService))
+    //@Inject(forwardRef(() => BlockService))
     private blockService: BlockService,
-    @Inject(forwardRef(() => FriendService))
+    //@Inject(forwardRef(() => FriendService))
     private friendService: FriendService,
-    @Inject(forwardRef(() => UserService))
+    //@Inject(forwardRef(() => UserService))
     private userService: UserService,
   ) {}
 
@@ -79,11 +79,12 @@ export class ChannelGateway
     if (!user || !client.id || user.socketId) {
       return client.disconnect();
     }
-    this.logger.log(`Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       socketId: client.id,
       userState: UserState.ONLINE,
     });
+    const tmp = await this.userService.getUserById(user.id);
+    console.log(tmp.nickname, tmp.socketId);
     user.channels.forEach((channel) => {
       client.join(channel.id.toString());
     });
@@ -329,6 +330,7 @@ export class ChannelGateway
     const userSocket = this.server.sockets.get(user.socketId);
     if (!targetUser || !targetUser.socketId || !userSocket) return;
     this.server.to(targetUser.socketId).emit(event, data);
+    this.logger.log(`emit to ${targetUser.nickname} ${event}`);
     //this.cacheMessages(data);
   }
 

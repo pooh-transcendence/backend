@@ -40,10 +40,11 @@ export class BlockService {
     return await this.blockRepository.createBlock(createBlockDto);
   }
 
-  async deleteBlock(deleteBlockDto: BlockDto) {
+  async deleteBlock(deleteBlockDto: BlockDto): Promise<BlockEntity> {
     const block = await this.blockRepository.findOneBy(deleteBlockDto);
     if (!block) throw new NotFoundException("there's no block to delete");
-    return await this.blockRepository.deleteBlock(block);
+    await this.blockRepository.deleteBlock(block);
+    return block;
   }
 
   async isBlocked(from: number, to: number): Promise<boolean> {
