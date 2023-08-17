@@ -1,17 +1,14 @@
 import {
   HttpException,
   HttpStatus,
-  Inject,
   Injectable,
   NotFoundException,
-  forwardRef,
 } from '@nestjs/common';
 import { BlockRepository } from './block.repository';
 import { BlockDto } from './block.dto';
 import { BlockEntity } from './block.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { FriendRepository } from 'src/friend/friend.respository';
-import { ChannelGateway } from 'src/channel/channel.gateway';
 
 @Injectable()
 export class BlockService {
@@ -40,11 +37,10 @@ export class BlockService {
     return await this.blockRepository.createBlock(createBlockDto);
   }
 
-  async deleteBlock(deleteBlockDto: BlockDto): Promise<BlockEntity> {
+  async deleteBlock(deleteBlockDto: BlockDto) {
     const block = await this.blockRepository.findOneBy(deleteBlockDto);
     if (!block) throw new NotFoundException("there's no block to delete");
-    await this.blockRepository.deleteBlock(block);
-    return block;
+    return await this.blockRepository.deleteBlock(block);
   }
 
   async isBlocked(from: number, to: number): Promise<boolean> {

@@ -42,7 +42,6 @@ import { JwtService } from '@nestjs/jwt';
     ChannelRepository,
     ChannelUserRepository,
     ChannelService,
-    ChannelGateway,
     AuthService,
     JwtService,
   ],

@@ -23,7 +23,6 @@ import { FriendEntity } from 'src/friend/friend.entity';
 import { MessageEntity } from 'src/channel/message.entity';
 import { PassportModule } from '@nestjs/passport';
 import { GameGateway } from './game.gateway';
-import { ChannelGateway } from 'src/channel/channel.gateway';
 
 @Module({
   imports: [
@@ -54,7 +53,6 @@ import { ChannelGateway } from 'src/channel/channel.gateway';
     GameService,
     GameRepository,
     GameGateway,
-    ChannelGateway,
   ],
 })
 export class GameModule {}
