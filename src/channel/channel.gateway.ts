@@ -7,7 +7,6 @@ import {
   UseFilters,
   UsePipes,
   ValidationPipe,
-  forwardRef,
 } from '@nestjs/common';
 import {
   ConnectedSocket,
@@ -20,7 +19,6 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Cache } from 'cache-manager';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import { BlockService } from 'src/block/block.service';
@@ -41,12 +39,10 @@ import {
   UpdateChannelUserDto,
 } from './channel.dto';
 import { ChannelService } from './channel.service';
-import { resourceLimits } from 'worker_threads';
 import { ChannelType } from './channel.entity';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
-//@UseInterceptors(SocketTransformInterceptor)
 @UsePipes(new ValidationPipe({ transform: true }))
 export class ChannelGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -88,8 +84,9 @@ export class ChannelGateway
       const toFriend = await this.userService.getUserById(toFriendFrom.from);
       if (!toFriend.socketId) continue;
       this.server.to(toFriend.socketId).emit('changeFriendState', {
-        method: 'MODIFY',
-        user: { id: user.id, userState: UserState.ONLINE },
+        id: user.id,
+        nickname: user.nickname,
+        userState: UserState.ONLINE,
       });
     }
   }
@@ -106,11 +103,9 @@ export class ChannelGateway
       const friendSocketId = await this.userService.getUserById(friend.id);
       if (!friendSocketId?.socketId) continue;
       this.server.to(friendSocketId.socketId).emit('changeFriendState', {
-        method: 'MODIFY',
-        user: {
-          id: user.id,
-          userState: UserState.OFFLINE,
-        },
+        id: user.id,
+        nickname: user.nickname,
+        userState: UserState.OFFLINE,
       });
     }
     client.rooms.clear();
@@ -137,7 +132,8 @@ export class ChannelGateway
       const channel = await this.channelService.getChannelByChannelId(
         channelId,
       );
-      this.server.emit('changeChannelState', { method: 'MODIFY', channel });
+      client.emit('addChannelToUserChannelList', channel);
+      //this.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -190,19 +186,21 @@ export class ChannelGateway
       );
       if (!targetUser) throw new NotFoundException({ error: 'User not found' });
       await this.channelService.kickChannelUser(user.id, channelUserInfo);
+      const channel = await this.channelService.getChannelByChannelId(
+        channelId,
+      );
+      if (!channel) throw new NotFoundException({ error: `Channel not found` });
       if (targetUser.socketId) {
         const targetUserSocket: Socket = this.server.sockets.get(
           targetUser.socketId,
         );
         targetUserSocket.to(channelId.toString()).emit('channelMessage', {
+          channelId,
           message: `${targetUser.nickname}님이 강퇴당하셨습니다.`,
         });
         targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
+        targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
-      const channel = await this.channelService.getChannelByChannelId(
-        channelId,
-      );
-      this.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -217,8 +215,29 @@ export class ChannelGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('ban Error'); //this.server.to(client.id).emit('ban', { message: 'you are banned' });
     try {
-      this.verifyNotSelfBanOrKick(user.id, channelUserInfo.userId);
-      return await this.channelService.banChannelUser(user.id, channelUserInfo);
+      const { userId, channelId } = channelUserInfo;
+      this.verifyNotSelfBanOrKick(user.id, userId);
+      const targetUser = await this.userService.getUserById(
+        channelUserInfo.userId,
+      );
+      if (!targetUser) throw new NotFoundException({ error: `User not found` });
+      const channel = await this.channelService.getChannelByChannelId(
+        channelId,
+      );
+      if (channel) throw new NotFoundException({ error: `Channel not found` });
+      client.to(channelId.toString()).emit('channelMessage', {
+        channelId: channelId,
+        message: `${targetUser.nickname} 님이 ${user.nickname}에 의해 밴을 당하셨음!`,
+      });
+      const reuslt = await this.channelService.banChannelUser(
+        user.id,
+        channelUserInfo,
+      );
+      if (targetUser.socketId) {
+        const targetUserSocket = this.server.get(targetUser.socketId);
+        targetUserSocket.emit('deleteChannelToUserChannelList', channel);
+      }
+      return reuslt;
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -234,6 +253,13 @@ export class ChannelGateway
     if (user.id === channelUserInfo.userId)
       throw new WsException(`You can't set yourself as admin`);
     try {
+      const { userId, channelId } = channelUserInfo;
+      const targetUser = await this.userService.getUserById(userId);
+      if (!targetUser)
+        throw new NotFoundException(`${userId} 아이디를 찾지 못함`);
+      client.to(channelId.toString()).emit('channelMessage', {
+        message: `${user.id}님이 ${targetUser.nickname}을 Admin으로 임명되었습니다.`,
+      });
       return await this.channelService.setAdmin(user.id, channelUserInfo);
     } catch (err) {
       this.logger.log(err);
@@ -281,11 +307,7 @@ export class ChannelGateway
         userSocket.join(result.id.toString());
       }
       // 서버에있는 소켓들 에게 이벤트 보내기
-      if (result.channelType !== ChannelType.PRIVATE)
-        this.server.emit('changeChannelState', {
-          method: 'ADD',
-          channel: result,
-        });
+      this.server.emit('addChannelToAllChannelList', { channel: result });
       return result;
     } catch (err) {
       this.logger.log(err);
@@ -300,11 +322,14 @@ export class ChannelGateway
   ) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('leave Error');
+    const channel = await this.channelService.getChannelByChannelId(channelId);
+    if (!channel) throw new NotFoundException(`${channel.id}를 못 찾음`);
     await this.channelService.leaveChannel(user.id, channelId);
     client.to(channelId.toString()).emit('channelMessage', {
       message: `${user.nickname}님이 나가셨습니다.`,
     });
     client.rooms.delete(channelId.toString());
+    client.emit('deleteChannelToUserChannelList', channel);
   }
 
   async emitToUser(
@@ -325,7 +350,6 @@ export class ChannelGateway
     const userSocket = this.server.sockets.get(user.socketId);
     if (!targetUser || !targetUser.socketId || !userSocket) return;
     this.server.to(targetUser.socketId).emit(event, data);
-    //this.cacheMessages(data);
   }
 
   async emitToChannel(
@@ -355,7 +379,6 @@ export class ChannelGateway
     if (!userSocket) return;
     if (await this.channelService.getChannelUserByIds(channelId, user.id)) {
       userSocket.to(channelId.toString()).emit(event, data);
-      //this.cacheMessages(data);
     }
   }
   /*
@@ -416,7 +439,7 @@ export class ChannelGateway
         ]),
       );
     }
-    this.server.to(client.id).emit('getBlockList', blockList);
+    client.emit('getBlockList', blockList);
     return { sucess: true, blockList };
   }
 
@@ -464,7 +487,7 @@ export class ChannelGateway
         this.logger.error(err);
         throw new WsException(err);
       });
-    this.server.to.client.id.emit('deleteBlock', deleteBlock);
+    client.emit('deleteBlock', deleteBlock);
     return { sucess: true, deleteBlock };
   }
 
@@ -487,7 +510,7 @@ export class ChannelGateway
         ]),
       );
     }
-    this.server.to(client.id).emit('getFriendList', friendList);
+    client.emit('getFriendList', friendList);
     //return friendList;
   }
 
@@ -511,7 +534,7 @@ export class ChannelGateway
         this.logger.log(err);
         throw new WsException(err);
       });
-    this.server.to(client.id).emit('createFriend', friend);
+    client.emit('addFriendToFriendList', friend);
     return { success: true, friend };
   }
 
@@ -535,6 +558,7 @@ export class ChannelGateway
         this.logger.error(err);
         throw new WsException(err);
       });
+    client.emit('deleteFriendToFriendList', { friendId: followingUserId });
   }
 
   @SubscribeMessage('getChannelAdmin')
@@ -558,7 +582,9 @@ export class ChannelGateway
   ) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
-    const { userId } = createChannelUserDto;
+    const { userId, channelId } = createChannelUserDto;
+    const channel = await this.channelService.getChannelByChannelId(channelId);
+    if (channel) throw new NotFoundException({ error: `Channel not found` });
     const ret = await this.channelService.inviteUserToChannel(
       user.id,
       createChannelUserDto,
@@ -570,6 +596,7 @@ export class ChannelGateway
       targetSocket.to(ret.channelId.toString()).emit('channelMessage', {
         message: `${user.nickname} has invited ${targetUser.nickname} to join this channel`,
       });
+      targetSocket.emit('addChannelToUserChannelList', channel);
     }
     return ret;
   }
