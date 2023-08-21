@@ -27,11 +27,16 @@ import {
   UpdateChannelUserDto,
 } from './channel.dto';
 import { ChannelService } from './channel.service';
+import { ChannelGateway } from './channel.gateway';
+import { Channel } from 'diagnostics_channel';
 
 @Controller('/channel')
 @UseInterceptors(TransformInterceptor)
 export class ChannelController {
-  constructor(private channelService: ChannelService) {}
+  constructor(
+    private channelService: ChannelService,
+    private channelGateway: ChannelGateway,
+  ) {}
 
   logger = new Logger(ChannelController.name);
 
@@ -45,7 +50,13 @@ export class ChannelController {
     channelUserIds: number[],
   ) {
     this.verifyRequestIdMatch(user.id, channelInfo.ownerId);
-    return await this.channelService.createChannel(channelInfo, channelUserIds);
+    const result = await this.channelService.createChannel(
+      channelInfo,
+      channelUserIds,
+    );
+    if (result.password) result.password = undefined;
+    ChannelGateway.emitToAllClient('addChannelToAllChannelList', result);
+    return result;
   }
 
   @Post('/join')
@@ -55,7 +66,8 @@ export class ChannelController {
     @Body() channelUserInfo: CreateChannelUserDto,
   ) {
     this.verifyRequestIdMatch(user.id, channelUserInfo.userId);
-    return await this.channelService.joinChannelUser(channelUserInfo);
+    const result = await this.channelService.joinChannelUser(channelUserInfo);
+    return result;
   }
 
   @Get('/visible')

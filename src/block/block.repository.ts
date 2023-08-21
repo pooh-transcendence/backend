@@ -30,7 +30,6 @@ export class BlockRepository extends Repository<BlockEntity> {
   }
 
   async deleteBlock(deleteBlockDto: BlockDto) {
-    console.log(deleteBlockDto);
     const result = await this.delete({
       from: deleteBlockDto.from,
       to: deleteBlockDto.to,

@@ -1,6 +1,4 @@
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import {
-  Inject,
   Logger,
   NotFoundException,
   ParseIntPipe,
@@ -39,7 +37,9 @@ import {
   UpdateChannelUserDto,
 } from './channel.dto';
 import { ChannelService } from './channel.service';
-import { ChannelType } from './channel.entity';
+import { ChannelEntity } from './channel.entity';
+import { FriendEntity } from 'src/friend/friend.entity';
+import { FriendDto } from 'src/friend/friend.dto';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -56,7 +56,7 @@ export class ChannelGateway
   ) {}
 
   @WebSocketServer()
-  server: Server;
+  private static server: Server;
   private logger = new Logger('ChannelGateway');
 
   async afterInit(server: Server) {
@@ -83,7 +83,7 @@ export class ChannelGateway
     for (const toFriendFrom of toFriendList) {
       const toFriend = await this.userService.getUserById(toFriendFrom.from);
       if (!toFriend.socketId) continue;
-      this.server.to(toFriend.socketId).emit('changeFriendState', {
+      ChannelGateway.server.to(toFriend.socketId).emit('changeFriendState', {
         id: user.id,
         nickname: user.nickname,
         userState: UserState.ONLINE,
@@ -102,13 +102,23 @@ export class ChannelGateway
     for (const friend of user.friends) {
       const friendSocketId = await this.userService.getUserById(friend.id);
       if (!friendSocketId?.socketId) continue;
-      this.server.to(friendSocketId.socketId).emit('changeFriendState', {
-        id: user.id,
-        nickname: user.nickname,
-        userState: UserState.OFFLINE,
-      });
+      ChannelGateway.server
+        .to(friendSocketId.socketId)
+        .emit('changeFriendState', {
+          id: user.id,
+          nickname: user.nickname,
+          userState: UserState.OFFLINE,
+        });
     }
     client.rooms.clear();
+  }
+
+  static emitToAllClient(event: string, data: any) {
+    ChannelGateway.server.emit(event, data);
+  }
+
+  static emitToClient(socketId: string, event: string, data: any) {
+    ChannelGateway.server.to(socketId).emit(event, data);
   }
 
   @SubscribeMessage('joinChannel')
@@ -133,7 +143,7 @@ export class ChannelGateway
         channelId,
       );
       client.emit('addChannelToUserChannelList', channel);
-      //this.server.emit('changeChannelState', { method: 'MODIFY', channel });
+      //ChannelGateway.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -167,7 +177,7 @@ export class ChannelGateway
   @SubscribeMessage('visibleChannel')
   async getVisibleChannel(@ConnectedSocket() client: Socket) {
     const channels = await this.channelService.getVisibleChannel();
-    this.server.to(client.id).emit('visibleChannel', channels);
+    ChannelGateway.server.to(client.id).emit('visibleChannel', channels);
     return channels;
   }
 
@@ -191,7 +201,7 @@ export class ChannelGateway
       );
       if (!channel) throw new NotFoundException({ error: `Channel not found` });
       if (targetUser.socketId) {
-        const targetUserSocket: Socket = this.server.sockets.get(
+        const targetUserSocket: Socket = ChannelGateway.server.sockets.get(
           targetUser.socketId,
         );
         targetUserSocket.to(channelId.toString()).emit('channelMessage', {
@@ -213,7 +223,7 @@ export class ChannelGateway
     @MessageBody() channelUserInfo: UpdateChannelUserDto,
   ): Promise<ChannelUserEntity> {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('ban Error'); //this.server.to(client.id).emit('ban', { message: 'you are banned' });
+    if (!user) throw new WsException('ban Error'); //ChannelGateway.server.to(client.id).emit('ban', { message: 'you are banned' });
     try {
       const { userId, channelId } = channelUserInfo;
       this.verifyNotSelfBanOrKick(user.id, userId);
@@ -234,7 +244,7 @@ export class ChannelGateway
         channelUserInfo,
       );
       if (targetUser.socketId) {
-        const targetUserSocket = this.server.get(targetUser.socketId);
+        const targetUserSocket = ChannelGateway.server.get(targetUser.socketId);
         targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
       return reuslt;
@@ -294,7 +304,7 @@ export class ChannelGateway
     if (!user) throw new WsException('create Error');
     try {
       this.verifyRequestIdMatch(user.id, channelInfo.ownerId);
-      const result = await this.channelService.createChannel(
+      const result: ChannelEntity = await this.channelService.createChannel(
         channelInfo,
         channelUserIds,
       );
@@ -302,12 +312,13 @@ export class ChannelGateway
       const channelUsers = await this.channelService.getChannelUser(result.id);
       for (const channelUser of channelUsers) {
         const user = await this.userService.getUserById(channelUser.userId);
-        const userSocket = this.server.sockets.get(user.socketId);
+        const userSocket = ChannelGateway.server.sockets.get(user.socketId);
         if (!userSocket) continue;
         userSocket.join(result.id.toString());
       }
       // 서버에있는 소켓들 에게 이벤트 보내기
-      this.server.emit('addChannelToAllChannelList', { channel: result });
+      if (result.password) result.password = undefined;
+      ChannelGateway.server.emit('addChannelToAllChannelList', result);
       return result;
     } catch (err) {
       this.logger.log(err);
@@ -329,6 +340,7 @@ export class ChannelGateway
       message: `${user.nickname}님이 나가셨습니다.`,
     });
     client.rooms.delete(channelId.toString());
+    if (channel.password) channel.password = undefined;
     client.emit('deleteChannelToUserChannelList', channel);
   }
 
@@ -347,9 +359,9 @@ export class ChannelGateway
       }
     });
     if (isBlocked) return;
-    const userSocket = this.server.sockets.get(user.socketId);
+    const userSocket = ChannelGateway.server.sockets.get(user.socketId);
     if (!targetUser || !targetUser.socketId || !userSocket) return;
-    this.server.to(targetUser.socketId).emit(event, data);
+    ChannelGateway.server.to(targetUser.socketId).emit(event, data);
   }
 
   async emitToChannel(
@@ -370,12 +382,12 @@ export class ChannelGateway
     const channelUsers = await this.channelService.getChannelUser(channelId);
     for (const channelUser of channelUsers) {
       const user = await this.userService.getUserById(channelUser.userId);
-      const userSocket = this.server.sockets.get(user.socketId);
+      const userSocket = ChannelGateway.server.sockets.get(user.socketId);
       if (!userSocket) continue;
       userSocket.join(channelId.toString());
     }
     // 여기까지
-    const userSocket = this.server.sockets.get(user.socketId);
+    const userSocket = ChannelGateway.server.sockets.get(user.socketId);
     if (!userSocket) return;
     if (await this.channelService.getChannelUserByIds(channelId, user.id)) {
       userSocket.to(channelId.toString()).emit(event, data);
@@ -454,17 +466,22 @@ export class ChannelGateway
     const userId = user.id;
     if (userId === blockUserId)
       throw new WsException(`Can't be block with yourself`);
-    const createBlock = await this.blockService
-      .createBlock({
+    try {
+      const freindDto: FriendDto = {
         from: userId,
         to: blockUserId,
-      })
-      .catch((err) => {
-        this.logger.error(err);
-        throw new WsException(err);
-      });
-    this.server.to(client.id).emit('createBlock', createBlock);
-    return { sucess: true, createBlock };
+      };
+      await this.friendService.deleteFriend(freindDto);
+    } catch (err) {}
+    const taragetUser = await this.userService.getUserById(blockUserId);
+    if (!taragetUser) throw new WsException('User not found');
+    client.emit('createBlockToBlockList', {
+      id: taragetUser.id,
+      nickname: taragetUser.nickname,
+      avatar: taragetUser.avatar,
+      userState: taragetUser.userState,
+    });
+    //return { sucess: true, createBlock };
   }
 
   @SubscribeMessage('deleteBlock')
@@ -487,12 +504,11 @@ export class ChannelGateway
         this.logger.error(err);
         throw new WsException(err);
       });
-    client.emit('deleteBlock', deleteBlock);
+    client.emit('deleteBlockToBlockList', { id: blockedUserId });
     return { sucess: true, deleteBlock };
   }
 
   // Friend
-
   @SubscribeMessage('getFriendList')
   async getFriendList(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
@@ -525,7 +541,7 @@ export class ChannelGateway
     const userId = user.id;
     if (userId === followingUserId)
       throw new WsException(`Can't be friend with yourself`);
-    const friend = await this.friendService
+    const friend: FriendEntity = await this.friendService
       .creatFriend({
         from: userId,
         to: followingUserId,
@@ -534,7 +550,13 @@ export class ChannelGateway
         this.logger.log(err);
         throw new WsException(err);
       });
-    client.emit('addFriendToFriendList', friend);
+    const targetUser = await this.userService.getUserById(friend.to);
+    client.emit('addFriendToFriendList', {
+      id: targetUser.id,
+      nickname: targetUser.nickname,
+      avatar: targetUser.avatar,
+      userState: targetUser.userState,
+    });
     return { success: true, friend };
   }
 
@@ -558,7 +580,11 @@ export class ChannelGateway
         this.logger.error(err);
         throw new WsException(err);
       });
-    client.emit('deleteFriendToFriendList', { friendId: followingUserId });
+    const targeUser = await this.userService.getUserById(followingUserId);
+    client.emit('deleteFriendToFriendList', {
+      userId: targeUser.id,
+      nickname: targeUser.nickname,
+    });
   }
 
   @SubscribeMessage('getChannelAdmin')
@@ -591,7 +617,9 @@ export class ChannelGateway
     );
     const targetUser = await this.userService.getUserById(userId);
     if (targetUser.socketId) {
-      const targetSocket: Socket = this.server.sockets.get(targetUser.socketId);
+      const targetSocket: Socket = ChannelGateway.server.sockets.get(
+        targetUser.socketId,
+      );
       targetSocket.join(ret.channelId.toString());
       targetSocket.to(ret.channelId.toString()).emit('channelMessage', {
         message: `${user.nickname} has invited ${targetUser.nickname} to join this channel`,

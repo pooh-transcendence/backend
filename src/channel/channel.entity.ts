@@ -27,8 +27,6 @@ export class ChannelEntity extends CommonEntity {
   @IsNotEmpty()
   channelName: string;
 
-  //  @ManyToOne(() => UserEntity, { eager: true })
-  // owner: UserEntity;
   @Column()
   @IsNumber()
   @IsPositive()
