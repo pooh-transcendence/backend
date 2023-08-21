@@ -34,13 +34,14 @@ export class Game {
   private racket; // = new Array(2);
   private playersStatus;
 
+  // paddle 로 바꾸기
   constructor(
     private gameInfo: GameEntity,
     private userService: UserService,
 
-    private readonly canvasWidth = 1150,
-    private readonly canvasHeight = 600,
-    private readonly racketWidth = 30,
+    private readonly canvasWidth = 1400,
+    private readonly canvasHeight = 1000,
+    private readonly racketWidth = 18,
     private readonly racketSpeed = 10,
     private readonly ballRadius = 10,
     private readonly maxScore = 6,
