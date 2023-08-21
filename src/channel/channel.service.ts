@@ -86,7 +86,9 @@ export class ChannelService {
     await this.verifyTargetUser(channelUser, channelId);
     // ban 처리
     channelUser.isBanned = isBanned || false;
-    await this.channelUserRepository.update(channelUser.id, channelUser);
+    await this.channelUserRepository.update(channelUser.id, {
+      isBanned: false,
+    });
     return channelUser;
   }
 
