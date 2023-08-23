@@ -289,7 +289,12 @@ export class ChannelGateway
           message: `${user.nickname}님이 ${targetUser.nickname}을 Admin으로 임명되었습니다.`,
         },
       ]);
-      client.emit('changeUserTypeToMod', { id: channelId });
+      if (targetUser.socketId) {
+        const targetUserSocket = ChannelGateway.server.sockets.get(
+          targetUser.socketId,
+        );
+        targetUserSocket.emit('changeUserTypeToMod', { id: channelId });
+      }
       return await this.channelService.setAdmin(user.id, channelUserInfo);
     } catch (err) {
       this.logger.log(err);
@@ -660,7 +665,6 @@ export class ChannelGateway
       ]);
       targetSocket.emit('addChannelToUserChannelList', channel);
     }
-    console.log('channel', channel);
     return ret;
   }
 

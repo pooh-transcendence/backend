@@ -20,6 +20,7 @@ import { Game } from './game.class';
 import { RacketUpdatesDto } from './game.dto';
 import { GameType } from './game.entity';
 import { GameService } from './game.service';
+import { ChannelGateway } from 'src/channel/channel.gateway';
 
 @WebSocketGateway({ namespace: 'game' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -43,9 +44,9 @@ export class GameGateway
 
   @WebSocketServer()
   private server: Server;
-
-  afterInit(server: any) {}
-
+  afterInit(server: any) {
+    server = ChannelGateway.server;
+  }
   handleConnection(client: any) {}
 
   async handleDisconnect(client: Socket) {
