@@ -151,7 +151,9 @@ export class ChannelService {
       await this.channelUserRepository.findChannelUserByChannelId(channelId);
     if (channelUserList.length === 0) {
       await this.channelRepository.deleteChannelByChannelId(channelId);
+      return true;
     }
+    return false;
   }
 
   async setAdmin(

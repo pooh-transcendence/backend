@@ -29,6 +29,8 @@ import {
 import { ChannelService } from './channel.service';
 import { ChannelGateway } from './channel.gateway';
 import { Channel } from 'diagnostics_channel';
+import { UserService } from 'src/user/user.service';
+import { transformAuthInfo } from 'passport';
 
 @Controller('/channel')
 @UseInterceptors(TransformInterceptor)
@@ -36,6 +38,7 @@ export class ChannelController {
   constructor(
     private channelService: ChannelService,
     private channelGateway: ChannelGateway,
+    private userService: UserService,
   ) {}
 
   logger = new Logger(ChannelController.name);
@@ -55,7 +58,14 @@ export class ChannelController {
       channelUserIds,
     );
     if (result.password) result.password = undefined;
+    const _user = await this.userService.getUserById(user.id);
     ChannelGateway.emitToAllClient('addChannelToAllChannelList', result);
+    if (_user.socketId)
+      ChannelGateway.emitToClient(
+        _user.socketId,
+        'addChannelToUserChannelList',
+        result,
+      );
     return result;
   }
 
@@ -67,6 +77,17 @@ export class ChannelController {
   ) {
     this.verifyRequestIdMatch(user.id, channelUserInfo.userId);
     const result = await this.channelService.joinChannelUser(channelUserInfo);
+    const resultChannel = await this.channelService.getChannelByChannelId(
+      result.channelId,
+    );
+    if (resultChannel.password) resultChannel.password = undefined;
+    const _user = await this.userService.getUserById(user.id);
+    if (_user.socketId)
+      ChannelGateway.emitToClient(
+        _user.socketId,
+        'addChannelToUserChannelList',
+        resultChannel,
+      );
     return result;
   }
 
@@ -101,7 +122,22 @@ export class ChannelController {
     @GetUser() user: UserEntity,
     @Body('channelId', ParseIntPipe, PositiveIntPipe) channelId: number,
   ) {
-    return await this.channelService.leaveChannel(user.id, channelId);
+    const result = await this.channelService.leaveChannel(user.id, channelId);
+    const _user = await this.userService.getUserById(user.id);
+    if (_user.socketId) {
+      ChannelGateway.emitToClient(
+        _user.socketId,
+        'deleteChannelToUserChannelList',
+        channelId,
+      );
+      const userSocket = ChannelGateway.server.sockets.get(_user.socketId);
+      userSocket.leave(channelId.toString());
+    }
+    if (result) {
+      ChannelGateway.emitToAllClient('deleteChannelToAllChannelList', {
+        channelId,
+      });
+    }
   }
 
   @Patch('/admin')
