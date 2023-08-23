@@ -165,14 +165,12 @@ export class ChannelGateway
     if (!user) throw new NotFoundException({ error: ' User not found' });
     const { userId, channelId, message } = messageDto;
     if (!userId && channelId)
-      this.emitToChannel(user, channelId, 'channelMessage', [
-        {
-          channelId,
-          userId: user.id,
-          nickname: user.nickname,
-          message,
-        },
-      ]).catch((err) => {});
+      this.emitToChannel(user, channelId, 'channelMessage', {
+        channelId,
+        userId: user.id,
+        nickname: user.nickname,
+        message,
+      }).catch((err) => {});
     else if (userId && !channelId)
       this.emitToUser(user, userId, 'userMessage', {
         userId: user.id,
@@ -291,6 +289,7 @@ export class ChannelGateway
           message: `${user.nickname}님이 ${targetUser.nickname}을 Admin으로 임명되었습니다.`,
         },
       ]);
+      client.emit('changeUserTypeToMod', { id: channelId });
       return await this.channelService.setAdmin(user.id, channelUserInfo);
     } catch (err) {
       this.logger.log(err);
