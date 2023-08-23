@@ -56,11 +56,12 @@ export class ChannelGateway
   ) {}
 
   @WebSocketServer()
-  private static server: Server;
+  static server: Server;
   private logger = new Logger('ChannelGateway');
 
   async afterInit(server: Server) {
     const alluser: UserEntity[] = await this.userService.getAllUser();
+    ChannelGateway.server = server;
     for (const user of alluser) {
       await this.userService.updateUserElements(user.id, { socketId: null });
     }
@@ -136,9 +137,14 @@ export class ChannelGateway
       );
       if (!result) throw new WsException('Channel not found');
       client.join(channelId.toString());
-      client.to(channelId.toString()).emit('channelMessage', {
-        message: `${user.nickname}님이 입장하셨습니다.`,
-      });
+      client.to(channelId.toString()).emit('channelMessage', [
+        {
+          nickname: null,
+          userId: null,
+          channelId: channelId,
+          message: `${user.nickname}님이 입장하셨습니다.`,
+        },
+      ]);
       const channel = await this.channelService.getChannelByChannelId(
         channelId,
       );
@@ -159,12 +165,14 @@ export class ChannelGateway
     if (!user) throw new NotFoundException({ error: ' User not found' });
     const { userId, channelId, message } = messageDto;
     if (!userId && channelId)
-      this.emitToChannel(user, channelId, 'channelMessage', {
-        channelId,
-        userId: user.id,
-        nickname: user.nickname,
-        message,
-      }).catch((err) => {});
+      this.emitToChannel(user, channelId, 'channelMessage', [
+        {
+          channelId,
+          userId: user.id,
+          nickname: user.nickname,
+          message,
+        },
+      ]).catch((err) => {});
     else if (userId && !channelId)
       this.emitToUser(user, userId, 'userMessage', {
         userId: user.id,
@@ -204,10 +212,14 @@ export class ChannelGateway
         const targetUserSocket: Socket = ChannelGateway.server.sockets.get(
           targetUser.socketId,
         );
-        targetUserSocket.to(channelId.toString()).emit('channelMessage', {
-          channelId,
-          message: `${targetUser.nickname}님이 강퇴당하셨습니다.`,
-        });
+        targetUserSocket.to(channelId.toString()).emit('channelMessage', [
+          {
+            nickname: null,
+            userId: null,
+            channelId: channelId,
+            message: `${targetUser.nickname}님이 강퇴당하셨습니다.`,
+          },
+        ]);
         targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
         targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
@@ -235,10 +247,14 @@ export class ChannelGateway
         channelId,
       );
       if (channel) throw new NotFoundException({ error: `Channel not found` });
-      client.to(channelId.toString()).emit('channelMessage', {
-        channelId: channelId,
-        message: `${targetUser.nickname} 님이 ${user.nickname}에 의해 밴을 당하셨음!`,
-      });
+      client.to(channelId.toString()).emit('channelMessage', [
+        {
+          nickname: null,
+          userId: null,
+          channelId: channelId,
+          message: `${targetUser.nickname} 님이 ${user.nickname}에 의해 밴을 당하셨음!`,
+        },
+      ]);
       const reuslt = await this.channelService.banChannelUser(
         user.id,
         channelUserInfo,
@@ -267,9 +283,14 @@ export class ChannelGateway
       const targetUser = await this.userService.getUserById(userId);
       if (!targetUser)
         throw new NotFoundException(`${userId} 아이디를 찾지 못함`);
-      client.to(channelId.toString()).emit('channelMessage', {
-        message: `${user.id}님이 ${targetUser.nickname}을 Admin으로 임명되었습니다.`,
-      });
+      client.to(channelId.toString()).emit('channelMessage', [
+        {
+          nickname: null,
+          userId: null,
+          channelId: channelId,
+          message: `${user.nickname}님이 ${targetUser.nickname}을 Admin으로 임명되었습니다.`,
+        },
+      ]);
       return await this.channelService.setAdmin(user.id, channelUserInfo);
     } catch (err) {
       this.logger.log(err);
@@ -335,13 +356,22 @@ export class ChannelGateway
     if (!user) throw new WsException('leave Error');
     const channel = await this.channelService.getChannelByChannelId(channelId);
     if (!channel) throw new NotFoundException(`${channel.id}를 못 찾음`);
-    await this.channelService.leaveChannel(user.id, channelId);
-    client.to(channelId.toString()).emit('channelMessage', {
-      message: `${user.nickname}님이 나가셨습니다.`,
-    });
+    const result = await this.channelService.leaveChannel(user.id, channelId);
+    client.to(channelId.toString()).emit('channelMessage', [
+      {
+        nickname: null,
+        userId: null,
+        channelId: channelId,
+        message: `${user.nickname}님이 나가셨습니다.`,
+      },
+    ]);
     client.rooms.delete(channelId.toString());
     if (channel.password) channel.password = undefined;
     client.emit('deleteChannelToUserChannelList', channel);
+    if (result)
+      ChannelGateway.server.emit('deleteChannelToAllChannelList', {
+        id: channelId,
+      });
   }
 
   async emitToUser(
@@ -610,7 +640,7 @@ export class ChannelGateway
     if (!user) throw new WsException('Unauthorized');
     const { userId, channelId } = createChannelUserDto;
     const channel = await this.channelService.getChannelByChannelId(channelId);
-    if (channel) throw new NotFoundException({ error: `Channel not found` });
+    if (!channel) throw new NotFoundException({ error: `Channel not found` });
     const ret = await this.channelService.inviteUserToChannel(
       user.id,
       createChannelUserDto,
@@ -621,11 +651,17 @@ export class ChannelGateway
         targetUser.socketId,
       );
       targetSocket.join(ret.channelId.toString());
-      targetSocket.to(ret.channelId.toString()).emit('channelMessage', {
-        message: `${user.nickname} has invited ${targetUser.nickname} to join this channel`,
-      });
+      targetSocket.to(ret.channelId.toString()).emit('channelMessage', [
+        {
+          nickname: null,
+          userId: null,
+          channelId: channelId,
+          message: `${user.nickname} 님이 ${targetUser.nickname}을 초대되었습니다.`,
+        },
+      ]);
       targetSocket.emit('addChannelToUserChannelList', channel);
     }
+    console.log('channel', channel);
     return ret;
   }
 
