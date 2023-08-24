@@ -137,10 +137,12 @@ export class GameGateway
     this.server.to(user1SocketId).emit('getGame', {
       gameInfo: createGameDto,
       whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
+      nickname: user1.nickname,
     });
     this.server.to(user2SocketId).emit('getGame', {
       gameInfo: createGameDto,
       whoAmI: user2.id === gameEntity.winner.id ? 'left' : 'right',
+      nickname: user2.nickname,
     });
     const socket1 = this.server.sockets.sockets.get(user1SocketId);
     const socket2 = this.server.sockets.sockets.get(user2SocketId);
