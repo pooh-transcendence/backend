@@ -37,9 +37,10 @@ import {
   UpdateChannelUserDto,
 } from './channel.dto';
 import { ChannelService } from './channel.service';
-import { ChannelEntity } from './channel.entity';
+import { ChannelEntity, ChannelType } from './channel.entity';
 import { FriendEntity } from 'src/friend/friend.entity';
 import { FriendDto } from 'src/friend/friend.dto';
+import { Channel } from 'diagnostics_channel';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -310,7 +311,12 @@ export class ChannelGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('password Error');
     try {
-      return await this.channelService.updatePassword(user.id, channelInfo);
+      const result = await this.channelService.updatePassword(
+        user.id,
+        channelInfo,
+      );
+      ChannelGateway.emitToAllClient('changeChannelState', result);
+      return result;
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -343,7 +349,8 @@ export class ChannelGateway
       }
       // 서버에있는 소켓들 에게 이벤트 보내기
       if (result.password) result.password = undefined;
-      ChannelGateway.server.emit('addChannelToAllChannelList', result);
+      if (result.channelType !== ChannelType.PRIVATE)
+        ChannelGateway.server.emit('addChannelToAllChannelList', result);
       return result;
     } catch (err) {
       this.logger.log(err);
@@ -673,5 +680,18 @@ export class ChannelGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     return await this.userService.getAllUser();
+  }
+
+  @SubscribeMessage('socketTest')
+  async socketTest(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any,
+  ) {
+    // Json { event : "getPaddleSize"
+    //        data : {paddleSize : 3, x : 3 , y : 3}
+    //  }
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    client.emit(data.event, data.data);
   }
 }

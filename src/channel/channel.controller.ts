@@ -31,6 +31,7 @@ import { ChannelGateway } from './channel.gateway';
 import { Channel } from 'diagnostics_channel';
 import { UserService } from 'src/user/user.service';
 import { transformAuthInfo } from 'passport';
+import { ChannelType } from './channel.entity';
 
 @Controller('/channel')
 @UseInterceptors(TransformInterceptor)
@@ -59,7 +60,8 @@ export class ChannelController {
     );
     if (result.password) result.password = undefined;
     const _user = await this.userService.getUserById(user.id);
-    ChannelGateway.emitToAllClient('addChannelToAllChannelList', result);
+    if (result.channelType !== ChannelType.PRIVATE)
+      ChannelGateway.emitToAllClient('addChannelToAllChannelList', result);
     if (_user.socketId)
       ChannelGateway.emitToClient(
         _user.socketId,
@@ -170,7 +172,10 @@ export class ChannelController {
     @GetUser() user: UserEntity,
     @Body() channelInfo: UpdateChannelDto,
   ) {
-    return await this.channelService.updatePassword(user.id, channelInfo);
+    const result = await this.channelService.updatePassword(
+      user.id,
+      channelInfo,
+    );
   }
 
   @Patch('/invite')
