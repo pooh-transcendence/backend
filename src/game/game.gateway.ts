@@ -190,8 +190,11 @@ export class GameGateway
   gameStart(game: Game) {
     this.logger.log('gameStart');
     // 1초에 60번 update
-    setTimeout(() => {
+    const timerId = setInterval(() => {
       this.gameLoop(game);
+      if (game.isGameOver()) {
+        clearInterval(timerId);
+      }
     }, 1000 / 60);
     // while (1) {
     //   const ret = game.update();
