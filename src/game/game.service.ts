@@ -1,10 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { GameRepository } from './game.repository';
-import { CreateGameDto, RacketUpdatesDto } from './game.dto';
-import { GameEntity, GameType } from './game.entity';
 import { UserRepository } from 'src/user/user.repository';
-import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
+import { CreateGameDto } from './game.dto';
+import { GameEntity } from './game.entity';
+import { GameRepository } from './game.repository';
 
 @Injectable()
 export class GameService {
@@ -38,5 +37,9 @@ export class GameService {
 
   async deleteGameByGameId(gameId: number): Promise<void> {
     await this.gameRepository.deleteGameByGameId(gameId);
+  }
+
+  async updateGame(game: GameEntity): Promise<void> {
+    await this.gameRepository.updateGame(game);
   }
 }

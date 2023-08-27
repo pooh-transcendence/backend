@@ -1,17 +1,17 @@
-import { Module, NestModule } from '@nestjs/common';
-import { ChannelModule } from './channel/channel.module';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { typeOrmConfig } from './configs/typeorm.config';
-import { UserModule } from './user/user.module';
-import { GameModule } from './game/game.module';
-import { ValidationPipe } from '@nestjs/common';
-import { APP_PIPE } from '@nestjs/core';
-import { BlockModule } from './block/block.module';
-import { FriendModule } from './friend/friend.module';
-import { MiddlewareConsumer } from '@nestjs/common/interfaces';
-import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { CacheModule } from '@nestjs/cache-manager';
+import { Module, NestModule, ValidationPipe } from '@nestjs/common';
+import { MiddlewareConsumer } from '@nestjs/common/interfaces';
+import { APP_PIPE } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { BlockModule } from './block/block.module';
+import { ChannelModule } from './channel/channel.module';
+import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { cacheModuleConfig } from './configs/cache.config';
+import { typeOrmConfig } from './configs/typeorm.config';
+import { FriendModule } from './friend/friend.module';
+import { GameModule } from './game/game.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -22,6 +22,7 @@ import { cacheModuleConfig } from './configs/cache.config';
     GameModule,
     BlockModule,
     FriendModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [

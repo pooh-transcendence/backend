@@ -1,4 +1,5 @@
-import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Interval, SchedulerRegistry } from '@nestjs/schedule';
 import {
   ConnectedSocket,
   MessageBody,
@@ -12,15 +13,15 @@ import {
 import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
+import { ChannelGateway } from 'src/channel/channel.gateway';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
 import { Game } from './game.class';
-import { RacketUpdatesDto } from './game.dto';
-import { GameType } from './game.entity';
+import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
+import { GameEntity, GameType } from './game.entity';
 import { GameService } from './game.service';
-import { ChannelGateway } from 'src/channel/channel.gateway';
 
 @WebSocketGateway({ namespace: 'game' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -31,6 +32,9 @@ export class GameGateway
   private gameMap: Map<number, Game>;
   private queueUser: UserEntity[];
   private gameToUserMap: Map<number, number>;
+  private schedulerRegistry: SchedulerRegistry;
+
+  logger: Logger = new Logger('GameGateway');
 
   constructor(
     private userService: UserService,
@@ -65,7 +69,7 @@ export class GameGateway
     this.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
     while (this.queueUser.length >= 2) {
-      await this.getGame();
+      await this.gameReady();
     }
   }
 
@@ -78,8 +82,18 @@ export class GameGateway
     this.server.to(client.id).emit('leaveQueue', { status: 'success' });
   }
 
+  @SubscribeMessage('gameReady')
+  async handleGameReady(@ConnectedSocket() client: Socket) {
+    const userId = this.authService.getUserIdFromSocket(client);
+    if (!userId) client.disconnect();
+    const gameId = this.gameToUserMap.get(userId);
+    if (!gameId) return;
+    // game start
+    this.gameStart(this.gameMap.get(gameId));
+  }
+
   // game 시작
-  async getGame() {
+  async gameReady() {
     let gameUserCount = 0;
     let user1: UserEntity;
     let user2: UserEntity;
@@ -133,24 +147,27 @@ export class GameGateway
       loser: null,
     };
     const gameEntity = await this.gameService.createGame(createGameDto);
-    // user1과 user2에게 game start emit
-    this.server.to(user1SocketId).emit('getGame', {
-      gameInfo: createGameDto,
-      whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
-      nickname: user1.nickname,
-    });
-    this.server.to(user2SocketId).emit('getGame', {
-      gameInfo: createGameDto,
-      whoAmI: user2.id === gameEntity.winner.id ? 'left' : 'right',
-      nickname: user2.nickname,
-    });
+
     const socket1 = this.server.sockets.sockets.get(user1SocketId);
     const socket2 = this.server.sockets.sockets.get(user2SocketId);
     socket1.join('game : ' + gameEntity.id.toString());
     socket2.join('game : ' + gameEntity.id.toString());
     this.gameToUserMap.set(user1.id, gameEntity.id);
     this.gameToUserMap.set(user2.id, gameEntity.id);
-    this.gameMap.set(gameEntity.id, new Game(gameEntity, this.userService));
+    const game = new Game(gameEntity, this.userService);
+    const gameUpdateDto: GameUpdateDto = game.init();
+    this.gameMap.set(gameEntity.id, game);
+    // user1과 user2에게 game ready emit
+    this.server.to(user1SocketId).emit('gameReady', {
+      gameInfo: gameUpdateDto,
+      whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
+      nickname: user1.nickname,
+    });
+    this.server.to(user2SocketId).emit('gameReady', {
+      gameInfo: gameUpdateDto,
+      whoAmI: user2.id === gameEntity.winner.id ? 'left' : 'right',
+      nickname: user2.nickname,
+    });
   }
 
   // socket 연결 여부 확인
@@ -172,22 +189,55 @@ export class GameGateway
     game.getUpdateRacket(racketUpdate);
   }
 
-  private gameStart(game: Game) {
-    game.init();
-    let gameEntity;
-    while (1) {
-      const ret = game.update();
-      this.server.to(game.getRoomId()).emit('gameUpdate', ret);
-      if (ret.isGetScore) game.init();
-      if (game.isGameOver()) {
-        gameEntity = game.exportToGameEntity();
-        break;
-      }
-    }
+  @SubscribeMessage('gameStart')
+  gameStart(game: Game) {
+    this.logger.log('gameStart');
+    this.gameLoop(game);
+    // while (1) {
+    //   const ret = game.update();
+    //   this.server.to(game.getRoomId()).emit('gameUpdate', ret);
+    //   if (ret.isGetScore) game.init();
+    //   if (game.isGameOver()) {
+    //     const gameEntity = game.exportToGameEntity();
+    //     this.gameMap.delete(gameEntity.id);
+    //     this.gameToUserMap.delete(gameEntity.winner.id);
+    //     this.gameToUserMap.delete(gameEntity.loser.id);
+    //     break;
+    //   }
+  }
 
-    this.gameMap.delete(gameEntity.id);
-    this.gameToUserMap.delete(gameEntity.participants[0].id);
-    this.gameToUserMap.delete(gameEntity.participants[1].id);
-    //this.gameService.updateGame(gameEntity.id, gameEntity);
+  @Interval('gameLoop', 1000)
+  private gameLoop(game: Game) {
+    const updateInfo = game.update();
+    const roomId: string = game.getRoomId();
+    this.server.to(roomId).emit('gameUpdate', updateInfo);
+    if (updateInfo.isGetScore) game.init();
+    if (game.isGameOver()) {
+      const gameEntity: GameEntity = game.exportToGameEntity();
+      this.gameMap.delete(gameEntity.id);
+      this.gameToUserMap.delete(gameEntity.winner.id);
+      this.gameToUserMap.delete(gameEntity.loser.id);
+
+      // gameLoop 종료
+      const interval = this.schedulerRegistry.getInterval('gameLoop');
+      this.schedulerRegistry.deleteInterval('gameLoop');
+      clearInterval(interval);
+
+      // gameEntity 저장
+      this.gameService.updateGame(gameEntity);
+      gameEntity.winner.accessToken = null;
+      gameEntity.winner.refreshToken = null;
+      gameEntity.winner.ftId = null;
+      gameEntity.winner.winnerGame = null;
+      gameEntity.winner.loserGame = null;
+
+      gameEntity.loser.accessToken = null;
+      gameEntity.loser.refreshToken = null;
+      gameEntity.loser.ftId = null;
+      gameEntity.loser.winnerGame = null;
+      gameEntity.loser.loserGame = null;
+
+      this.server.to(roomId).emit('gameOver', gameEntity);
+    }
   }
 }
