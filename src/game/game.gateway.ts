@@ -1,5 +1,4 @@
 import { Logger, UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
-import { Interval, SchedulerRegistry } from '@nestjs/schedule';
 import {
   ConnectedSocket,
   MessageBody,
@@ -32,8 +31,6 @@ export class GameGateway
   private gameMap: Map<number, Game>;
   private queueUser: UserEntity[];
   private gameToUserMap: Map<number, number>;
-  private schedulerRegistry: SchedulerRegistry;
-
   logger: Logger = new Logger('GameGateway');
 
   constructor(
@@ -192,7 +189,10 @@ export class GameGateway
   @SubscribeMessage('gameStart')
   gameStart(game: Game) {
     this.logger.log('gameStart');
-    this.gameLoop(game);
+    // 1초에 60번 update
+    setTimeout(() => {
+      this.gameLoop(game);
+    }, 1000 / 60);
     // while (1) {
     //   const ret = game.update();
     //   this.server.to(game.getRoomId()).emit('gameUpdate', ret);
@@ -206,7 +206,6 @@ export class GameGateway
     //   }
   }
 
-  @Interval('gameLoop', 1000)
   private gameLoop(game: Game) {
     const updateInfo = game.update();
     const roomId: string = game.getRoomId();
@@ -217,11 +216,6 @@ export class GameGateway
       this.gameMap.delete(gameEntity.id);
       this.gameToUserMap.delete(gameEntity.winner.id);
       this.gameToUserMap.delete(gameEntity.loser.id);
-
-      // gameLoop 종료
-      const interval = this.schedulerRegistry.getInterval('gameLoop');
-      this.schedulerRegistry.deleteInterval('gameLoop');
-      clearInterval(interval);
 
       // gameEntity 저장
       this.gameService.updateGame(gameEntity);
