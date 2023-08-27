@@ -38,18 +38,11 @@ export class GameEntity extends CommonEntity {
   @IsNumber()
   @IsPositive()
   @IsIn([1, 2, 3])
-  ballCount: number;
-
-  @Column({ default: 1 })
-  @IsNumber()
-  @IsPositive()
-  @IsIn([1, 2, 3])
   racketSize: number;
+  // @Column({ default: null })
+  // isGiveUp: boolean;
 
-  @Column({ default: null })
-  isGiveUp: boolean;
-
-  @Column({ default: null })
-  @IsNumber()
-  giveUpUser: number;
+  // @Column({ default: null })
+  // @IsNumber()
+  // giveUpUser: number;
 }

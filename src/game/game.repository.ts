@@ -29,11 +29,14 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async getAllGame(): Promise<GameEntity[]> {
-    return this.find({ relations: ['winner', 'loser'], order: { id: 'ASC' } });
+    return await this.find({
+      relations: ['winner', 'loser'],
+      order: { id: 'ASC' },
+    });
   }
 
   async getGameByUserId(userId: number): Promise<GameEntity[]> {
-    return this.find({
+    return await this.find({
       relations: ['winner', 'loser'],
       where: [{ winner: { id: userId } }, { loser: { id: userId } }],
       order: { id: 'ASC' },
@@ -41,7 +44,7 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async getGameByGameId(gameId: number): Promise<GameEntity> {
-    return this.findOne({
+    return await this.findOne({
       relations: ['winner', 'loser'],
       where: { id: gameId },
       order: { id: 'ASC' },
@@ -52,5 +55,11 @@ export class GameRepository extends Repository<GameEntity> {
     const result = await this.delete({ id: gameId });
     if (result.affected !== 1)
       throw new NotFoundException(`there is no game id ${gameId}`);
+  }
+
+  async updateGame(game: GameEntity): Promise<void> {
+    const result = await this.update(game.id, game);
+    if (result.affected !== 1)
+      throw new NotFoundException(`there is no game id ${game.id}`);
   }
 }
