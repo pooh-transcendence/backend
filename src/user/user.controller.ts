@@ -101,9 +101,9 @@ export class UserController {
   }
 
   @Post('avatarUpload')
-  @UseInterceptors(FileInterceptor('file'))
+  //@UseInterceptors(FileInterceptor('file'))
   async uploadFile(
-    @UploadedFile(
+    /*@UploadedFile(
       new ParseFilePipeBuilder()
         .addFileTypeValidator({
           fileType: 'jpeg',
@@ -115,9 +115,10 @@ export class UserController {
           errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY,
         }),
     )
-    file: Express.Multer.File,
+    file: Express.Multer.File,*/
     @GetUser() user: UserEntity,
+    @Body('file') file: string,
   ) {
-    this.userService.updateUserElements(user.id, { avator: file });
+    return await this.userService.updateUserElements(user.id, { avator: file });
   }
 }
