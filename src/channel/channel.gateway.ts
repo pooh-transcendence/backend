@@ -428,7 +428,7 @@ export class ChannelGateway
       userSocket.join(channelId.toString());
     }
     // 여기까지
-    const userSocket = ChannelGateway.server.sockets.get(user.socketId);
+    const userSocket = ChannelGateway.server.sockets.get(user.channelSocketId);
     if (!userSocket) return;
     if (await this.channelService.getChannelUserByIds(channelId, user.id)) {
       userSocket.to(channelId.toString()).emit(event, data);

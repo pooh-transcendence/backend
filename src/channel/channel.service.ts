@@ -54,7 +54,8 @@ export class ChannelService {
       user.winnerGame = undefined;
       user.loserGame = undefined;
       user.secret = undefined;
-      user.socketId = undefined;
+      user.channelSocketId = undefined;
+      user.gameSocketId = undefined;
       // channelUser 배열에 추가
       channelUser.push(user);
     }
@@ -323,7 +324,7 @@ export class ChannelService {
       userSocketId.push(
         await this.userRepository.findOne({
           where: { id: user.userId },
-          select: ['socketId'],
+          select: ['channelSocketId'],
         }),
       );
     }

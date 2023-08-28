@@ -7,6 +7,7 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
@@ -42,11 +43,11 @@ export class GameGateway
     this.gameToUserMap = new Map<number, number>();
   }
 
-  // @WebSocketServer()
-  // private server: Server;
+  @WebSocketServer()
+  private server: Server;
 
   afterInit(server: Server) {
-    // server = ChannelGateway.server;
+    server = ChannelGateway.server;
   }
 
   handleConnection(client: any) {}
@@ -108,7 +109,7 @@ export class GameGateway
       user1 = this.queueUser.shift();
       // socketId 확인
       user1SocketId = await this.userService.getUserElementsById(user1.id, [
-        'socketId',
+        'gameSocketId',
       ]);
       if (!user1SocketId || !this.isSocketConnected(user1SocketId.socketId)) {
         continue;
@@ -124,7 +125,7 @@ export class GameGateway
       user2 = this.queueUser.shift();
       // socketId 확인
       user2SocketId = await this.userService.getUserElementsById(user2.id, [
-        'socketId',
+        'gameSocketId',
       ]);
       if (!user2SocketId || !this.isSocketConnected(user2SocketId.socketId)) {
         continue;
@@ -232,17 +233,21 @@ export class GameGateway
 
       // gameEntity 저장
       this.gameService.updateGame(gameEntity);
-      gameEntity.winner.accessToken = null;
-      gameEntity.winner.refreshToken = null;
-      gameEntity.winner.ftId = null;
-      gameEntity.winner.winnerGame = null;
-      gameEntity.winner.loserGame = null;
+      gameEntity.winner.accessToken = undefined;
+      gameEntity.winner.refreshToken = undefined;
+      gameEntity.winner.ftId = undefined;
+      gameEntity.winner.winnerGame = undefined;
+      gameEntity.winner.loserGame = undefined;
+      gameEntity.winner.channelSocketId = undefined;
+      gameEntity.winner.gameSocketId = undefined;
 
-      gameEntity.loser.accessToken = null;
-      gameEntity.loser.refreshToken = null;
-      gameEntity.loser.ftId = null;
-      gameEntity.loser.winnerGame = null;
-      gameEntity.loser.loserGame = null;
+      gameEntity.loser.accessToken = undefined;
+      gameEntity.loser.refreshToken = undefined;
+      gameEntity.loser.ftId = undefined;
+      gameEntity.loser.winnerGame = undefined;
+      gameEntity.loser.loserGame = undefined;
+      gameEntity.loser.channelSocketId = undefined;
+      gameEntity.loser.gameSocketId = undefined;
 
       ChannelGateway.server.to(roomId).emit('gameOver', gameEntity);
 

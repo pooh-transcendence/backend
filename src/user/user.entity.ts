@@ -70,5 +70,9 @@ export class UserEntity extends CommonEntity {
 
   @Column({ nullable: true })
   @Exclude()
-  socketId: string;
+  channelSocketId: string;
+
+  @Column({ nullable: true })
+  @Exclude()
+  gameSocketId: string;
 }
