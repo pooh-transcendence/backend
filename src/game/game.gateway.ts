@@ -45,9 +45,11 @@ export class GameGateway
 
   @WebSocketServer()
   private server: Server;
-  afterInit(server: any) {
+
+  afterInit(server: Server) {
     server = ChannelGateway.server;
   }
+
   handleConnection(client: any) {}
 
   async handleDisconnect(client: Socket) {
@@ -224,9 +226,6 @@ export class GameGateway
     if (updateInfo.isGetScore) game.init();
     if (game.isGameOver()) {
       const gameEntity: GameEntity = game.exportToGameEntity();
-      this.gameMap.delete(gameEntity.id);
-      this.gameToUserMap.delete(gameEntity.winner.id);
-      this.gameToUserMap.delete(gameEntity.loser.id);
 
       // gameEntity 저장
       this.gameService.updateGame(gameEntity);
@@ -243,6 +242,13 @@ export class GameGateway
       gameEntity.loser.loserGame = null;
 
       this.server.to(roomId).emit('gameOver', gameEntity);
+
+      this.gameMap.delete(gameEntity.id);
+      this.gameToUserMap.delete(gameEntity.winner.id);
+      this.gameToUserMap.delete(gameEntity.loser.id);
+
+      // leave room
+      this.server.socketsLeave(roomId);
     }
   }
 }
