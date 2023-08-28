@@ -37,7 +37,8 @@ export class UserRepository extends Repository<UserEntity> {
         loseScore: true,
         userState: true,
         secret: true,
-        socketId: true,
+        channelSocketId: true,
+        gameSocketId: true,
       },
     });
   }

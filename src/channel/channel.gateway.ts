@@ -24,6 +24,8 @@ import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-excep
 import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
 import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { FriendDto } from 'src/friend/friend.dto';
+import { FriendEntity } from 'src/friend/friend.entity';
 import { FriendService } from 'src/friend/friend.service';
 import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -36,11 +38,8 @@ import {
   UpdateChannelDto,
   UpdateChannelUserDto,
 } from './channel.dto';
-import { ChannelService } from './channel.service';
 import { ChannelEntity, ChannelType } from './channel.entity';
-import { FriendEntity } from 'src/friend/friend.entity';
-import { FriendDto } from 'src/friend/friend.dto';
-import { Channel } from 'diagnostics_channel';
+import { ChannelService } from './channel.service';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -58,24 +57,27 @@ export class ChannelGateway
 
   @WebSocketServer()
   static server: Server;
+
   private logger = new Logger('ChannelGateway');
 
   async afterInit(server: Server) {
     const alluser: UserEntity[] = await this.userService.getAllUser();
     ChannelGateway.server = server;
     for (const user of alluser) {
-      await this.userService.updateUserElements(user.id, { socketId: null });
+      await this.userService.updateUserElements(user.id, {
+        channelSocketId: null,
+      });
     }
   }
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || !client.id || user.socketId) {
+    if (!user || !client.id || user.channelSocketId) {
       return client.disconnect();
     }
     this.logger.log(`Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
-      socketId: client.id,
+      channelSocketId: client.id,
       userState: UserState.ONLINE,
     });
     user.channels.forEach((channel) => {
@@ -84,28 +86,30 @@ export class ChannelGateway
     const toFriendList = await this.friendService.getFriendListByToId(user.id);
     for (const toFriendFrom of toFriendList) {
       const toFriend = await this.userService.getUserById(toFriendFrom.from);
-      if (!toFriend.socketId) continue;
-      ChannelGateway.server.to(toFriend.socketId).emit('changeFriendState', {
-        id: user.id,
-        nickname: user.nickname,
-        userState: UserState.ONLINE,
-      });
+      if (!toFriend.channelSocketId) continue;
+      ChannelGateway.server
+        .to(toFriend.channelSocketId)
+        .emit('changeFriendState', {
+          id: user.id,
+          nickname: user.nickname,
+          userState: UserState.ONLINE,
+        });
     }
   }
 
   async handleDisconnect(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || client.id !== user.socketId) return;
+    if (!user || client.id !== user.channelSocketId) return;
     this.logger.log(`Client distconnected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
-      socketId: null,
+      channelSocketId: null,
       userState: UserState.OFFLINE,
     });
     for (const friend of user.friends) {
       const friendSocketId = await this.userService.getUserById(friend.id);
-      if (!friendSocketId?.socketId) continue;
+      if (!friendSocketId?.channelSocketId) continue;
       ChannelGateway.server
-        .to(friendSocketId.socketId)
+        .to(friendSocketId.channelSocketId)
         .emit('changeFriendState', {
           id: user.id,
           nickname: user.nickname,
@@ -207,9 +211,9 @@ export class ChannelGateway
         channelId,
       );
       if (!channel) throw new NotFoundException({ error: `Channel not found` });
-      if (targetUser.socketId) {
+      if (targetUser.channelSocketId) {
         const targetUserSocket: Socket = ChannelGateway.server.sockets.get(
-          targetUser.socketId,
+          targetUser.channelSocketId,
         );
         targetUserSocket.to(channelId.toString()).emit('channelMessage', [
           {
@@ -258,8 +262,10 @@ export class ChannelGateway
         user.id,
         channelUserInfo,
       );
-      if (targetUser.socketId) {
-        const targetUserSocket = ChannelGateway.server.get(targetUser.socketId);
+      if (targetUser.channelSocketId) {
+        const targetUserSocket = ChannelGateway.server.get(
+          targetUser.channelSocketId,
+        );
         targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
       return reuslt;
@@ -290,9 +296,9 @@ export class ChannelGateway
           message: `${user.nickname}님이 ${targetUser.nickname}을 Admin으로 임명되었습니다.`,
         },
       ]);
-      if (targetUser.socketId) {
+      if (targetUser.channelSocketId) {
         const targetUserSocket = ChannelGateway.server.sockets.get(
-          targetUser.socketId,
+          targetUser.channelSocketId,
         );
         targetUserSocket.emit('changeUserTypeToMod', { id: channelId });
       }
@@ -344,7 +350,9 @@ export class ChannelGateway
       const channelUsers = await this.channelService.getChannelUser(result.id);
       for (const channelUser of channelUsers) {
         const user = await this.userService.getUserById(channelUser.userId);
-        const userSocket = ChannelGateway.server.sockets.get(user.socketId);
+        const userSocket = ChannelGateway.server.sockets.get(
+          user.channelSocketId,
+        );
         if (!userSocket) continue;
         userSocket.join(result.id.toString());
       }
@@ -401,9 +409,9 @@ export class ChannelGateway
       }
     });
     if (isBlocked) return;
-    const userSocket = ChannelGateway.server.sockets.get(user.socketId);
-    if (!targetUser || !targetUser.socketId || !userSocket) return;
-    ChannelGateway.server.to(targetUser.socketId).emit(event, data);
+    const userSocket = ChannelGateway.server.sockets.get(user.channelSocketId);
+    if (!targetUser || !targetUser.channelSocketId || !userSocket) return;
+    ChannelGateway.server.to(targetUser.channelSocketId).emit(event, data);
   }
 
   async emitToChannel(
@@ -424,12 +432,14 @@ export class ChannelGateway
     const channelUsers = await this.channelService.getChannelUser(channelId);
     for (const channelUser of channelUsers) {
       const user = await this.userService.getUserById(channelUser.userId);
-      const userSocket = ChannelGateway.server.sockets.get(user.socketId);
+      const userSocket = ChannelGateway.server.sockets.get(
+        user.channelSocketId,
+      );
       if (!userSocket) continue;
       userSocket.join(channelId.toString());
     }
     // 여기까지
-    const userSocket = ChannelGateway.server.sockets.get(user.socketId);
+    const userSocket = ChannelGateway.server.sockets.get(user.channelSocketId);
     if (!userSocket) return;
     if (await this.channelService.getChannelUserByIds(channelId, user.id)) {
       userSocket.to(channelId.toString()).emit(event, data);
@@ -658,9 +668,9 @@ export class ChannelGateway
       createChannelUserDto,
     );
     const targetUser = await this.userService.getUserById(userId);
-    if (targetUser.socketId) {
+    if (targetUser.channelSocketId) {
       const targetSocket: Socket = ChannelGateway.server.sockets.get(
-        targetUser.socketId,
+        targetUser.channelSocketId,
       );
       targetSocket.join(ret.channelId.toString());
       targetSocket.to(ret.channelId.toString()).emit('channelMessage', [
