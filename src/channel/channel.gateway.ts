@@ -315,6 +315,7 @@ export class ChannelGateway
         user.id,
         channelInfo,
       );
+      if (result.password) result.password = undefined;
       ChannelGateway.emitToAllClient('changeChannelState', result);
       return result;
     } catch (err) {

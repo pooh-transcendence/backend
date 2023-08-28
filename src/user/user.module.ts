@@ -16,7 +16,6 @@ import { ChannelRepository } from 'src/channel/channel.repository';
 import { ChannelUserRepository } from 'src/channel/channel-user.repository';
 import { ChannelService } from 'src/channel/channel.service';
 import { PassportModule } from '@nestjs/passport';
-import { ChannelGateway } from 'src/channel/channel.gateway';
 import { AuthService } from 'src/auth/auth.service';
 import { JwtService } from '@nestjs/jwt';
 
