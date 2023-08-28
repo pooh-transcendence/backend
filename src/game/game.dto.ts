@@ -46,7 +46,7 @@ export class GameUpdateDto extends PickType(GameEntity, ['gameType']) {
   participants: number[];
 
   racket: number[][];
-  score: number[][];
+  score: number[];
   ball: number[];
 
   @IsBoolean()
