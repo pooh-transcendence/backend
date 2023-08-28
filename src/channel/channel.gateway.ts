@@ -24,6 +24,8 @@ import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-excep
 import { ChannelTypePipe } from 'src/common/pipes/channelType.pipe';
 import { NumArrayPipe } from 'src/common/pipes/numArray.pipe';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { FriendDto } from 'src/friend/friend.dto';
+import { FriendEntity } from 'src/friend/friend.entity';
 import { FriendService } from 'src/friend/friend.service';
 import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
@@ -36,11 +38,8 @@ import {
   UpdateChannelDto,
   UpdateChannelUserDto,
 } from './channel.dto';
-import { ChannelService } from './channel.service';
 import { ChannelEntity, ChannelType } from './channel.entity';
-import { FriendEntity } from 'src/friend/friend.entity';
-import { FriendDto } from 'src/friend/friend.dto';
-import { Channel } from 'diagnostics_channel';
+import { ChannelService } from './channel.service';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)

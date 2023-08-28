@@ -7,7 +7,6 @@ import {
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
 } from '@nestjs/websockets';
 import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
@@ -43,11 +42,11 @@ export class GameGateway
     this.gameToUserMap = new Map<number, number>();
   }
 
-  @WebSocketServer()
-  private server: Server;
+  // @WebSocketServer()
+  // private server: Server;
 
   afterInit(server: Server) {
-    server = ChannelGateway.server;
+    // server = ChannelGateway.server;
   }
 
   handleConnection(client: any) {}
@@ -65,7 +64,9 @@ export class GameGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) client.disconnect();
     this.queueUser.push(user);
-    this.server.to(client.id).emit('joinQueue', { status: 'success' });
+    ChannelGateway.server
+      .to(client.id)
+      .emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
     while (this.queueUser.length >= 2) {
       await this.gameReady();
@@ -78,7 +79,9 @@ export class GameGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) client.disconnect();
     this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
-    this.server.to(client.id).emit('leaveQueue', { status: 'success' });
+    ChannelGateway.server
+      .to(client.id)
+      .emit('leaveQueue', { status: 'success' });
   }
 
   // @SubscribeMessage('gameReady')
@@ -147,8 +150,8 @@ export class GameGateway
     };
     const gameEntity = await this.gameService.createGame(createGameDto);
 
-    const socket1 = this.server.sockets.sockets.get(user1SocketId);
-    const socket2 = this.server.sockets.sockets.get(user2SocketId);
+    const socket1 = ChannelGateway.server.sockets.sockets.get(user1SocketId);
+    const socket2 = ChannelGateway.server.sockets.sockets.get(user2SocketId);
     socket1.join('game : ' + gameEntity.id.toString());
     socket2.join('game : ' + gameEntity.id.toString());
     this.gameToUserMap.set(user1.id, gameEntity.id);
@@ -157,12 +160,12 @@ export class GameGateway
     const gameUpdateDto: GameUpdateDto = game.init();
     this.gameMap.set(gameEntity.id, game);
     // user1과 user2에게 game ready emit
-    this.server.to(user1SocketId).emit('gameReady', {
+    ChannelGateway.server.to(user1SocketId).emit('gameReady', {
       gameInfo: gameUpdateDto,
       whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
       nickname: user1.nickname,
     });
-    this.server.to(user2SocketId).emit('gameReady', {
+    ChannelGateway.server.to(user2SocketId).emit('gameReady', {
       gameInfo: gameUpdateDto,
       whoAmI: user2.id === gameEntity.winner.id ? 'left' : 'right',
       nickname: user2.nickname,
@@ -171,7 +174,7 @@ export class GameGateway
 
   // socket 연결 여부 확인
   private isSocketConnected(socketId: string): boolean {
-    return this.server.sockets.sockets.has(socketId)?.connected;
+    return ChannelGateway.server.sockets.sockets.has(socketId)?.connected;
   }
 
   @SubscribeMessage('updateRacket')
@@ -222,7 +225,7 @@ export class GameGateway
   private gameLoop(game: Game) {
     const updateInfo = game.update();
     const roomId: string = game.getRoomId();
-    this.server.to(roomId).emit('gameUpdate', updateInfo);
+    ChannelGateway.server.to(roomId).emit('gameUpdate', updateInfo);
     if (updateInfo.isGetScore) game.init();
     if (game.isGameOver()) {
       const gameEntity: GameEntity = game.exportToGameEntity();
@@ -241,14 +244,14 @@ export class GameGateway
       gameEntity.loser.winnerGame = null;
       gameEntity.loser.loserGame = null;
 
-      this.server.to(roomId).emit('gameOver', gameEntity);
+      ChannelGateway.server.to(roomId).emit('gameOver', gameEntity);
 
       this.gameMap.delete(gameEntity.id);
       this.gameToUserMap.delete(gameEntity.winner.id);
       this.gameToUserMap.delete(gameEntity.loser.id);
 
       // leave room
-      this.server.socketsLeave(roomId);
+      ChannelGateway.server.socketsLeave(roomId);
     }
   }
 }
