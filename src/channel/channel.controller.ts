@@ -176,6 +176,9 @@ export class ChannelController {
       user.id,
       channelInfo,
     );
+    if (result.password) result.password = undefined;
+    ChannelGateway.emitToAllClient('changeChannelState', result);
+    return result;
   }
 
   @Patch('/invite')
