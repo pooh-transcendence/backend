@@ -79,15 +79,15 @@ export class GameGateway
     this.server.to(client.id).emit('leaveQueue', { status: 'success' });
   }
 
-  @SubscribeMessage('gameReady')
-  async handleGameReady(@ConnectedSocket() client: Socket) {
-    const userId = this.authService.getUserIdFromSocket(client);
-    if (!userId) client.disconnect();
-    const gameId = this.gameToUserMap.get(userId);
-    if (!gameId) return;
-    // game start
-    this.gameStart(this.gameMap.get(gameId));
-  }
+  // @SubscribeMessage('gameReady')
+  // async handleGameReady(@ConnectedSocket() client: Socket) {
+  //   const userId = this.authService.getUserIdFromSocket(client);
+  //   if (!userId) client.disconnect();
+  //   const gameId = this.gameToUserMap.get(userId);
+  //   if (!gameId) return;
+  //   // game start
+  //   this.gameStart(this.gameMap.get(gameId));
+  // }
 
   // game 시작
   async gameReady() {
@@ -187,7 +187,15 @@ export class GameGateway
   }
 
   @SubscribeMessage('gameStart')
-  gameStart(game: Game) {
+  gameStart(@ConnectedSocket() client: Socket) {
+    const userId = this.authService.getUserIdFromSocket(client);
+    if (!userId) {
+      client.disconnect();
+      return;
+    }
+    const gameId = this.gameToUserMap.get(userId);
+    if (!gameId) return;
+    const game: Game = this.gameMap.get(gameId);
     this.logger.log('gameStart');
     // 1초에 60번 update
     const timerId = setInterval(() => {
