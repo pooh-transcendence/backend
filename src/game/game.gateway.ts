@@ -14,13 +14,14 @@ import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import { ChannelGateway } from 'src/channel/channel.gateway';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
-import { UserEntity } from 'src/user/user.entity';
+import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
 import { Game } from './game.class';
 import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameType } from './game.entity';
 import { GameService } from './game.service';
+import { FriendService } from 'src/friend/friend.service';
 
 @WebSocketGateway({ namespace: 'game' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -37,6 +38,7 @@ export class GameGateway
     private userService: UserService,
     private gameService: GameService,
     private authService: AuthService,
+    private friendService: FriendService,
   ) {
     this.gameMap = new Map<number, Game>();
     this.queueUser = [];
@@ -46,18 +48,48 @@ export class GameGateway
   @WebSocketServer()
   private server: Server;
 
-  afterInit(server: Server) {
-    server = ChannelGateway.server;
+  async afterInit(server: Server) {
+    this.logger.log('init');
+    this.server = server;
+    const alluser: UserEntity[] = await this.userService.getAllUser();
+    for (const user of alluser) {
+      if (user.gameSocketId) {
+        this.server.sockets.sockets.get(user.gameSocketId)?.disconnect();
+      }
+      await this.userService.updateUserElements(user.id, {
+        gameSocketId: null,
+      });
+    }
   }
 
-  handleConnection(client: any) {}
+  async handleConnection(client: any) {
+    const user: UserEntity = await this.authService.getUserFromSocket(client);
+    if (!client.id || !user || user.gameSocketId) return client.disconnect();
+    this.logger.log(`Client connected: ${user.nickname}`);
+    await this.userService.updateUserElements(user.id, {
+      gameSocketId: client.id,
+      UserState: UserState.INGAME,
+    });
+    const toFriendList = await this.friendService.getFriendListByToId(user.id);
+    for (const toFriendFrom of toFriendList) {
+      const toFriend = await this.userService.getUserById(toFriendFrom.from);
+      if (!toFriend.channelSocketId) continue;
+      ChannelGateway.server
+        .to(toFriend.channelSocketId)
+        .emit('changeFriendState', {
+          id: user.id,
+          nickname: user.nickname,
+          userState: UserState.INGAME,
+        });
+    }
+  }
 
   async handleDisconnect(client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) return;
     this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
     //this.gameSocketMap.delete(user.userId);
-    this.userService.updateUserElements(user.userId, { socketId: null });
+    this.userService.updateUserElements(user.userId, { gameSocketId: null });
   }
 
   @SubscribeMessage('joinQueue')
@@ -111,7 +143,10 @@ export class GameGateway
       user1SocketId = await this.userService.getUserElementsById(user1.id, [
         'gameSocketId',
       ]);
-      if (!user1SocketId || !this.isSocketConnected(user1SocketId.socketId)) {
+      if (
+        !user1SocketId ||
+        !this.isSocketConnected(user1SocketId.gameSocketId)
+      ) {
         continue;
       } else {
         gameUserCount++;
@@ -127,7 +162,10 @@ export class GameGateway
       user2SocketId = await this.userService.getUserElementsById(user2.id, [
         'gameSocketId',
       ]);
-      if (!user2SocketId || !this.isSocketConnected(user2SocketId.socketId)) {
+      if (
+        !user2SocketId ||
+        !this.isSocketConnected(user2SocketId.gameSocketId)
+      ) {
         continue;
       } else {
         gameUserCount++;
