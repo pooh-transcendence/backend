@@ -66,6 +66,7 @@ export class ChannelGateway
     for (const user of alluser) {
       await this.userService.updateUserElements(user.id, {
         channelSocketId: null,
+        userState: UserState.OFFLINE,
       });
     }
   }

@@ -8,6 +8,7 @@ import {
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer,
+  WsException,
 } from '@nestjs/websockets';
 import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
@@ -50,7 +51,7 @@ export class GameGateway
 
   async afterInit(server: Server) {
     this.logger.log('init');
-    this.server = server;
+    //this.server = server;
     const alluser: UserEntity[] = await this.userService.getAllUser();
     for (const user of alluser) {
       if (user.gameSocketId) {
@@ -58,17 +59,18 @@ export class GameGateway
       }
       await this.userService.updateUserElements(user.id, {
         gameSocketId: null,
+        userState: UserState.OFFLINE,
       });
     }
   }
 
   async handleConnection(client: any) {
-    const user: UserEntity = await this.authService.getUserFromSocket(client);
+    const user = await this.authService.getUserFromSocket(client);
     if (!client.id || !user || user.gameSocketId) return client.disconnect();
-    this.logger.log(`Client connected: ${user.nickname}`);
+    this.logger.log(`Game Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       gameSocketId: client.id,
-      UserState: UserState.INGAME,
+      userState: UserState.INGAME,
     });
     const toFriendList = await this.friendService.getFriendListByToId(user.id);
     for (const toFriendFrom of toFriendList) {
@@ -86,10 +88,14 @@ export class GameGateway
 
   async handleDisconnect(client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user) return;
+    if (!user || client.id !== user.gameSocketId) return;
     this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
+    this.logger.log(`Game Client disconnected: ${user.nickname}`);
     //this.gameSocketMap.delete(user.userId);
-    this.userService.updateUserElements(user.userId, { gameSocketId: null });
+    await this.userService.updateUserElements(user.userId, {
+      gameSocketId: null,
+      //userState: UserState.OFFLINE,
+    });
   }
 
   @SubscribeMessage('joinQueue')
@@ -296,5 +302,18 @@ export class GameGateway
       // leave room
       ChannelGateway.server.socketsLeave(roomId);
     }
+  }
+
+  @SubscribeMessage('socketTest')
+  async socketTest(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: any,
+  ) {
+    // Json { event : "getPaddleSize"
+    //        data : {paddleSize : 3, x : 3 , y : 3}
+    //  }
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    client.emit(data.event, data.data);
   }
 }
