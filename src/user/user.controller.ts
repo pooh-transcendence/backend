@@ -119,6 +119,6 @@ export class UserController {
     @GetUser() user: UserEntity,
     @Body('file') file: string,
   ) {
-    return await this.userService.updateUserElements(user.id, { avator: file });
+    return await this.userService.updateUserElements(user.id, { avatar: file });
   }
 }
