@@ -104,19 +104,20 @@ export class GameGateway
     // queue 2명 이상이면 game 시작
     //console.log(this.queueUser);
     while (this.queueUser.length >= 2) {
-      await this.generateGame();
+      const ret = await this.generateGame();
+      if (ret) break;
     }
   }
 
-  private generateGame() {
+  private async generateGame(): Promise<boolean> {
     const user1 = this.queueUser.shift();
-    if (!user1 || !this.isSocketConnected(user1.gameSocketId)) return;
+    if (!user1 || !this.isSocketConnected(user1.gameSocketId)) return false;
     const user2 = this.queueUser.shift();
     if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
       this.queueUser.push(user1);
-      return;
+      return false;
     }
-    this.gameReady(user1, user2);
+    await this.gameReady(user1, user2);
     return true;
   }
   // 랜덤매칭 로딩 중 취소
@@ -264,9 +265,6 @@ export class GameGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any,
   ) {
-    // Json { event : "getPaddleSize"
-    //        data : {paddleSize : 3, x : 3 , y : 3}
-    //  }
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     client.emit(data.event, data.data);
