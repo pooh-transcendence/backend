@@ -17,6 +17,7 @@ import {
 } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelRepository } from './channel.repository';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class ChannelService {
@@ -196,7 +197,7 @@ export class ChannelService {
     if (password) {
       // ChannelType 변경
       channel.channelType = ChannelType.PROTECTED;
-      channel.password = password;
+      channel.password = await bcrypt.hash(password, await bcrypt.genSalt());
     } else {
       // ChannelType 변경
       channel.channelType = ChannelType.PUBLIC;
@@ -255,8 +256,9 @@ export class ChannelService {
         password,
         channel.password,
       ))
-    )
+    ) {
       throw new HttpException('Password is not valid', HttpStatus.BAD_REQUEST);
+    }
   }
 
   // channel admin user 검사

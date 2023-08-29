@@ -48,9 +48,7 @@ export class UserController {
 
   // 유저의 채널 목록을 가져온다.
   @Get('/channel')
-  async getChannelListByUserId(
-    @GetUser() user: UserEntity,
-  ): Promise<ChannelEntity[]> {
+  async getChannelListByUserId(@GetUser() user: UserEntity): Promise<any[]> {
     return await this.userService.getChannelListByUserId(user.id);
   }
 

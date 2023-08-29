@@ -102,12 +102,23 @@ export class GameGateway
     this.queueUser.push(user);
     this.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
-    console.log(this.queueUser);
+    //console.log(this.queueUser);
     while (this.queueUser.length >= 2) {
-      await this.gameReady();
+      await this.generateGame();
     }
   }
 
+  private generateGame() {
+    const user1 = this.queueUser.shift();
+    if (!user1 || !this.isSocketConnected(user1.gameSocketId)) return;
+    const user2 = this.queueUser.shift();
+    if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
+      this.queueUser.push(user1);
+      return;
+    }
+    this.gameReady(user1, user2);
+    return true;
+  }
   // 랜덤매칭 로딩 중 취소
   @SubscribeMessage('leaveQueue')
   async handleLeaveQueue(@ConnectedSocket() client: Socket) {
@@ -128,59 +139,7 @@ export class GameGateway
   // }
 
   // game 시작
-  async gameReady() {
-    let gameUserCount = 0;
-    let user1: UserEntity;
-    let user2: UserEntity;
-    let user1SocketId;
-    let user2SocketId;
-
-    // user1 pop
-    while (this.queueUser.length >= 2) {
-      // user1 socket 연결 확인
-      user1 = this.queueUser.shift();
-      // socketId 확인
-      // user1SocketId = await this.userService.getUserElementsById(user1.id, [
-      //   'gameSocketId',
-      // ]);
-      // console.log('user1SocketId', user1SocketId);
-      if (
-        !user1.gameSocketId //SocketId // ||
-        //!this.isSocketConnected(user1SocketId.gameSocketId)
-      ) {
-        continue;
-      } else {
-        gameUserCount++;
-        break;
-      }
-    }
-
-    //if (gameUserCount < 1) return; // user1이 없을 때
-    // user2 pop
-    while (this.queueUser.length >= 1) {
-      // user2 socket 연결 확인
-      user2 = this.queueUser.shift();
-      // socketId 확인
-      // user2SocketId = await this.userService.getUserElementsById(user2.id, [
-      //   'gameSocketId',
-      // ]);
-      if (
-        !user2.gameSocketId //SocketId //||
-        //!this.isSocketConnected(user2SocketId.gameSocketId)
-      ) {
-        continue;
-      } else {
-        gameUserCount++;
-        break;
-      }
-    }
-    // user1 연결 후 user2 연결이 안됐을 때
-    // if (gameUserCount === 1) {
-    //   this.queueUser.push(user1);
-    //   return;
-    // }
-    console.log('HI');
-    // createGameDto 생성
+  async gameReady(user1: UserEntity, user2: UserEntity) {
     const createGameDto = {
       participants: [user1.id, user2.id],
       gameType: GameType.LADDER,
@@ -190,23 +149,18 @@ export class GameGateway
       loser: null,
     };
     const gameEntity = await this.gameService.createGame(createGameDto);
+    const game = new Game(gameEntity, this.userService);
 
     const socket1 = this.server.sockets.get(user1.gameSocketId);
     const socket2 = this.server.sockets.get(user2.gameSocketId);
-    //console.log(socket1, socket2);
-    socket1.join('game : ' + gameEntity.id.toString());
-    socket2.join('game : ' + gameEntity.id.toString());
-    console.log('__ 205 __');
+    socket1.join(game.getRoomId());
+    socket2.join(game.getRoomId());
     this.gameToUserMap.set(user1.id, gameEntity.id);
     this.gameToUserMap.set(user2.id, gameEntity.id);
-    const game = new Game(gameEntity, this.userService);
-    console.log('__ 209 __');
     const gameUpdateDto: GameUpdateDto = game.init();
-    console.log('__ 211 __');
     this.gameMap.set(gameEntity.id, game);
-    console.log('__ 213 __');
+
     // user1과 user2에게 game ready emit
-    console.log('FUCK');
     this.server.to(user1.gameSocketId).emit('gameReady', {
       gameInfo: gameUpdateDto,
       whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
