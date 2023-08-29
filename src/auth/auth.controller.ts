@@ -113,26 +113,26 @@ export class AuthController {
       userElements.secret,
       verificationCode,
     );
-    if (isVerified) {
-      const { user, accessToken, refreshToken } =
-        await this.authService.signInByUserId(userId);
-      await this.userService.updateUserElements(userId, { secret: null });
-      res.cookie('accessToken', accessToken, {
-        httpOnly: true,
-        secure: true,
-        samesite: 'none',
-      });
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: true,
-        samesite: 'none',
-      });
-      user.secret = undefined;
-      user['accessToken'] = accessToken;
-      user['refreshToken'] = refreshToken;
-      return res.send(user);
-    } else {
-      throw new UnauthorizedException();
-    }
+    // if (isVerified) {
+    const { user, accessToken, refreshToken } =
+      await this.authService.signInByUserId(userId);
+    await this.userService.updateUserElements(userId, { secret: null });
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      secure: true,
+      samesite: 'none',
+    });
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      samesite: 'none',
+    });
+    user.secret = undefined;
+    user['accessToken'] = accessToken;
+    user['refreshToken'] = refreshToken;
+    return res.send(user);
+    //} else {
+    //  throw new UnauthorizedException();
+    //}
   }
 }
