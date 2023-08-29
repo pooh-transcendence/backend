@@ -2,7 +2,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { Module, NestModule, ValidationPipe } from '@nestjs/common';
 import { MiddlewareConsumer } from '@nestjs/common/interfaces';
 import { APP_PIPE } from '@nestjs/core';
-import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlockModule } from './block/block.module';
 import { ChannelModule } from './channel/channel.module';
@@ -22,7 +21,6 @@ import { UserModule } from './user/user.module';
     GameModule,
     BlockModule,
     FriendModule,
-    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [
