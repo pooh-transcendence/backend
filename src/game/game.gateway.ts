@@ -48,6 +48,8 @@ export class GameGateway
   @WebSocketServer()
   private server: Server;
 
+  private connectedSockets: Map<string, Socket> = new Map();
+
   async afterInit(server: Server) {
     this.logger.log('init');
     //this.server = server;
@@ -81,6 +83,7 @@ export class GameGateway
         userState: UserState.INGAME,
       });
     }
+    this.connectedSockets.set(client.id, client);
   }
 
   async handleDisconnect(client: Socket) {
@@ -93,6 +96,7 @@ export class GameGateway
       gameSocketId: null,
       //userState: UserState.ONLINE,
     });
+    this.connectedSockets.delete(client.id);
   }
 
   @SubscribeMessage('joinQueue')
@@ -111,9 +115,16 @@ export class GameGateway
 
   private async generateGame(): Promise<boolean> {
     const user1 = this.queueUser.shift();
-    if (!user1 || !this.isSocketConnected(user1.gameSocketId)) return false;
+    if (
+      !user1
+      // || !this.isSocketConnected(user1.gameSocketId)
+    )
+      return false;
     const user2 = this.queueUser.shift();
-    if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
+    if (
+      !user2
+      // || !this.isSocketConnected(user2.gameSocketId)
+    ) {
       this.queueUser.push(user1);
       return false;
     }
@@ -175,7 +186,7 @@ export class GameGateway
   }
   // socket 연결 여부 확인
   private isSocketConnected(socketId: string): boolean {
-    return this.server.sockets.sockets.has(socketId)?.connected;
+    return this.connectedSockets.has(socketId);
   }
 
   @SubscribeMessage('updateRacket')
