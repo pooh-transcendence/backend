@@ -357,6 +357,8 @@ export class ChannelGateway
         if (!userSocket) continue;
         userSocket.join(result.id.toString());
       }
+      result['ownerNickname'] = user.nickname;
+      client.emit('addChannelToUserChannelList', result);
       // 서버에있는 소켓들 에게 이벤트 보내기
       if (result.password) result.password = undefined;
       if (result.channelType !== ChannelType.PRIVATE)

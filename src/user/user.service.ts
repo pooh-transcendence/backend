@@ -73,7 +73,9 @@ export class UserService {
     return blockList;
   }
 
-  async getChannelListByUserId(userId: number): Promise<ChannelEntity[]> {
+  async getChannelListByUserId(
+    userId: number,
+  ): Promise</*ChannelEntity[]*/ any[]> {
     const channelUserList =
       await this.channelUserRepository.findChannelUserByUserId(userId);
     const channelList: ChannelEntity[] = [];

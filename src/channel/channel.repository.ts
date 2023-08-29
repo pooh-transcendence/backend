@@ -23,19 +23,16 @@ export class ChannelRepository extends Repository<ChannelEntity> {
     createChannelDto: CreateChannelDto,
   ): Promise<ChannelEntity> {
     const { ownerId, channelType, channelName, password } = createChannelDto;
-
     const hashedPassword =
       channelType === ChannelType.PROTECTED
         ? await bcrypt.hash(password, await bcrypt.genSalt())
         : null;
-
     const channel = this.create({
       channelType,
       channelName,
       ownerId,
       password: hashedPassword,
     });
-
     try {
       await this.save(channel);
     } catch (error) {

@@ -62,9 +62,9 @@ export class ChannelController {
     const _user = await this.userService.getUserById(user.id);
     if (result.channelType !== ChannelType.PRIVATE)
       ChannelGateway.emitToAllClient('addChannelToAllChannelList', result);
-    if (_user.socketId)
+    if (_user.channelSocketId)
       ChannelGateway.emitToClient(
-        _user.socketId,
+        _user.channelSocketId,
         'addChannelToUserChannelList',
         result,
       );
@@ -84,9 +84,9 @@ export class ChannelController {
     );
     if (resultChannel.password) resultChannel.password = undefined;
     const _user = await this.userService.getUserById(user.id);
-    if (_user.socketId)
+    if (_user.channelSocketId)
       ChannelGateway.emitToClient(
-        _user.socketId,
+        _user.channelSocketId,
         'addChannelToUserChannelList',
         resultChannel,
       );
@@ -126,13 +126,15 @@ export class ChannelController {
   ) {
     const result = await this.channelService.leaveChannel(user.id, channelId);
     const _user = await this.userService.getUserById(user.id);
-    if (_user.socketId) {
+    if (_user.channelSocketId) {
       ChannelGateway.emitToClient(
-        _user.socketId,
+        _user.channelSocketId,
         'deleteChannelToUserChannelList',
         channelId,
       );
-      const userSocket = ChannelGateway.server.sockets.get(_user.socketId);
+      const userSocket = ChannelGateway.server.sockets.get(
+        _user.channelSocketId,
+      );
       userSocket.leave(channelId.toString());
     }
     if (result) {
