@@ -290,9 +290,9 @@ export class GameGateway
 
   @SubscribeMessage('getAllWaitingGame')
   async getAllWaitingGame(@ConnectedSocket() client: Socket) {
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('Unauthorized');
-    const games = await this.gameService.getAllWaitingGame(user.id);
+    const userId = await this.authService.getUserIdFromSocket(client);
+    if (!userId) throw new WsException('Unauthorized');
+    const games = await this.gameService.getAllWaitingGame(userId);
     client.emit('getAllActiveGame', games);
   }
 }
