@@ -45,8 +45,8 @@ export class GameUpdateDto extends PickType(GameEntity, ['gameType']) {
   @IsPositive({ each: true })
   participants: number[];
 
-  racket: any; //number[][];
-  score: any; //number[];
+  racket: number[][];
+  score: number[];
   ball: number[];
 
   @IsBoolean()
