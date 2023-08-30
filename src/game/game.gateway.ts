@@ -14,6 +14,7 @@ import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
+import { FriendService } from 'src/friend/friend.service';
 import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
@@ -21,7 +22,6 @@ import { Game } from './game.class';
 import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameService } from './game.service';
-import { FriendService } from 'src/friend/friend.service';
 
 @WebSocketGateway({ namespace: 'game' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -150,14 +150,14 @@ export class GameGateway
     this.logger.log('gameReady');
     //this.logger.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
     const createGameDto = {
-      participants: [user1.id, 2 /*user2.id*/],
+      participants: [user1.id, user1.id /*user2.id*/],
       gameType: GameType.LADDER,
       ballSpeed: randomInt(1, 3),
       ballCount: randomInt(1, 3),
       winner: null,
       loser: null,
     };
-    this.logger.log('prv createGame');
+    this.logger.log('prev createGame');
     const gameEntity = await this.gameService.createGame(createGameDto);
     // console.log('createGame: ' + gameEntity);
     const game = new Game(gameEntity, this.userService);
@@ -288,11 +288,11 @@ export class GameGateway
     client.emit(data.event, data.data);
   }
 
-  @SubscribeMessage('getAllActiveGame')
-  async getAllGame(@ConnectedSocket() client: Socket) {
+  @SubscribeMessage('getAllWaitingGame')
+  async getAllWaitingGame(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
-    const games = await this.gameService.getAllActiveGame();
+    const games = await this.gameService.getAllWaitingGame(user.id);
     client.emit('getAllActiveGame', games);
   }
 }
