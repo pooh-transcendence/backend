@@ -30,7 +30,7 @@ export class Game {
   private giveUpUser: number;
   private player1: UserEntity;
   private player2: UserEntity;
-  private racket; // = new Array(2);
+  private racket: any; //number[][];
   private playersStatus;
 
   // paddle 로 바꾸기
@@ -55,12 +55,18 @@ export class Game {
   }
 
   init(): GameUpdateDto {
+    console.log('init');
     this.ball = [
       this.canvasHeight / 2 + Math.random() * 100, // x
       this.canvasWidth / 2 + Math.random() * 30, // y
       Math.random() * 2 * Math.PI, // radian
     ];
 
+    console.log('this.ball: ', this.ball);
+    // console.log('user1: ', this.player1);
+    // console.log('user2: ', this.player2);
+    console.log('racketHeight: ', this.racketHeight);
+    this.racket = {};
     this.racket[this.player1.id] = [
       0, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
@@ -70,12 +76,18 @@ export class Game {
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
 
+    console.log('this.racket: ', this.racket);
+    this.score = {};
     this.score[this.player1.id] = 0;
     this.score[this.player2.id] = 0;
 
+    console.log('this.score: ', this.score);
+
+    this.playersStatus = {};
     this.playersStatus[this.player1.id] = PlayerStatus.NONE;
     this.playersStatus[this.player2.id] = PlayerStatus.NONE;
 
+    console.log('this.racket: ', this.racket);
     const gameUpdateDto: GameUpdateDto = {
       participants: [this.player1.id, this.player2.id],
       gameType: this.type,
@@ -84,6 +96,7 @@ export class Game {
       ball: this.ball,
       isGetScore: false,
     };
+    console.log('gameUpdateDto: ', gameUpdateDto);
     return gameUpdateDto;
   }
 
@@ -115,17 +128,18 @@ export class Game {
 
   private isInRacket(ball: number[]): boolean {
     let ret = false;
-    this.racket.forEach((racket) => {
+    for (const userId in this.racket) {
       if (
         // 원의 중심 기준
-        ball[0] - this.ballRadius >= racket[0] &&
-        ball[0] + this.ballRadius <= racket[0] + this.racketWidth &&
-        ball[1] - this.ballRadius >= racket[1] &&
-        ball[1] + this.ballRadius <= racket[1] + this.racketHeight
+        ball[0] - this.ballRadius >= this.racket[userId][0] &&
+        ball[0] + this.ballRadius <=
+          this.racket[userId][0] + this.racketWidth &&
+        ball[1] - this.ballRadius >= this.racket[userId][1] &&
+        ball[1] + this.ballRadius <= this.racket[userId][1] + this.racketHeight
       ) {
         ret = true;
       }
-    });
+    }
     return ret;
   }
 
@@ -145,8 +159,8 @@ export class Game {
   }
 
   racketUpdate() {
-    this.playersStatus.forEach((status, userId) => {
-      this.racket[userId][1] += status;
+    for (const userId in this.playersStatus) {
+      this.racket[userId][1] += this.playersStatus[userId];
       if (this.racket[userId][1] < 0) {
         this.racket[userId][1] = 0;
       } else if (
@@ -155,7 +169,7 @@ export class Game {
       ) {
         this.racket[userId][1] = this.canvasHeight - this.racketHeight;
       }
-    });
+    }
     this.playersStatus[this.player1.id] = PlayerStatus.NONE;
     this.playersStatus[this.player2.id] = PlayerStatus.NONE;
   }
@@ -181,11 +195,19 @@ export class Game {
     return ret;
   }
 
-  update(): GameUpdateDto {
+  public update(): GameUpdateDto {
     this.racketUpdate();
     const ret: number = this.ballUpdate();
     const winplayerId = ret === 1 ? this.player1.id : this.player2.id;
     if (ret !== 0) this.score[winplayerId]++;
+    // const gameUpdateDto: GameUpdateDto = {
+    //   participants: [this.player1.id, this.player2.id],
+    //   gameType: this.type,
+    //   racket: this.racket,
+    //   score: this.score,
+    //   ball: this.ball,
+    //   isGetScore: ret !== 0,
+    // };
     const gameUpdateDto: GameUpdateDto = {
       participants: [this.player1.id, this.player2.id],
       gameType: this.type,

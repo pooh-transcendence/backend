@@ -92,8 +92,11 @@ export class GameGateway
   async handleDisconnect(client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user || client.id !== user.gameSocketId) return;
+    console.log('queueUser: ' + this.queueUser.length);
     this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
+    console.log('After queueUser: ' + this.queueUser.length);
     this.logger.log(`Game Client disconnected: ${user.nickname}`);
+
     //this.gameSocketMap.delete(user.userId);
     await this.userService.updateUserElements(user.id, {
       gameSocketId: null,
@@ -162,17 +165,25 @@ export class GameGateway
       winner: null,
       loser: null,
     };
+    this.logger.log('prv createGame');
     const gameEntity = await this.gameService.createGame(createGameDto);
+    console.log('createGame: ' + gameEntity);
     const game = new Game(gameEntity, this.userService);
     const socket1 = this.server.sockets.get(user1.gameSocketId);
+    this.logger.log('socket1: ' + user1.gameSocketId);
     const socket2 = this.server.sockets.get(user2.gameSocketId);
+    this.logger.log('socket2: ' + user2.gameSocketId);
     socket1.join(game.getRoomId());
     socket2.join(game.getRoomId());
     this.gameToUserMap.set(user1.id, gameEntity.id);
     this.gameToUserMap.set(user2.id, gameEntity.id);
+    this.logger.log('before game');
     const gameUpdateDto: GameUpdateDto = game.init();
+    this.logger.log('after game');
     this.gameMap.set(gameEntity.id, game);
+    this.logger.log('set After game');
     // user1과 user2에게 game ready emit
+    this.logger.log('HI');
     this.server.to(user1.gameSocketId).emit('gameReady', {
       gameInfo: gameUpdateDto,
       whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
@@ -207,19 +218,24 @@ export class GameGateway
 
   @SubscribeMessage('gameStart')
   gameStart(@ConnectedSocket() client: Socket) {
+    this.logger.log('gameStart');
     const userId = this.authService.getUserIdFromSocket(client);
     if (!userId) {
+      this.logger.log('gameStart: userId is null');
       client.disconnect();
       return;
     }
+    this.logger.log(`gameStart: ${userId}`);
     const gameId = this.gameToUserMap.get(userId);
     if (!gameId) return;
     const game: Game = this.gameMap.get(gameId);
     this.logger.log('gameStart');
     // 1초에 60번 update
     const timerId = setInterval(() => {
+      this.logger.log('gameLoop');
       this.gameLoop(game);
       if (game.isGameOver()) {
+        console.log('gameOver');
         clearInterval(timerId);
       }
     }, 1000 / 60);
@@ -237,6 +253,7 @@ export class GameGateway
   }
 
   private gameLoop(game: Game) {
+    this.logger.log('gameLoop start');
     const updateInfo = game.update();
     const roomId: string = game.getRoomId();
     this.server.to(roomId).emit('gameUpdate', updateInfo);
