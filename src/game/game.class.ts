@@ -76,13 +76,14 @@ export class Game {
     this.playersStatus[this.player1.id] = PlayerStatus.NONE;
     this.playersStatus[this.player2.id] = PlayerStatus.NONE;
 
-    const gameUpdateDto: GameUpdateDto = new GameUpdateDto();
-    gameUpdateDto.participants = [this.player1.id, this.player2.id];
-    gameUpdateDto.gameType = this.type;
-    gameUpdateDto.racket = this.racket;
-    gameUpdateDto.score = this.score;
-    gameUpdateDto.ball = this.ball;
-    gameUpdateDto.isGetScore = false;
+    const gameUpdateDto: GameUpdateDto = {
+      participants: [this.player1.id, this.player2.id],
+      gameType: this.type,
+      racket: this.racket,
+      score: this.score,
+      ball: this.ball,
+      isGetScore: false,
+    };
     return gameUpdateDto;
   }
 
