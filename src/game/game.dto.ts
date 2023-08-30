@@ -23,8 +23,8 @@ export class CreateGameDto extends PickType(GameEntity, [
 }
 
 export enum Direction {
-  UP = 'UP',
-  DOWN = 'DOWN',
+  UP = 1,
+  DOWN = -1,
 }
 
 export class RacketUpdatesDto {
@@ -45,8 +45,8 @@ export class GameUpdateDto extends PickType(GameEntity, ['gameType']) {
   @IsPositive({ each: true })
   participants: number[];
 
-  racket: number[][];
-  score: number[];
+  racket: any; //number[][];
+  score: any; //number[];
   ball: number[];
 
   @IsBoolean()

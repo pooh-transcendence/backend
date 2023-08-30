@@ -22,6 +22,7 @@ import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameType } from './game.entity';
 import { GameService } from './game.service';
 import { FriendService } from 'src/friend/friend.service';
+import { throwIfEmpty } from 'rxjs';
 
 @WebSocketGateway({ namespace: 'game' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -68,7 +69,9 @@ export class GameGateway
   async handleConnection(client: any) {
     const user = await this.authService.getUserFromSocket(client);
     if (!client.id || !user || user.gameSocketId) return client.disconnect();
-    this.logger.log(`Game Client connected: ${user.nickname}`);
+    this.logger.log(
+      `Game Client connected: ${user.nickname}, clientId : ${client.id}`,
+    );
     await this.userService.updateUserElements(user.id, {
       gameSocketId: client.id,
       userState: UserState.INGAME,
@@ -89,8 +92,11 @@ export class GameGateway
   async handleDisconnect(client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user || client.id !== user.gameSocketId) return;
+    console.log('queueUser: ' + this.queueUser.length);
     this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
+    console.log('After queueUser: ' + this.queueUser.length);
     this.logger.log(`Game Client disconnected: ${user.nickname}`);
+
     //this.gameSocketMap.delete(user.userId);
     await this.userService.updateUserElements(user.id, {
       gameSocketId: null,
@@ -101,31 +107,30 @@ export class GameGateway
 
   @SubscribeMessage('joinQueue')
   async handleJoinQueue(@ConnectedSocket() client: Socket) {
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) client.disconnect();
+    const __user = await this.authService.getUserFromSocket(client);
+    if (!__user) client.disconnect();
+    const user = await this.userService.getUserById(__user.id);
     this.queueUser.push(user);
     this.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
     //console.log(this.queueUser);
+    this.logger.log(`${user.nickname} JOIN QUEUE`);
     while (this.queueUser.length >= 2) {
       const ret = await this.generateGame();
-      if (ret) break;
+      this.logger.log(`generateGame: ${ret}`);
+      if (!ret) break;
     }
   }
 
   private async generateGame(): Promise<boolean> {
     const user1 = this.queueUser.shift();
-    if (
-      !user1
-      // || !this.isSocketConnected(user1.gameSocketId)
-    )
+    if (!user1 || !this.isSocketConnected(user1.gameSocketId)) {
       return false;
+    }
     const user2 = this.queueUser.shift();
-    if (
-      !user2
-      // || !this.isSocketConnected(user2.gameSocketId)
-    ) {
+    if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
       this.queueUser.push(user1);
+      this.logger.log(`user2 is null`);
       return false;
     }
     await this.gameReady(user1, user2);
@@ -149,9 +154,9 @@ export class GameGateway
   //   // game start
   //   this.gameStart(this.gameMap.get(gameId));
   // }
-
   // game 시작
-  async gameReady(user1: UserEntity, user2: UserEntity) {
+  async gameReady(user1: any, user2: any) {
+    this.logger.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
     const createGameDto = {
       participants: [user1.id, user2.id],
       gameType: GameType.LADDER,
@@ -160,19 +165,25 @@ export class GameGateway
       winner: null,
       loser: null,
     };
+    this.logger.log('prv createGame');
     const gameEntity = await this.gameService.createGame(createGameDto);
+    console.log('createGame: ' + gameEntity);
     const game = new Game(gameEntity, this.userService);
-
     const socket1 = this.server.sockets.get(user1.gameSocketId);
+    this.logger.log('socket1: ' + user1.gameSocketId);
     const socket2 = this.server.sockets.get(user2.gameSocketId);
+    this.logger.log('socket2: ' + user2.gameSocketId);
     socket1.join(game.getRoomId());
     socket2.join(game.getRoomId());
     this.gameToUserMap.set(user1.id, gameEntity.id);
     this.gameToUserMap.set(user2.id, gameEntity.id);
+    this.logger.log('before game');
     const gameUpdateDto: GameUpdateDto = game.init();
+    this.logger.log('after game');
     this.gameMap.set(gameEntity.id, game);
-
+    this.logger.log('set After game');
     // user1과 user2에게 game ready emit
+    this.logger.log('HI');
     this.server.to(user1.gameSocketId).emit('gameReady', {
       gameInfo: gameUpdateDto,
       whoAmI: user1.id === gameEntity.winner.id ? 'left' : 'right',
@@ -186,7 +197,9 @@ export class GameGateway
   }
   // socket 연결 여부 확인
   private isSocketConnected(socketId: string): boolean {
-    return this.connectedSockets.has(socketId);
+    // return true; // TODO: socket 연결 여부 확인
+    //return this.connectedSockets.has(socketId);
+    return this.server.sockets.get(socketId)?.connected;
   }
 
   @SubscribeMessage('updateRacket')
@@ -205,19 +218,24 @@ export class GameGateway
 
   @SubscribeMessage('gameStart')
   gameStart(@ConnectedSocket() client: Socket) {
+    this.logger.log('gameStart');
     const userId = this.authService.getUserIdFromSocket(client);
     if (!userId) {
+      this.logger.log('gameStart: userId is null');
       client.disconnect();
       return;
     }
+    this.logger.log(`gameStart: ${userId}`);
     const gameId = this.gameToUserMap.get(userId);
     if (!gameId) return;
     const game: Game = this.gameMap.get(gameId);
     this.logger.log('gameStart');
     // 1초에 60번 update
     const timerId = setInterval(() => {
+      this.logger.log('gameLoop');
       this.gameLoop(game);
       if (game.isGameOver()) {
+        console.log('gameOver');
         clearInterval(timerId);
       }
     }, 1000 / 60);
@@ -235,6 +253,7 @@ export class GameGateway
   }
 
   private gameLoop(game: Game) {
+    this.logger.log('gameLoop start');
     const updateInfo = game.update();
     const roomId: string = game.getRoomId();
     this.server.to(roomId).emit('gameUpdate', updateInfo);
