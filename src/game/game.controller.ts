@@ -54,4 +54,10 @@ export class GameController {
   ) {
     this.gameService.deleteGameByGameId(gameId);
   }
+
+  @Get('/allActiveGame')
+  @UsePipes(ValidationPipe)
+  async getAllActiveGame(): Promise<GameEntity[]> {
+    return await this.gameService.getAllActiveGame();
+  }
 }

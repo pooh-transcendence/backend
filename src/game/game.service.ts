@@ -42,4 +42,8 @@ export class GameService {
   async updateGame(game: GameEntity): Promise<void> {
     await this.gameRepository.updateGame(game);
   }
+
+  async getAllActiveGame(): Promise<GameEntity[]> {
+    return await this.gameRepository.getAllActiveGame();
+  }
 }

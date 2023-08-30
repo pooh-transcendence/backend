@@ -1,6 +1,6 @@
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GameEntity } from './game.entity';
+import { GameEntity, GameStatus } from './game.entity';
 import { CreateGameDto } from './game.dto';
 import {
   ConflictException,
@@ -61,5 +61,11 @@ export class GameRepository extends Repository<GameEntity> {
     const result = await this.update(game.id, game);
     if (result.affected !== 1)
       throw new NotFoundException(`there is no game id ${game.id}`);
+  }
+
+  async getAllActiveGame(): Promise<GameEntity[]> {
+    return await this.find({
+      where: { gameStatus: GameStatus.WAITING },
+    });
   }
 }

@@ -8,6 +8,13 @@ export enum GameType {
   LADDER = 'LADDER',
 }
 
+export enum GameStatus {
+  DEFAULT = 'DEFAULT',
+  WAITING = 'WAITING',
+  PLAYING = 'PLAYING',
+  FINISHED = 'FINISHED',
+}
+
 @Entity()
 export class GameEntity extends CommonEntity {
   @ManyToOne(() => UserEntity, (user) => user.winnerGame, { eager: false })
@@ -39,6 +46,15 @@ export class GameEntity extends CommonEntity {
   @IsPositive()
   @IsIn([1, 2, 3])
   racketSize: number;
+
+  @Column({ default: GameStatus.DEFAULT })
+  @IsIn([
+    GameStatus.DEFAULT,
+    GameStatus.WAITING,
+    GameStatus.PLAYING,
+    GameStatus.FINISHED,
+  ])
+  gameStatus: string;
   // @Column({ default: null })
   // isGiveUp: boolean;
 
