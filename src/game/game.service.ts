@@ -43,7 +43,7 @@ export class GameService {
     await this.gameRepository.updateGame(game);
   }
 
-  async getAllActiveGame(): Promise<GameEntity[]> {
-    return await this.gameRepository.getAllActiveGame();
+  async getAllWaitingGame(userId: number): Promise<GameEntity[]> {
+    return await this.gameRepository.getAllWaitingGame(userId);
   }
 }

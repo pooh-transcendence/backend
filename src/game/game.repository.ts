@@ -1,12 +1,12 @@
-import { DataSource, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import { GameEntity, GameStatus } from './game.entity';
-import { CreateGameDto } from './game.dto';
 import {
   ConflictException,
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { CreateGameDto } from './game.dto';
+import { GameEntity, GameStatus } from './game.entity';
 
 export class GameRepository extends Repository<GameEntity> {
   constructor(@InjectRepository(GameEntity) private dataSource: DataSource) {
@@ -63,9 +63,9 @@ export class GameRepository extends Repository<GameEntity> {
       throw new NotFoundException(`there is no game id ${game.id}`);
   }
 
-  async getAllActiveGame(): Promise<GameEntity[]> {
+  async getAllWaitingGame(userId: number): Promise<GameEntity[]> {
     return await this.find({
-      where: { gameStatus: GameStatus.WAITING },
+      where: { gameStatus: GameStatus.WAITING, loser: { id: userId } },
     });
   }
 }
