@@ -46,38 +46,37 @@ export class GameService {
   }
 
   async getAllOneToOneGame(userId: number): Promise<GameEntity[]> {
-    const publicGame: GameEntity[] =
-      await this.gameRepository.getAllPublicWaitingGame();
-    const privateGames: GameEntity[] =
-      await this.gameRepository.getAllPrivateWaitingGame(userId);
+    console.log('userId: ', userId);
+    const publicGame = await this.gameRepository.getAllPublicWaitingGame();
+    const privateGames = await this.gameRepository.getAllPrivateWaitingGame(
+      userId,
+    );
     return [...publicGame, ...privateGames];
   }
 
   async createOneToOneGame(
-    userId: number,
+    user: UserEntity,
     createOneToOneGameDto: CreateOneToOneGameDto,
   ): Promise<GameEntity> {
-    const user = await this.userRepository.getUserByUserId(userId);
-    if (!user) throw new NotFoundException("Couldn't find user");
-
+    // console.log('createOneToOneGameDto: ', createOneToOneGameDto);
     const game = new GameEntity();
+    // console.log('user: ', user);
     if (createOneToOneGameDto.targetNickname) {
       if (createOneToOneGameDto.targetNickname === user.nickname)
         throw new NotFoundException("Target user can't be same as user");
-      if (!createOneToOneGameDto.targetNickname) {
-        // public 1vs1 game
-        game.gameType = GameType.ONEVSONE_PUBLIC;
-        game.loser = null;
-      } else {
-        const targetUser = await this.userRepository.getUserByNickname(
-          createOneToOneGameDto.targetNickname,
-        );
-        if (!targetUser || !targetUser.gameSocketId)
-          throw new NotFoundException("Couldn't find target user");
-        // private 1vs1 game
-        game.gameType = GameType.ONEVSONE_PRIVATE;
-        game.loser = targetUser;
-      }
+      // console.log('targetNickname: ', createOneToOneGameDto.targetNickname);
+      const targetUser = await this.userRepository.getUserByNickname(
+        createOneToOneGameDto.targetNickname,
+      );
+      if (!targetUser || !targetUser.gameSocketId)
+        throw new NotFoundException("Couldn't find target user");
+      // private 1vs1 game
+      game.gameType = GameType.ONEVSONE_PRIVATE;
+      game.loser = targetUser;
+    } else {
+      // public 1vs1 game
+      game.gameType = GameType.ONEVSONE_PUBLIC;
+      game.loser = null;
     }
 
     game.winner = user;
@@ -86,7 +85,7 @@ export class GameService {
     game.ballSpeed = createOneToOneGameDto.ballSpeed;
     game.gameStatus = GameStatus.WAITING;
 
-    return await this.gameRepository.createOneToOneGameDto(game);
+    return await this.gameRepository.createOneToOneGame(game);
   }
 
   async cancelOneToOneGame(user: UserEntity, gameId: number): Promise<void> {
