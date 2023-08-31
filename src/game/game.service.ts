@@ -88,16 +88,28 @@ export class GameService {
     return await this.gameRepository.createOneToOneGameDto(game);
   }
 
+  async cancelOneToOneGame(user: UserEntity, gameId: number): Promise<void> {
+    const game = await this.gameRepository.getGameByGameId(gameId);
+    this.validateOneToOneGame(user.id, game);
+    if (game.winner.id !== user.id)
+      throw new NotFoundException('You are not in this game');
+    await this.gameRepository.deleteGameByGameId(gameId);
+  }
+
   async startOneToOneGame(user: UserEntity, gameId: number) {
     const game = await this.gameRepository.getGameByGameId(gameId);
-    if (!game) throw new NotFoundException("Couldn't find game");
-    if (game.gameStatus !== GameStatus.WAITING)
-      throw new NotFoundException('Game is not waiting');
+    this.validateOneToOneGame(user.id, game);
     if (game.loser && game.loser.id !== user.id)
       throw new NotFoundException('You are not in this game');
     game.gameStatus = GameStatus.PLAYING;
     game.loser = user;
     await this.gameRepository.updateGame(game);
     return game;
+  }
+
+  validateOneToOneGame(userId: number, game: GameEntity) {
+    if (!game) throw new NotFoundException("Couldn't find game");
+    if (game.gameStatus !== GameStatus.WAITING)
+      throw new NotFoundException('Game is not waiting');
   }
 }

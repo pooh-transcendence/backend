@@ -77,6 +77,16 @@ export class GameController {
     );
   }
 
+  @Delete('/oneToOneGame/:gameId')
+  @UsePipes(ValidationPipe)
+  async cancelOneToOneGame(
+    @GetUser() user: UserEntity,
+    @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
+  ): Promise<void> {
+    return await this.gameService.cancelOneToOneGame(user, gameId);
+  }
+
+  // 사용하지 않을 것 같아요
   @Get('/oneToOneGame/:gameId')
   @UsePipes(ValidationPipe)
   async startOneToOneGame(
