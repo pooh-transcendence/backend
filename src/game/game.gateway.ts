@@ -49,8 +49,6 @@ export class GameGateway
   @WebSocketServer()
   private server: Server;
 
-  private connectedSockets: Map<string, Socket> = new Map();
-
   async afterInit(server: Server) {
     this.logger.log('afterInit');
     //this.server = server;
@@ -76,16 +74,15 @@ export class GameGateway
       gameSocketId: client.id,
       //userState: UserState.INGAME,
     });
-    const toFriendList = await this.friendService.getFriendListByToId(user.id);
-    for (const toFriendFrom of toFriendList) {
-      const toFriend = await this.userService.getUserById(toFriendFrom.from);
-      if (!toFriend.channelSocketId) continue;
-      this.server.to(toFriend.channelSocketId).emit('changeFriendState', {
-        id: user.id,
-        nickname: user.nickname,
-      });
-    }
-    this.connectedSockets.set(client.id, client);
+    // const toFriendList = await this.friendService.getFriendListByToId(user.id);
+    // for (const toFriendFrom of toFriendList) {
+    //   const toFriend = await this.userService.getUserById(toFriendFrom.from);
+    //   if (!toFriend.channelSocketId) continue;
+    //   this.server.to(toFriend.channelSocketId).emit('changeFriendState', {
+    //     id: user.id,
+    //     nickname: user.nickname,
+    //   });
+    // }
   }
 
   async handleDisconnect(client: Socket) {
@@ -101,7 +98,6 @@ export class GameGateway
       gameSocketId: null,
       //userState: user.channelSocketId ? UserState.ONLINE : UserState.OFFLINE,
     });
-    this.connectedSockets.delete(client.id);
   }
 
   @SubscribeMessage('joinQueue')
@@ -137,7 +133,9 @@ export class GameGateway
       this.queueUser.push(user1);
       return false;
     }
-    console.log('generateGame: ' + user1.nickname + ' vs ' + user2.nickname);
+    this.logger.log(
+      'generateGame: ' + user1.nickname + ' vs ' + user2.nickname,
+    );
     await this.gameReady(user1, user2);
     return true;
   }
@@ -265,6 +263,23 @@ export class GameGateway
         this.gameService.updateGame(gameEntity);
         game.setGameOver(true);
         clearInterval(timerId);
+        const users = [game.getPlayer1(), game.getPlayer2()];
+        users.forEach(async (user) => {
+          const friendLists = await this.friendService.getFriendListByToId(
+            user.id,
+          );
+          for (const friendList of friendLists) {
+            const friend = await this.userService.getUserById(friendList.from);
+            if (!friend.channelSocketId) continue;
+            ChannelGateway.server
+              .to(friend.channelSocketId)
+              .emit('changeFriendState', {
+                id: user.id,
+                nickname: user.nickname,
+                userState: UserState.ONLINE,
+              });
+          }
+        });
       }
     }, 1000 / 60);
   }
