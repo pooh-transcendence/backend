@@ -311,4 +311,15 @@ export class GameGateway
     await this.gameService.createOneToOneGame(user.id, createOneToOneGameDto);
     client.emit('createOneToOneGame', { status: 'success' });
   }
+
+  @SubscribeMessage('startOneToOneGame')
+  async startOneToOneGame(
+    @ConnectedSocket() client: Socket,
+    @MessageBody('gameId') gameId: number,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const game = await this.gameService.startOneToOneGame(user, gameId);
+    client.emit('startOneToOneGame', game);
+  }
 }
