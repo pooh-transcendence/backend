@@ -124,12 +124,13 @@ export class GameController {
     GameGateway.emitToAllClient('deleteOneToOneGame', gameId);
   }
 
-  @Get('/oneToOneGame/:gameId')
-  @UsePipes(ValidationPipe)
-  async startOneToOneGame(
-    @GetUser() user: UserEntity,
-    @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
-  ): Promise<GameEntity> {
-    return await this.gameService.startOneToOneGame(user, gameId);
-  }
+  // @Get('/oneToOneGame/:gameId')
+  // @UsePipes(ValidationPipe)
+  // async startOneToOneGame(
+  //   @GetUser() user: UserEntity,
+  //   @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
+  // ): Promise<void> {
+  //   const game = await this.gameService.startOneToOneGame(user, gameId);
+  //   GameGateway.gameReady(game.winner, game.loser, game);
+  // }
 }
