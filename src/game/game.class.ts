@@ -2,7 +2,6 @@ import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
-import { max } from 'class-validator';
 
 export enum PlayerStatus {
   NONE = 0,
@@ -47,7 +46,8 @@ export class Game {
     this.player2 = gameInfo.loser;
     this.type = gameInfo.gameType;
     this.id = gameInfo.id;
-    this.ballSpeed = 1 + gameInfo.ballSpeed * 2; // 3, 5, 7
+    //this.ballSpeed = 1 + gameInfo.ballSpeed * 2; // 3, 5, 7
+    this.ballSpeed = 3;
     this.gameOver = false;
     this.readyCountPlayer = 0;
     this.racketHeight = gameInfo.racketSize * 90;
@@ -64,15 +64,15 @@ export class Game {
     //player1 init
     this.racket[0] = [
       150, // x
-      // this.canvasHeight / 2 - this.racketHeight / 2, // y
-      0, // 라켓 위치 수정
+      this.canvasHeight / 2 - this.racketHeight / 2, // y
+      //0, // 라켓 위치 수정
     ];
     //player2 init
     this.racket[1] = [
       1250,
-      //this.canvasWidth - 200, // x
-      0, // TODO: 라켓 위치 수정
-      // this.canvasHeight / 2 - this.racketHeight / 2, // y
+      // this.canvasWidth - 200, // x
+      // 0, // TODO: 라켓 위치 수정
+      this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
 
     //console.log('this.racket: ', this.racket);
@@ -120,6 +120,25 @@ export class Game {
     gameEntity.ballSpeed = this.ballSpeed;
     gameEntity.racketSize = this.racketHeight;
     return gameEntity;
+  }
+
+  private ballInRacket(ball: number[]): boolean {
+    let ret = false;
+    this.racket.forEach((racket) => {
+      const dists = [
+        Math.abs(ball[0] - racket[0]),
+        Math.abs(ball[1] - racket[1]),
+      ];
+      const delta = [
+        Math.max(dists[0] - this.racketWidth, 0),
+        Math.max(dists[1] - this.racketHeight, 0),
+      ];
+      if (
+        Math.sqrt(Math.pow(delta[0], 2) + Math.pow(delta[1], 2)) <= this.ball[2]
+      )
+        ret = true;
+    });
+    return ret;
   }
 
   private isInRacket(ball: number[]): boolean {
@@ -250,6 +269,6 @@ export class Game {
 
   readyCount(): boolean {
     this.readyCountPlayer++;
-    return this.readyCountPlayer === 2;
+    return this.readyCountPlayer !== 2;
   }
 }

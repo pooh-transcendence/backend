@@ -110,11 +110,13 @@ export class GameGateway
     const __user = await this.authService.getUserFromSocket(client);
     if (!__user) client.disconnect();
     const user = await this.userService.getUserById(__user.id);
-    user.socketId = client.id;
+    if (!user) throw new WsException('Unauthorized');
+    user.gameSocketId = client.id;
     if (!this.queueUser.find((u) => u.id === user.id)) {
       this.queueUser.push(user);
       this.logger.log(`${user.nickname} JOIN QUEUE`);
     }
+    console.log('queueUser: ' + this.queueUser);
     this.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
     while (this.queueUser.length >= 2) {
@@ -136,6 +138,7 @@ export class GameGateway
       this.queueUser.push(user1);
       return false;
     }
+    console.log('generateGame: ' + user1.nickname + ' vs ' + user2.nickname);
     await this.gameReady(user1, user2);
     return true;
   }
