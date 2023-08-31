@@ -1,7 +1,7 @@
 import { UserEntity } from 'src/user/user.entity';
-import { UserService } from 'src/user/user.service';
 import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
+import { UserService } from 'src/user/user.service';
 
 export enum PlayerStatus {
   NONE = 0,

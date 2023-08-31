@@ -19,10 +19,10 @@ import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
 import { Game } from './game.class';
-import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameService } from './game.service';
 import { ChannelGateway } from 'src/channel/channel.gateway';
+import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 
 @WebSocketGateway({ namespace: 'game' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -136,7 +136,17 @@ export class GameGateway
     this.logger.log(
       'generateGame: ' + user1.nickname + ' vs ' + user2.nickname,
     );
-    await this.gameReady(user1, user2);
+    const createGameDto = {
+      participants: [user1.id, user2.id],
+      gameType: GameType.LADDER,
+      ballSpeed: randomInt(1, 3),
+      ballCount: randomInt(1, 3),
+      winner: null,
+      loser: null,
+    };
+    this.logger.log('prev createGame');
+    const gameEntity = await this.gameService.createGame(createGameDto);
+    await this.gameReady(user1, user2, gameEntity);
     return true;
   }
 
@@ -150,26 +160,20 @@ export class GameGateway
   }
 
   // game 시작
-  async gameReady(user1: any, user2: any) {
+  public async gameReady(
+    user1: UserEntity,
+    user2: UserEntity,
+    gameEntity: GameEntity,
+  ) {
     // this.logger.log('gameReady');
-    this.logger.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
-    const createGameDto = {
-      participants: [user1.id, user2.id],
-      gameType: GameType.LADDER,
-      ballSpeed: randomInt(1, 3),
-      ballCount: randomInt(1, 3),
-      winner: null,
-      loser: null,
-    };
-    this.logger.log('prev createGame');
-    const gameEntity = await this.gameService.createGame(createGameDto);
+    console.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
     // console.log('createGame: ' + gameEntity);
     const game = new Game(gameEntity, this.userService);
     const socket1 = GameGateway.server.sockets.get(user1.gameSocketId);
-    this.logger.log('after createGame');
-    this.logger.log('socket1: ' + user1.gameSocketId);
+    console.log('after createGame');
+    console.log('socket1: ' + user1.gameSocketId);
     const socket2 = GameGateway.server.sockets.get(user2.gameSocketId);
-    this.logger.log('socket2: ' + user2.gameSocketId);
+    console.log('socket2: ' + user2.gameSocketId);
     socket1.join(game.getRoomId());
     socket2.join(game.getRoomId());
     this.gameToUserMap.set(user1.id, gameEntity.id);
@@ -338,6 +342,8 @@ export class GameGateway
     client.emit(data.event, data.data);
   }
 
+  /* 1VS1 Game */
+
   // @SubscribeMessage('getAllOneToOneGame')
   // async getAllWaitingGame(@ConnectedSocket() client: Socket) {
   //   const user = await this.authService.getUserFromSocket(client);
@@ -366,7 +372,7 @@ export class GameGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     const game = await this.gameService.startOneToOneGame(user, gameId);
-    client.emit('startOneToOneGame', game);
+    this.gameReady(game.winner, game.loser, game);
   }
 
   static emitToAllClient(event: string, data: any) {

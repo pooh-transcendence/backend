@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserEntity } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
 import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameRepository } from './game.repository';
-import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class GameService {
@@ -91,15 +91,18 @@ export class GameService {
 
   async cancelOneToOneGame(user: UserEntity, gameId: number): Promise<void> {
     const game = await this.gameRepository.getGameByGameId(gameId);
-    this.validateOneToOneGame(user.id, game);
+    this.validateOneToOneGame(game);
     if (game.winner.id !== user.id)
       throw new NotFoundException('You are not in this game');
     await this.gameRepository.deleteGameByGameId(gameId);
   }
 
-  async startOneToOneGame(user: UserEntity, gameId: number) {
+  async startOneToOneGame(
+    user: UserEntity,
+    gameId: number,
+  ): Promise<GameEntity> {
     const game = await this.gameRepository.getGameByGameId(gameId);
-    this.validateOneToOneGame(user.id, game);
+    this.validateOneToOneGame(game);
     if (game.loser && game.loser.id !== user.id)
       throw new NotFoundException('You are not in this game');
     game.gameStatus = GameStatus.PLAYING;
@@ -108,7 +111,7 @@ export class GameService {
     return game;
   }
 
-  validateOneToOneGame(userId: number, game: GameEntity) {
+  validateOneToOneGame(game: GameEntity) {
     if (!game) throw new NotFoundException("Couldn't find game");
     if (game.gameStatus !== GameStatus.WAITING)
       throw new NotFoundException('Game is not waiting');

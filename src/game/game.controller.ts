@@ -105,12 +105,12 @@ export class GameController {
         throw new NotFoundException("Couldn't find target user");
       GameGateway.emitToClient(
         targetUser.gameSocketId,
-        'getUpdatedOneToOneGame',
+        'addOneToOneGame',
         game,
       );
     } else {
       // publicOneToOneGame의 경우
-      GameGateway.emitToAllClient('getUpdatedOneToOneGame', game);
+      GameGateway.emitToAllClient('addOneToOneGame', game);
     }
   }
 
@@ -120,15 +120,17 @@ export class GameController {
     @GetUser() user: UserEntity,
     @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
   ): Promise<void> {
-    return await this.gameService.cancelOneToOneGame(user, gameId);
+    await this.gameService.cancelOneToOneGame(user, gameId);
+    GameGateway.emitToAllClient('deleteOneToOneGame', gameId);
   }
 
-  @Get('/oneToOneGame/:gameId')
-  @UsePipes(ValidationPipe)
-  async startOneToOneGame(
-    @GetUser() user: UserEntity,
-    @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
-  ): Promise<GameEntity> {
-    return await this.gameService.startOneToOneGame(user, gameId);
-  }
+  // @Get('/oneToOneGame/:gameId')
+  // @UsePipes(ValidationPipe)
+  // async startOneToOneGame(
+  //   @GetUser() user: UserEntity,
+  //   @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
+  // ): Promise<void> {
+  //   const game = await this.gameService.startOneToOneGame(user, gameId);
+  //   GameGateway.gameReady(game.winner, game.loser, game);
+  // }
 }
