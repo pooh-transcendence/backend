@@ -2,22 +2,16 @@ import {
   Body,
   Controller,
   Get,
-  HttpStatus,
-  Inject,
   Logger,
   Param,
-  ParseFilePipeBuilder,
   ParseIntPipe,
   Patch,
   Post,
-  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { GetUser } from 'src/auth/get-user.decostor';
-import { ChannelEntity } from 'src/channel/channel.entity';
 import { TransformInterceptor } from 'src/common/interceptors/tranform.interceptor';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserProfileDto } from './user.dto';

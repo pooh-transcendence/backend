@@ -4,7 +4,8 @@ import { UserEntity } from 'src/user/user.entity';
 import { Column, Entity, ManyToOne } from 'typeorm';
 
 export enum GameType {
-  ONEVSONE = '1vs1',
+  ONEVSONE_PRIVATE = '1vs1 PRIVATE',
+  ONEVSONE_PUBLIC = '1vs1 PUBLIC',
   LADDER = 'LADDER',
 }
 
@@ -24,7 +25,7 @@ export class GameEntity extends CommonEntity {
   loser: UserEntity;
 
   @Column()
-  @IsIn([GameType.ONEVSONE, GameType.LADDER])
+  @IsIn([GameType.LADDER, GameType.ONEVSONE_PRIVATE, GameType.ONEVSONE_PUBLIC])
   gameType: GameType;
 
   @Column({ default: 0 })
@@ -35,13 +36,13 @@ export class GameEntity extends CommonEntity {
   @IsNumber()
   loseScore: number;
 
-  @Column({ default: 1 })
+  @Column({ default: 2 })
   @IsNumber()
   @IsPositive()
   @IsIn([1, 2, 3])
   ballSpeed: number;
 
-  @Column({ default: 1 })
+  @Column({ default: 2 })
   @IsNumber()
   @IsPositive()
   @IsIn([1, 2, 3])

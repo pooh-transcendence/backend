@@ -12,7 +12,6 @@ export enum PlayerStatus {
 export class Game {
   private id: number;
   private ballSpeed: number;
-  //private racketHeight: number;
   private status: GameStatus;
   private ball: number[]; // [x, y, radion]
   private score: number[];
@@ -36,18 +35,17 @@ export class Game {
     private readonly canvasWidth = 1400,
     private readonly canvasHeight = 1000,
     private readonly racketWidth = 18,
+    private readonly racketHeight = 180,
     private readonly racketSpeed = 10,
     private readonly ballRadius = 9,
     private readonly maxScore = 6,
     private readonly ballVelocity = 5,
-    private readonly racketHeight = 180,
   ) {
     this.player1 = gameInfo.winner;
     this.player2 = gameInfo.loser;
     this.type = gameInfo.gameType;
     this.id = gameInfo.id;
-    //this.ballSpeed = 1 + gameInfo.ballSpeed * 2; // 3, 5, 7
-    this.ballSpeed = 3;
+    this.ballSpeed = gameInfo.ballSpeed * 2 - 1; // 1, 3, 5
     this.gameOver = false;
     this.readyCountPlayer = 0;
     this.racketHeight = gameInfo.racketSize * 90;
@@ -65,13 +63,11 @@ export class Game {
     this.racket[0] = [
       150, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
-      //0, // 라켓 위치 수정
     ];
     //player2 init
     this.racket[1] = [
       1250,
       // this.canvasWidth - 200, // x
-      // 0, // TODO: 라켓 위치 수정
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
 
@@ -118,7 +114,6 @@ export class Game {
     gameEntity.winScore = Math.max(this.score[0], this.score[1]);
     gameEntity.loseScore = Math.min(this.score[0], this.score[1]);
     gameEntity.ballSpeed = this.ballSpeed;
-    gameEntity.racketSize = this.racketHeight;
     return gameEntity;
   }
 
