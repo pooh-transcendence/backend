@@ -64,7 +64,7 @@ services:
     networks:
       - dream
     ports:
-      - '8484:3000'
+      - '3000:3000'
     env_file:
       - ./env/redis.env
       - ./env/postgres.env

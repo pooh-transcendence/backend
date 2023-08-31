@@ -12,7 +12,6 @@ export enum PlayerStatus {
 export class Game {
   private id: number;
   private ballSpeed: number;
-  //private racketHeight: number;
   private status: GameStatus;
   private ball: number[]; // [x, y, radion]
   private score: number[];
@@ -25,6 +24,8 @@ export class Game {
   private player2: UserEntity;
   private racket: number[][];
   private playersStatus: number[];
+  private gameOver: boolean;
+  private readyCountPlayer: number;
 
   // paddle 로 바꾸기
   constructor(
@@ -34,37 +35,39 @@ export class Game {
     private readonly canvasWidth = 1400,
     private readonly canvasHeight = 1000,
     private readonly racketWidth = 18,
+    private readonly racketHeight = 180,
     private readonly racketSpeed = 10,
     private readonly ballRadius = 9,
     private readonly maxScore = 6,
     private readonly ballVelocity = 5,
-    private readonly racketHeight = 180,
   ) {
     this.player1 = gameInfo.winner;
     this.player2 = gameInfo.loser;
-    this.ballSpeed = gameInfo.ballSpeed;
-    //this.racketHeight = gameInfo.racketSize;
     this.type = gameInfo.gameType;
     this.id = gameInfo.id;
-    this.ballSpeed = gameInfo.ballSpeed;
+    this.ballSpeed = gameInfo.ballSpeed * 2 - 1; // 1, 3, 5
+    this.gameOver = false;
+    this.readyCountPlayer = 0;
+    this.racketHeight = gameInfo.racketSize * 90;
   }
 
   init(isUpdate: boolean): GameUpdateDto {
     //console.log('init');
     this.ball = [
-      this.canvasHeight / 2 + Math.random() * 100, // x
-      this.canvasWidth / 2 + Math.random() * 30, // y
+      this.canvasWidth / 2, // x
+      this.canvasHeight / 2 + Math.random() * 30, // y
       Math.random() * 2 * Math.PI, // radian
     ];
     this.racket = new Array(2);
     //player1 init
     this.racket[0] = [
-      0, // x
+      150, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
     //player2 init
     this.racket[1] = [
-      this.canvasWidth - this.racketWidth, // x
+      1250,
+      // this.canvasWidth - 200, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
 
@@ -114,7 +117,24 @@ export class Game {
     return gameEntity;
   }
 
-  // 원으로 만들고 생각해오기
+  private ballInRacket(ball: number[]): boolean {
+    let ret = false;
+    this.racket.forEach((racket) => {
+      const dists = [
+        Math.abs(ball[0] - racket[0]),
+        Math.abs(ball[1] - racket[1]),
+      ];
+      const delta = [
+        Math.max(dists[0] - this.racketWidth, 0),
+        Math.max(dists[1] - this.racketHeight, 0),
+      ];
+      if (
+        Math.sqrt(Math.pow(delta[0], 2) + Math.pow(delta[1], 2)) <= this.ball[2]
+      )
+        ret = true;
+    });
+    return ret;
+  }
 
   private isInRacket(ball: number[]): boolean {
     // user1(left) racket check
@@ -158,14 +178,14 @@ export class Game {
 
   racketUpdate() {
     this.racket.forEach((racket, userId) => {
-      this.racket[userId][1] += this.playersStatus[userId] * 20;
+      this.racket[userId][1] -= this.playersStatus[userId] * 50;
       if (this.racket[userId][1] < 0) {
         this.racket[userId][1] = 0;
       } else if (
-        this.racket[userId][1] >
-        this.canvasHeight - this.racketHeight
+        this.racket[userId][1] + this.racketHeight * 2 >=
+        this.canvasHeight
       ) {
-        this.racket[userId][1] = this.canvasHeight - this.racketHeight;
+        this.racket[userId][1] = this.canvasHeight - this.racketHeight * 2;
       }
     });
     this.playersStatus[0] = PlayerStatus.NONE;
@@ -215,7 +235,35 @@ export class Game {
     return 'game: ' + this.id.toString();
   }
 
+  setGameOver(gameOver: boolean) {
+    this.gameOver = gameOver;
+  }
+
   isGameOver() {
-    return this.score[0] === this.maxScore || this.score[1] === this.maxScore;
+    return (
+      this.gameOver ||
+      this.score[0] === this.maxScore ||
+      this.score[1] === this.maxScore
+    );
+  }
+
+  getGiveUp(isConnect: boolean[]) {
+    if (this.isGiveUp) return true;
+    this.isGiveUp = Math.max(this.score[0], this.score[1]) === this.maxScore;
+    if (this.isGiveUp)
+      this.giveUpUser = !isConnect[0] ? this.player1.id : this.player2.id;
+    return this.isGiveUp;
+  }
+
+  getPlayer1(): UserEntity {
+    return this.player1;
+  }
+  getPlayer2(): UserEntity {
+    return this.player2;
+  }
+
+  readyCount(): boolean {
+    this.readyCountPlayer++;
+    return this.readyCountPlayer !== 2;
   }
 }

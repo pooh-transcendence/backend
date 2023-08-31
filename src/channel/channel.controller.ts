@@ -28,9 +28,7 @@ import {
 } from './channel.dto';
 import { ChannelService } from './channel.service';
 import { ChannelGateway } from './channel.gateway';
-import { Channel } from 'diagnostics_channel';
 import { UserService } from 'src/user/user.service';
-import { transformAuthInfo } from 'passport';
 import { ChannelType } from './channel.entity';
 
 @Controller('/channel')
@@ -59,6 +57,7 @@ export class ChannelController {
       channelUserIds,
     );
     if (result.password) result.password = undefined;
+    result['ownerNickname'] = user.nickname;
     const _user = await this.userService.getUserById(user.id);
     if (result.channelType !== ChannelType.PRIVATE)
       ChannelGateway.emitToAllClient('addChannelToAllChannelList', result);

@@ -16,6 +16,7 @@ export class GameService {
 
   async createGame(createGameDto: CreateGameDto): Promise<GameEntity> {
     const [id1, id2] = createGameDto.participants;
+    console.log('id1: ', id1, 'id2: ', id2);
     const user1 = await this.userRepository.getUserByUserId(id1);
     const user2 = await this.userRepository.getUserByUserId(id2);
     if (!user1 || !user2) throw new NotFoundException("Couldn't find users");
