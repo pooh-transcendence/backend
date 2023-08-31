@@ -83,7 +83,6 @@ export class GameGateway
       this.server.to(toFriend.channelSocketId).emit('changeFriendState', {
         id: user.id,
         nickname: user.nickname,
-        //userState: UserState.INGAME,
       });
     }
     this.connectedSockets.set(client.id, client);
@@ -100,13 +99,14 @@ export class GameGateway
     //this.gameSocketMap.delete(user.userId);
     await this.userService.updateUserElements(__user.id, {
       gameSocketId: null,
-      userState: user.channelSocketId ? UserState.ONLINE : UserState.OFFLINE,
+      //userState: user.channelSocketId ? UserState.ONLINE : UserState.OFFLINE,
     });
     this.connectedSockets.delete(client.id);
   }
 
   @SubscribeMessage('joinQueue')
   async handleJoinQueue(@ConnectedSocket() client: Socket) {
+    this.logger.log('joinQueue');
     const __user = await this.authService.getUserFromSocket(client);
     if (!__user) client.disconnect();
     const user = await this.userService.getUserById(__user.id);
@@ -116,7 +116,6 @@ export class GameGateway
       this.queueUser.push(user);
       this.logger.log(`${user.nickname} JOIN QUEUE`);
     }
-    console.log('queueUser: ' + this.queueUser);
     this.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
     while (this.queueUser.length >= 2) {

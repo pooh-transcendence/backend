@@ -59,6 +59,7 @@ export class ChannelController {
       channelUserIds,
     );
     if (result.password) result.password = undefined;
+    result['ownerNickname'] = user.nickname;
     const _user = await this.userService.getUserById(user.id);
     if (result.channelType !== ChannelType.PRIVATE)
       ChannelGateway.emitToAllClient('addChannelToAllChannelList', result);
