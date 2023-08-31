@@ -120,7 +120,8 @@ export class GameController {
     @GetUser() user: UserEntity,
     @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
   ): Promise<void> {
-    return await this.gameService.cancelOneToOneGame(user, gameId);
+    await this.gameService.cancelOneToOneGame(user, gameId);
+    GameGateway.emitToAllClient('deleteOneToOneGame', gameId);
   }
 
   @Get('/oneToOneGame/:gameId')
