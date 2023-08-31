@@ -6,7 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateGameDto } from './game.dto';
-import { GameEntity, GameStatus } from './game.entity';
+import { GameEntity, GameStatus, GameType } from './game.entity';
 
 export class GameRepository extends Repository<GameEntity> {
   constructor(@InjectRepository(GameEntity) private dataSource: DataSource) {
@@ -28,7 +28,7 @@ export class GameRepository extends Repository<GameEntity> {
     return game;
   }
 
-  async createOneToOneGameDto(gameEntity: GameEntity): Promise<GameEntity> {
+  async createOneToOneGame(gameEntity: GameEntity): Promise<GameEntity> {
     const game = this.create(gameEntity);
     if (!game) throw new InternalServerErrorException();
     try {
@@ -80,13 +80,21 @@ export class GameRepository extends Repository<GameEntity> {
 
   async getAllPublicWaitingGame(): Promise<GameEntity[]> {
     return await this.find({
-      where: { gameStatus: GameStatus.WAITING },
+      where: {
+        gameStatus: GameStatus.WAITING,
+        gameType: GameType.ONEVSONE_PUBLIC,
+      },
     });
   }
 
   async getAllPrivateWaitingGame(userId: number): Promise<GameEntity[]> {
-    return await this.find({
-      where: { gameStatus: GameStatus.WAITING, loser: { id: userId } },
+    const games = await this.find({
+      where: {
+        gameStatus: GameStatus.WAITING,
+        gameType: GameType.ONEVSONE_PRIVATE,
+        loser: { id: userId },
+      },
     });
+    return games;
   }
 }
