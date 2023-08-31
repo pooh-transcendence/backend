@@ -11,13 +11,13 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserEntity } from 'src/user/user.entity';
 import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
 import { GameEntity } from './game.entity';
 import { GameService } from './game.service';
-import { AuthGuard } from '@nestjs/passport';
 
 @Controller('game')
 @UseGuards(AuthGuard())
@@ -60,9 +60,9 @@ export class GameController {
     this.gameService.deleteGameByGameId(gameId);
   }
 
-  @Get('/allWaitingGame')
-  async getAllWaitingGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
-    return await this.gameService.getAllWaitingGame(user.id);
+  @Get('/allOneToOneGame')
+  async getAllOneToOneGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
+    return await this.gameService.getAllOneToOneGame(user.id);
   }
 
   @Post('/oneToOneGame')
