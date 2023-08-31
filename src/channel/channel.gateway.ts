@@ -155,6 +155,10 @@ export class ChannelGateway
         channelId,
       );
       client.emit('addChannelToUserChannelList', channel);
+      channel['channelUser'] = await this.channelService.getChannelUser(
+        channel.id,
+      );
+      ChannelGateway.server.emit('changeChannelState', channel);
       //ChannelGateway.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
       this.logger.log(err);
@@ -227,6 +231,10 @@ export class ChannelGateway
         targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
         targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
+      channel['channelUser'] = await this.channelService.getChannelUser(
+        channel.id,
+      );
+      ChannelGateway.server.emit('changeChannelState', channel);
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -391,10 +399,15 @@ export class ChannelGateway
     client.rooms.delete(channelId.toString());
     if (channel.password) channel.password = undefined;
     client.emit('deleteChannelToUserChannelList', channel);
-    if (result)
+    if (result) {
       ChannelGateway.server.emit('deleteChannelToAllChannelList', {
         id: channelId,
       });
+      channel['channelUser'] = await this.channelService.getChannelUser(
+        channel.id,
+      );
+      ChannelGateway.server.emit('changeChannelState', result);
+    }
   }
 
   async emitToUser(
