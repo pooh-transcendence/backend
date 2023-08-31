@@ -19,7 +19,11 @@ import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
 import { Game } from './game.class';
-import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
+import {
+  GameUpdateDto,
+  RacketUpdatesDto,
+  CreateOneToOneGameDto,
+} from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameService } from './game.service';
 
@@ -150,7 +154,7 @@ export class GameGateway
     this.logger.log('gameReady');
     //this.logger.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
     const createGameDto = {
-      participants: [user1.id, user1.id /*user2.id*/],
+      participants: [user1.id, user2.id],
       gameType: GameType.LADDER,
       ballSpeed: randomInt(1, 3),
       ballCount: randomInt(1, 3),
@@ -290,9 +294,20 @@ export class GameGateway
 
   @SubscribeMessage('getAllWaitingGame')
   async getAllWaitingGame(@ConnectedSocket() client: Socket) {
-    const userId = await this.authService.getUserIdFromSocket(client);
+    const userId = this.authService.getUserIdFromSocket(client);
     if (!userId) throw new WsException('Unauthorized');
     const games = await this.gameService.getAllWaitingGame(userId);
     client.emit('getAllActiveGame', games);
+  }
+
+  @SubscribeMessage('createOneToOneGame')
+  async createOneToOneGame(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() createOneToOneGameDto: CreateOneToOneGameDto,
+  ) {
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    // await this.gameService.createOneToOneGame(user.id, createOneToOneGameDto);
+    client.emit('createOneToOneGame', { status: 'success' });
   }
 }

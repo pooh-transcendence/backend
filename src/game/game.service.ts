@@ -46,4 +46,19 @@ export class GameService {
   async getAllWaitingGame(userId: number): Promise<GameEntity[]> {
     return await this.gameRepository.getAllWaitingGame(userId);
   }
+
+  // async createOneToOneGame(
+  //   userId: number,
+  //   createOneToOneGameDto: CreateOneToOneGameDto,
+  // ): Promise<GameEntity> {
+  //   const user = await this.userRepository.getUserByUserId(userId);
+  //   if (!user) throw new NotFoundException("Couldn't find user");
+
+  //   const targetUser = await this.userRepository.getUserByNickname(
+  //     createOneToOneGameDto.targetNickname,
+  //   );
+  //   if (!targetUser) throw new NotFoundException("Couldn't find target user");
+
+  //   // return await this.gameRepository.createGame(createGameDto);
+  // }
 }

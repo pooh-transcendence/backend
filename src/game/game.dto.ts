@@ -6,6 +6,7 @@ import {
   IsNotEmpty,
   IsNumber,
   IsPositive,
+  IsString,
 } from 'class-validator';
 import { GameEntity } from './game.entity';
 
@@ -51,4 +52,11 @@ export class GameUpdateDto extends PickType(GameEntity, ['gameType']) {
 
   @IsBoolean()
   isGetScore: boolean;
+}
+
+export class CreateOneToOneGameDto extends PickType(GameEntity, [
+  'ballSpeed',
+] as const) {
+  @IsString()
+  targetNickname: string;
 }
