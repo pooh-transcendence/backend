@@ -338,6 +338,8 @@ export class GameGateway
     client.emit(data.event, data.data);
   }
 
+  /* 1VS1 Game */
+
   // @SubscribeMessage('getAllOneToOneGame')
   // async getAllWaitingGame(@ConnectedSocket() client: Socket) {
   //   const user = await this.authService.getUserFromSocket(client);

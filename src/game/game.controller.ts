@@ -105,12 +105,12 @@ export class GameController {
         throw new NotFoundException("Couldn't find target user");
       GameGateway.emitToClient(
         targetUser.gameSocketId,
-        'getUpdatedOneToOneGame',
+        'addOneToOneGame',
         game,
       );
     } else {
       // publicOneToOneGame의 경우
-      GameGateway.emitToAllClient('getUpdatedOneToOneGame', game);
+      GameGateway.emitToAllClient('addOneToOneGame', game);
     }
   }
 

@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { UserEntity } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
 import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameRepository } from './game.repository';
-import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class GameService {
