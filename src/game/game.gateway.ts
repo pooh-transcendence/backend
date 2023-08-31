@@ -13,16 +13,16 @@ import {
 import { randomInt } from 'crypto';
 import { Socket } from 'socket.io';
 import { AuthService } from 'src/auth/auth.service';
+import { ChannelGateway } from 'src/channel/channel.gateway';
 import { AllExceptionsSocketFilter } from 'src/common/exceptions/websocket-exception.filter';
 import { FriendService } from 'src/friend/friend.service';
 import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
 import { Game } from './game.class';
+import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameService } from './game.service';
-import { ChannelGateway } from 'src/channel/channel.gateway';
-import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 
 @WebSocketGateway({ namespace: 'game' })
 @UseFilters(AllExceptionsSocketFilter)
