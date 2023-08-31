@@ -2,6 +2,7 @@ import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
+import { max } from 'class-validator';
 
 export enum PlayerStatus {
   NONE = 0,
@@ -25,6 +26,8 @@ export class Game {
   private player2: UserEntity;
   private racket: number[][];
   private playersStatus: number[];
+  private gameOver: boolean;
+  private readyCountPlayer: number;
 
   // paddle 로 바꾸기
   constructor(
@@ -42,31 +45,34 @@ export class Game {
   ) {
     this.player1 = gameInfo.winner;
     this.player2 = gameInfo.loser;
-    this.ballSpeed = gameInfo.ballSpeed;
-    //this.racketHeight = gameInfo.racketSize;
     this.type = gameInfo.gameType;
     this.id = gameInfo.id;
-    this.ballSpeed = gameInfo.ballSpeed;
+    this.ballSpeed = 1 + gameInfo.ballSpeed * 2; // 3, 5, 7
+    this.gameOver = false;
+    this.readyCountPlayer = 0;
+    this.racketHeight = gameInfo.racketSize * 90;
   }
 
   init(isUpdate: boolean): GameUpdateDto {
     //console.log('init');
     this.ball = [
-      this.canvasHeight / 2 + Math.random() * 100, // x
-      this.canvasWidth / 2 + Math.random() * 30, // y
+      this.canvasWidth / 2, // x
+      this.canvasHeight / 2 + Math.random() * 30, // y
       Math.random() * 2 * Math.PI, // radian
     ];
     this.racket = new Array(2);
     //player1 init
     this.racket[0] = [
       150, // x
-      this.canvasHeight / 2 - this.racketHeight / 2, // y
+      // this.canvasHeight / 2 - this.racketHeight / 2, // y
+      0, // 라켓 위치 수정
     ];
     //player2 init
     this.racket[1] = [
       1250,
       //this.canvasWidth - 200, // x
-      this.canvasHeight / 2 - this.racketHeight / 2, // y
+      0, // TODO: 라켓 위치 수정
+      // this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
 
     //console.log('this.racket: ', this.racket);
@@ -96,16 +102,16 @@ export class Game {
   exportToGameEntity() {
     const gameEntity = new GameEntity();
     gameEntity.id = this.id;
-    const p1 = this.player1.id,
-      p2 = this.player2.id;
     gameEntity.gameType = this.type;
 
     if (!this.isGiveUp) {
       this.winner = this.score[0] > this.score[1] ? this.player1 : this.player2;
       this.loser = this.score[0] > this.score[1] ? this.player2 : this.player1;
     } else {
-      this.winner = this.giveUpUser === p1 ? this.player2 : this.player1;
-      this.loser = this.giveUpUser === p1 ? this.player1 : this.player2;
+      this.winner =
+        this.giveUpUser === this.player1.id ? this.player2 : this.player1;
+      this.loser =
+        this.giveUpUser === this.player1.id ? this.player1 : this.player2;
     }
     gameEntity.winner = this.winner;
     gameEntity.loser = this.loser;
@@ -116,33 +122,29 @@ export class Game {
     return gameEntity;
   }
 
-  // 원으로 만들고 생각해오기
-
   private isInRacket(ball: number[]): boolean {
-    let ret = false;
-    // for (const userId in this.racket) {
-    //   if (
-    //     // 원의 중심 기준
-    //     ball[0] - this.ballRadius >= this.racket[userId][0] &&
-    //     ball[0] + this.ballRadius <=
-    //       this.racket[userId][0] + this.racketWidth &&
-    //     ball[1] - this.ballRadius >= this.racket[userId][1] &&
-    //     ball[1] + this.ballRadius <= this.racket[userId][1] + this.racketHeight
-    //   ) {
-    //     ret = true;
-    //   }
-    // }
-    this.racket.forEach((racket) => {
-      if (
-        ball[0] - this.ballRadius >= racket[0] &&
-        ball[0] + this.ballRadius <= racket[0] + this.racketWidth &&
-        ball[1] - this.ballRadius >= racket[1] &&
-        ball[1] + this.ballRadius <= racket[1] + this.racketHeight
-      ) {
-        ret = true;
-      }
-    });
-    return ret;
+    // user1(left) racket check
+    let racketX = this.racket[0][0];
+    let racketY = this.racket[0][1];
+    if (
+      ball[0] - this.ballRadius <= racketX + this.racketWidth &&
+      ball[0] - this.ballRadius >= racketX &&
+      ball[1] - this.ballRadius >= racketY &&
+      ball[1] + this.ballRadius <= racketY + this.racketHeight
+    )
+      return true;
+    // user2(right) racket check
+    racketX = this.racket[1][0];
+    racketY = this.racket[1][1];
+    if (
+      ball[0] + this.ballRadius >= racketX &&
+      ball[0] + this.ballRadius <= racketX + this.racketWidth &&
+      ball[1] - this.ballRadius >= racketY &&
+      ball[1] - this.ballRadius <= racketY + this.racketHeight
+    )
+      return true;
+    // 라켓에 공이 맞지 않으면 false
+    return false;
   }
 
   getUpdateRacket(racketUpdate: RacketUpdatesDto) {
@@ -162,14 +164,14 @@ export class Game {
 
   racketUpdate() {
     this.racket.forEach((racket, userId) => {
-      this.racket[userId][1] += this.playersStatus[userId] * 20;
+      this.racket[userId][1] -= this.playersStatus[userId] * 50;
       if (this.racket[userId][1] < 0) {
         this.racket[userId][1] = 0;
       } else if (
-        this.racket[userId][1] >
-        this.canvasHeight - this.racketHeight
+        this.racket[userId][1] + this.racketHeight * 2 >=
+        this.canvasHeight
       ) {
-        this.racket[userId][1] = this.canvasHeight - this.racketHeight;
+        this.racket[userId][1] = this.canvasHeight - this.racketHeight * 2;
       }
     });
     this.playersStatus[0] = PlayerStatus.NONE;
@@ -219,7 +221,35 @@ export class Game {
     return 'game: ' + this.id.toString();
   }
 
+  setGameOver(gameOver: boolean) {
+    this.gameOver = gameOver;
+  }
+
   isGameOver() {
-    return this.score[0] === this.maxScore || this.score[1] === this.maxScore;
+    return (
+      this.gameOver ||
+      this.score[0] === this.maxScore ||
+      this.score[1] === this.maxScore
+    );
+  }
+
+  getGiveUp(isConnect: boolean[]) {
+    if (this.isGiveUp) return true;
+    this.isGiveUp = Math.max(this.score[0], this.score[1]) === this.maxScore;
+    if (this.isGiveUp)
+      this.giveUpUser = !isConnect[0] ? this.player1.id : this.player2.id;
+    return this.isGiveUp;
+  }
+
+  getPlayer1(): UserEntity {
+    return this.player1;
+  }
+  getPlayer2(): UserEntity {
+    return this.player2;
+  }
+
+  readyCount(): boolean {
+    this.readyCountPlayer++;
+    return this.readyCountPlayer === 2;
   }
 }

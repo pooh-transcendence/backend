@@ -10,7 +10,9 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
+import { GetUser } from 'src/auth/get-user.decostor';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
+import { UserEntity } from 'src/user/user.entity';
 import { CreateGameDto } from './game.dto';
 import { GameEntity } from './game.entity';
 import { GameService } from './game.service';
@@ -55,9 +57,8 @@ export class GameController {
     this.gameService.deleteGameByGameId(gameId);
   }
 
-  @Get('/allActiveGame')
-  @UsePipes(ValidationPipe)
-  async getAllActiveGame(): Promise<GameEntity[]> {
-    return await this.gameService.getAllActiveGame();
+  @Get('/allWaitingGame')
+  async getAllWaitingGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
+    return await this.gameService.getAllWaitingGame(user.id);
   }
 }
