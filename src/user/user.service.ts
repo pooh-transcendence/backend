@@ -34,6 +34,13 @@ export class UserService {
     return user;
   }
 
+  async getUserByNickname(nickname: string): Promise<UserEntity> {
+    const user = await this.userRepository.getUserByNickname(nickname);
+    if (!user)
+      throw new NotFoundException(`There is no user with nickname ${nickname}`);
+    return user;
+  }
+
   async getUserProfileByNickname(
     userId: number,
     nickname: string,

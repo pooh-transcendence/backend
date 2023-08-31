@@ -28,7 +28,7 @@ export class GameRepository extends Repository<GameEntity> {
     return game;
   }
 
-  async createOneToOneGameDto(gameEntity: GameEntity): Promise<void> {
+  async createOneToOneGameDto(gameEntity: GameEntity): Promise<GameEntity> {
     const game = this.create(gameEntity);
     if (!game) throw new InternalServerErrorException();
     try {
@@ -40,6 +40,7 @@ export class GameRepository extends Repository<GameEntity> {
         throw new InternalServerErrorException();
       }
     }
+    return game;
   }
 
   async getAllGame(): Promise<GameEntity[]> {

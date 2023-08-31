@@ -55,7 +55,7 @@ export class GameService {
   async createOneToOneGame(
     userId: number,
     createOneToOneGameDto: CreateOneToOneGameDto,
-  ): Promise<void> {
+  ): Promise<GameEntity> {
     const user = await this.userRepository.getUserByUserId(userId);
     if (!user) throw new NotFoundException("Couldn't find user");
 
@@ -71,7 +71,7 @@ export class GameService {
         const targetUser = await this.userRepository.getUserByNickname(
           createOneToOneGameDto.targetNickname,
         );
-        if (!targetUser)
+        if (!targetUser || !targetUser.gameSocketId)
           throw new NotFoundException("Couldn't find target user");
         // private 1vs1 game
         game.gameType = GameType.ONEVSONE_PRIVATE;

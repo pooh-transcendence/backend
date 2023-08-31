@@ -4,6 +4,7 @@ import {
   Delete,
   Get,
   Logger,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -18,11 +19,16 @@ import { UserEntity } from 'src/user/user.entity';
 import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
 import { GameEntity } from './game.entity';
 import { GameService } from './game.service';
+import { GameGateway } from './game.gateway';
+import { UserService } from 'src/user/user.service';
 
 @Controller('game')
 @UseGuards(AuthGuard())
 export class GameController {
-  constructor(private gameService: GameService) {}
+  constructor(
+    private gameService: GameService,
+    private userService: UserService,
+  ) {}
 
   private logger = new Logger(GameController.name);
 
@@ -60,21 +66,49 @@ export class GameController {
     this.gameService.deleteGameByGameId(gameId);
   }
 
+  /* 1VS1 Game */
+
+  /**
+   * 홈 화면에서 한 번 호출되는 API
+   * 이후의 변경사항은 socket.io(getUpdatedOneToOneGame)를 통해 전달받음
+   * @param user
+   * @returns GameEntity[]
+   */
   @Get('/allOneToOneGame')
   async getAllOneToOneGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
     return await this.gameService.getAllOneToOneGame(user.id);
   }
 
+  /**
+   * 1VS1 게임 매칭 요청 API
+   * @param user
+   * @param createOneToOneGameDto
+   * @returns
+   */
   @Post('/oneToOneGame')
   @UsePipes(ValidationPipe)
   async createOneToOneGame(
     @GetUser() user: UserEntity,
     @Body() createOneToOneGameDto: CreateOneToOneGameDto,
   ): Promise<void> {
-    return await this.gameService.createOneToOneGame(
+    const game = await this.gameService.createOneToOneGame(
       user.id,
       createOneToOneGameDto,
     );
+    // socket.io를 통해 게임 매칭 요청을 전달
+    // privateOneToOneGame의 경우
+    if (createOneToOneGameDto.targetNickname) {
+      const targetUser = await this.userService.getUserByNickname(
+        createOneToOneGameDto.targetNickname,
+      );
+      if (!targetUser || !targetUser.gameSocketId)
+        throw new NotFoundException("Couldn't find target user");
+      GameGateway.emitToClient(
+        targetUser.gameSocketId,
+        'getUpdatedOneToOneGame',
+        game,
+      );
+    }
   }
 
   @Delete('/oneToOneGame/:gameId')
@@ -86,7 +120,6 @@ export class GameController {
     return await this.gameService.cancelOneToOneGame(user, gameId);
   }
 
-  // 사용하지 않을 것 같아요
   @Get('/oneToOneGame/:gameId')
   @UsePipes(ValidationPipe)
   async startOneToOneGame(
