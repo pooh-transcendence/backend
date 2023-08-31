@@ -93,6 +93,8 @@ export class GameService {
     if (!game) throw new NotFoundException("Couldn't find game");
     if (game.gameStatus !== GameStatus.WAITING)
       throw new NotFoundException('Game is not waiting');
+    if (game.loser && game.loser.id !== user.id)
+      throw new NotFoundException('You are not in this game');
     game.gameStatus = GameStatus.PLAYING;
     game.loser = user;
     await this.gameRepository.updateGame(game);
