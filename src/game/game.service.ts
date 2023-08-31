@@ -43,8 +43,12 @@ export class GameService {
     await this.gameRepository.updateGame(game);
   }
 
-  async getAllWaitingGame(): Promise<GameEntity[]> {
-    return await this.gameRepository.getAllWaitingGame();
+  async getAllWaitingGame(userId: number): Promise<GameEntity[]> {
+    const publicGame: GameEntity[] =
+      await this.gameRepository.getAllPublicWaitingGame();
+    const privateGames: GameEntity[] =
+      await this.gameRepository.getAllPrivateWaitingGame(userId);
+    return [...publicGame, ...privateGames];
   }
 
   async createOneToOneGame(

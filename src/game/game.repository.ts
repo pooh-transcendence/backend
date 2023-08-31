@@ -78,9 +78,15 @@ export class GameRepository extends Repository<GameEntity> {
       throw new NotFoundException(`there is no game id ${game.id}`);
   }
 
-  async getAllWaitingGame(): Promise<GameEntity[]> {
+  async getAllPublicWaitingGame(): Promise<GameEntity[]> {
     return await this.find({
       where: { gameStatus: GameStatus.WAITING },
+    });
+  }
+
+  async getAllPrivateWaitingGame(userId: number): Promise<GameEntity[]> {
+    return await this.find({
+      where: { gameStatus: GameStatus.WAITING, loser: { id: userId } },
     });
   }
 }

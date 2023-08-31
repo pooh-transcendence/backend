@@ -61,8 +61,8 @@ export class GameController {
   }
 
   @Get('/allWaitingGame')
-  async getAllWaitingGame(): Promise<GameEntity[]> {
-    return await this.gameService.getAllWaitingGame();
+  async getAllWaitingGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
+    return await this.gameService.getAllWaitingGame(user.id);
   }
 
   @Post('/oneToOneGame')
