@@ -5,6 +5,7 @@ import {
   IsIn,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
   IsPositive,
   IsString,
 } from 'class-validator';
@@ -59,5 +60,6 @@ export class CreateOneToOneGameDto extends PickType(GameEntity, [
   'racketSize',
 ] as const) {
   @IsString()
+  @IsOptional()
   targetNickname: string;
 }

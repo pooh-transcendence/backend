@@ -7,17 +7,20 @@ import {
   Param,
   ParseIntPipe,
   Post,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
 import { GetUser } from 'src/auth/get-user.decostor';
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserEntity } from 'src/user/user.entity';
-import { CreateGameDto } from './game.dto';
+import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
 import { GameEntity } from './game.entity';
 import { GameService } from './game.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('game')
+@UseGuards(AuthGuard())
 export class GameController {
   constructor(private gameService: GameService) {}
 
@@ -58,7 +61,19 @@ export class GameController {
   }
 
   @Get('/allWaitingGame')
-  async getAllWaitingGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
+  async getAllWaitingGame(): Promise<GameEntity[]> {
     return await this.gameService.getAllWaitingGame();
+  }
+
+  @Post('/oneToOneGame')
+  @UsePipes(ValidationPipe)
+  async createOneToOneGame(
+    @GetUser() user: UserEntity,
+    @Body() createOneToOneGameDto: CreateOneToOneGameDto,
+  ): Promise<GameEntity> {
+    return await this.gameService.createOneToOneGame(
+      user.id,
+      createOneToOneGameDto,
+    );
   }
 }
