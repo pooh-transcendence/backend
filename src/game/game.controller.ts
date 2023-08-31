@@ -70,10 +70,19 @@ export class GameController {
   async createOneToOneGame(
     @GetUser() user: UserEntity,
     @Body() createOneToOneGameDto: CreateOneToOneGameDto,
-  ): Promise<GameEntity> {
+  ): Promise<void> {
     return await this.gameService.createOneToOneGame(
       user.id,
       createOneToOneGameDto,
     );
+  }
+
+  @Get('/oneToOneGame/:gameId')
+  @UsePipes(ValidationPipe)
+  async startOneToOneGame(
+    @GetUser() user: UserEntity,
+    @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
+  ): Promise<GameEntity> {
+    return await this.gameService.startOneToOneGame(user, gameId);
   }
 }

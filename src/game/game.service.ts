@@ -4,6 +4,7 @@ import { UserService } from 'src/user/user.service';
 import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameRepository } from './game.repository';
+import { UserEntity } from 'src/user/user.entity';
 
 @Injectable()
 export class GameService {
@@ -54,7 +55,7 @@ export class GameService {
   async createOneToOneGame(
     userId: number,
     createOneToOneGameDto: CreateOneToOneGameDto,
-  ): Promise<GameEntity> {
+  ): Promise<void> {
     const user = await this.userRepository.getUserByUserId(userId);
     if (!user) throw new NotFoundException("Couldn't find user");
 
@@ -84,6 +85,17 @@ export class GameService {
     game.ballSpeed = createOneToOneGameDto.ballSpeed;
     game.gameStatus = GameStatus.WAITING;
 
-    return await this.gameRepository.CreateOneToOneGameDto(game);
+    return await this.gameRepository.createOneToOneGameDto(game);
+  }
+
+  async startOneToOneGame(user: UserEntity, gameId: number) {
+    const game = await this.gameRepository.getGameByGameId(gameId);
+    if (!game) throw new NotFoundException("Couldn't find game");
+    if (game.gameStatus !== GameStatus.WAITING)
+      throw new NotFoundException('Game is not waiting');
+    game.gameStatus = GameStatus.PLAYING;
+    game.loser = user;
+    await this.gameRepository.updateGame(game);
+    return game;
   }
 }
