@@ -108,6 +108,9 @@ export class GameController {
         'getUpdatedOneToOneGame',
         game,
       );
+    } else {
+      // publicOneToOneGame의 경우
+      GameGateway.emitToAllClient('getUpdatedOneToOneGame', game);
     }
   }
 

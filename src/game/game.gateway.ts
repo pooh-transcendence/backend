@@ -19,11 +19,7 @@ import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
 import { Game } from './game.class';
-import {
-  GameUpdateDto,
-  RacketUpdatesDto,
-  CreateOneToOneGameDto,
-} from './game.dto';
+import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameService } from './game.service';
 
@@ -294,25 +290,25 @@ export class GameGateway
     client.emit(data.event, data.data);
   }
 
-  @SubscribeMessage('getAllOneToOneGame')
-  async getAllWaitingGame(@ConnectedSocket() client: Socket) {
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('Unauthorized');
-    const games = await this.gameService.getAllOneToOneGame(user.id);
-    client.emit('getAllOneToOneGame', games);
-  }
+  // @SubscribeMessage('getAllOneToOneGame')
+  // async getAllWaitingGame(@ConnectedSocket() client: Socket) {
+  //   const user = await this.authService.getUserFromSocket(client);
+  //   if (!user) throw new WsException('Unauthorized');
+  //   const games = await this.gameService.getAllOneToOneGame(user.id);
+  //   client.emit('getAllOneToOneGame', games);
+  // }
 
-  @SubscribeMessage('createOneToOneGame')
-  async createOneToOneGame(
-    @ConnectedSocket() client: Socket,
-    @MessageBody('createOneToOneGameDto')
-    createOneToOneGameDto: CreateOneToOneGameDto,
-  ) {
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('Unauthorized');
-    await this.gameService.createOneToOneGame(user.id, createOneToOneGameDto);
-    client.emit('createOneToOneGame', { status: 'success' });
-  }
+  // @SubscribeMessage('createOneToOneGame')
+  // async createOneToOneGame(
+  //   @ConnectedSocket() client: Socket,
+  //   @MessageBody('createOneToOneGameDto')
+  //   createOneToOneGameDto: CreateOneToOneGameDto,
+  // ) {
+  //   const user = await this.authService.getUserFromSocket(client);
+  //   if (!user) throw new WsException('Unauthorized');
+  //   await this.gameService.createOneToOneGame(user.id, createOneToOneGameDto);
+  //   client.emit('createOneToOneGame', { status: 'success' });
+  // }
 
   @SubscribeMessage('startOneToOneGame')
   async startOneToOneGame(
