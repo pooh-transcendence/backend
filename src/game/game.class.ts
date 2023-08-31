@@ -64,7 +64,7 @@ export class Game {
     ];
     //player2 init
     this.racket[1] = [
-      this.canvasWidth, // x
+      this.canvasWidth - this.racketWidth, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
 
@@ -95,43 +95,50 @@ export class Game {
   exportToGameEntity() {
     const gameEntity = new GameEntity();
     gameEntity.id = this.id;
-    const p1 = this.player1.id,
-      p2 = this.player2.id;
     gameEntity.gameType = this.type;
 
     if (!this.isGiveUp) {
       this.winner = this.score[0] > this.score[1] ? this.player1 : this.player2;
       this.loser = this.score[0] > this.score[1] ? this.player2 : this.player1;
     } else {
-      this.winner = this.giveUpUser === p1 ? this.player2 : this.player1;
-      this.loser = this.giveUpUser === p1 ? this.player1 : this.player2;
+      this.winner =
+        this.giveUpUser === this.player1.id ? this.player2 : this.player1;
+      this.loser =
+        this.giveUpUser === this.player1.id ? this.player1 : this.player2;
     }
     gameEntity.winner = this.winner;
     gameEntity.loser = this.loser;
     gameEntity.winScore = Math.max(this.score[0], this.score[1]);
     gameEntity.loseScore = Math.min(this.score[0], this.score[1]);
     gameEntity.ballSpeed = this.ballSpeed;
-    gameEntity.racketSize = this.racketHeight;
     return gameEntity;
   }
 
   // 원으로 만들고 생각해오기
 
   private isInRacket(ball: number[]): boolean {
-    let ret = false;
-    for (const userId in this.racket) {
-      if (
-        // 원의 중심 기준
-        ball[0] - this.ballRadius >= this.racket[userId][0] &&
-        ball[0] + this.ballRadius <=
-          this.racket[userId][0] + this.racketWidth &&
-        ball[1] - this.ballRadius >= this.racket[userId][1] &&
-        ball[1] + this.ballRadius <= this.racket[userId][1] + this.racketHeight
-      ) {
-        ret = true;
-      }
-    }
-    return ret;
+    // user1(left) racket check
+    let racketX = this.racket[0][0];
+    let racketY = this.racket[0][1];
+    if (
+      ball[0] - this.ballRadius <= racketX + this.racketWidth &&
+      ball[0] - this.ballRadius >= racketX &&
+      ball[1] - this.ballRadius >= racketY &&
+      ball[1] + this.ballRadius <= racketY + this.racketHeight
+    )
+      return true;
+    // user2(right) racket check
+    racketX = this.racket[1][0];
+    racketY = this.racket[1][1];
+    if (
+      ball[0] + this.ballRadius >= racketX &&
+      ball[0] + this.ballRadius <= racketX + this.racketWidth &&
+      ball[1] - this.ballRadius >= racketY &&
+      ball[1] - this.ballRadius <= racketY + this.racketHeight
+    )
+      return true;
+    // 라켓에 공이 맞지 않으면 false
+    return false;
   }
 
   getUpdateRacket(racketUpdate: RacketUpdatesDto) {

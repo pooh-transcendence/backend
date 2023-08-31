@@ -1,8 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
-import { CreateGameDto } from './game.dto';
-import { GameEntity } from './game.entity';
+import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
+import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameRepository } from './game.repository';
 
 @Injectable()
@@ -43,22 +43,43 @@ export class GameService {
     await this.gameRepository.updateGame(game);
   }
 
-  async getAllWaitingGame(userId: number): Promise<GameEntity[]> {
-    return await this.gameRepository.getAllWaitingGame(userId);
+  async getAllWaitingGame(): Promise<GameEntity[]> {
+    return await this.gameRepository.getAllWaitingGame();
   }
 
-  // async createOneToOneGame(
-  //   userId: number,
-  //   createOneToOneGameDto: CreateOneToOneGameDto,
-  // ): Promise<GameEntity> {
-  //   const user = await this.userRepository.getUserByUserId(userId);
-  //   if (!user) throw new NotFoundException("Couldn't find user");
+  async createOneToOneGame(
+    userId: number,
+    createOneToOneGameDto: CreateOneToOneGameDto,
+  ): Promise<GameEntity> {
+    const user = await this.userRepository.getUserByUserId(userId);
+    if (!user) throw new NotFoundException("Couldn't find user");
 
-  //   const targetUser = await this.userRepository.getUserByNickname(
-  //     createOneToOneGameDto.targetNickname,
-  //   );
-  //   if (!targetUser) throw new NotFoundException("Couldn't find target user");
+    const game = new GameEntity();
+    if (createOneToOneGameDto.targetNickname) {
+      if (createOneToOneGameDto.targetNickname === user.nickname)
+        throw new NotFoundException("Target user can't be same as user");
+      if (!createOneToOneGameDto.targetNickname) {
+        // public 1vs1 game
+        game.gameType = GameType.ONEVSONE_PUBLIC;
+        game.loser = null;
+      } else {
+        const targetUser = await this.userRepository.getUserByNickname(
+          createOneToOneGameDto.targetNickname,
+        );
+        if (!targetUser)
+          throw new NotFoundException("Couldn't find target user");
+        // private 1vs1 game
+        game.gameType = GameType.ONEVSONE_PRIVATE;
+        game.loser = targetUser;
+      }
+    }
 
-  //   // return await this.gameRepository.createGame(createGameDto);
-  // }
+    game.winner = user;
+    game.winScore = 0;
+    game.loseScore = 0;
+    game.ballSpeed = createOneToOneGameDto.ballSpeed;
+    game.gameStatus = GameStatus.WAITING;
+
+    return await this.gameRepository.CreateOneToOneGameDto(game);
+  }
 }

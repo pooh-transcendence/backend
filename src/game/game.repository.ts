@@ -28,6 +28,21 @@ export class GameRepository extends Repository<GameEntity> {
     return game;
   }
 
+  async CreateOneToOneGameDto(gameEntity: GameEntity): Promise<GameEntity> {
+    const game = this.create(gameEntity);
+    if (!game) throw new InternalServerErrorException();
+    try {
+      await this.save(game);
+    } catch (error) {
+      if (error.code === '23505') {
+        throw new ConflictException('Existing game');
+      } else {
+        throw new InternalServerErrorException();
+      }
+    }
+    return game;
+  }
+
   async getAllGame(): Promise<GameEntity[]> {
     return await this.find({
       relations: ['winner', 'loser'],
@@ -63,9 +78,9 @@ export class GameRepository extends Repository<GameEntity> {
       throw new NotFoundException(`there is no game id ${game.id}`);
   }
 
-  async getAllWaitingGame(userId: number): Promise<GameEntity[]> {
+  async getAllWaitingGame(): Promise<GameEntity[]> {
     return await this.find({
-      where: { gameStatus: GameStatus.WAITING, loser: { id: userId } },
+      where: { gameStatus: GameStatus.WAITING },
     });
   }
 }

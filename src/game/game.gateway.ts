@@ -294,20 +294,21 @@ export class GameGateway
 
   @SubscribeMessage('getAllWaitingGame')
   async getAllWaitingGame(@ConnectedSocket() client: Socket) {
-    const userId = this.authService.getUserIdFromSocket(client);
-    if (!userId) throw new WsException('Unauthorized');
-    const games = await this.gameService.getAllWaitingGame(userId);
+    const user = await this.authService.getUserFromSocket(client);
+    if (!user) throw new WsException('Unauthorized');
+    const games = await this.gameService.getAllWaitingGame();
     client.emit('getAllActiveGame', games);
   }
 
   @SubscribeMessage('createOneToOneGame')
   async createOneToOneGame(
     @ConnectedSocket() client: Socket,
-    @MessageBody() createOneToOneGameDto: CreateOneToOneGameDto,
+    @MessageBody('createOneToOneGameDto')
+    createOneToOneGameDto: CreateOneToOneGameDto,
   ) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
-    // await this.gameService.createOneToOneGame(user.id, createOneToOneGameDto);
+    await this.gameService.createOneToOneGame(user.id, createOneToOneGameDto);
     client.emit('createOneToOneGame', { status: 'success' });
   }
 }

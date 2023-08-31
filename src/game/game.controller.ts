@@ -59,6 +59,6 @@ export class GameController {
 
   @Get('/allWaitingGame')
   async getAllWaitingGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
-    return await this.gameService.getAllWaitingGame(user.id);
+    return await this.gameService.getAllWaitingGame();
   }
 }

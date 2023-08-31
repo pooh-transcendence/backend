@@ -56,6 +56,7 @@ export class GameUpdateDto extends PickType(GameEntity, ['gameType']) {
 
 export class CreateOneToOneGameDto extends PickType(GameEntity, [
   'ballSpeed',
+  'racketSize',
 ] as const) {
   @IsString()
   targetNickname: string;
