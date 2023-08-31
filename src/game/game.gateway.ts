@@ -73,7 +73,7 @@ export class GameGateway
     );
     await this.userService.updateUserElements(user.id, {
       gameSocketId: client.id,
-      userState: UserState.INGAME,
+      //userState: UserState.INGAME,
     });
     const toFriendList = await this.friendService.getFriendListByToId(user.id);
     for (const toFriendFrom of toFriendList) {
@@ -82,7 +82,7 @@ export class GameGateway
       this.server.to(toFriend.channelSocketId).emit('changeFriendState', {
         id: user.id,
         nickname: user.nickname,
-        userState: UserState.INGAME,
+        //userState: UserState.INGAME,
       });
     }
     this.connectedSockets.set(client.id, client);
@@ -127,12 +127,12 @@ export class GameGateway
     if (!user1 || !this.isSocketConnected(user1.gameSocketId)) {
       return false;
     }
-    // const user2 = this.queueUser.shift();
-    // if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
-    //   this.queueUser.push(user1);
-    //   return false;
-    // }
-    await this.gameReady(user1, null); //user2);
+    const user2 = this.queueUser.shift();
+    if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
+      this.queueUser.push(user1);
+      return false;
+    }
+    await this.gameReady(user1, user2);
     return true;
   }
 
@@ -150,7 +150,7 @@ export class GameGateway
     this.logger.log('gameReady');
     //this.logger.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
     const createGameDto = {
-      participants: [user1.id, 2 /*user2.id*/],
+      participants: [user1.id, user2.id],
       gameType: GameType.LADDER,
       ballSpeed: randomInt(1, 3),
       ballCount: randomInt(1, 3),
@@ -163,18 +163,15 @@ export class GameGateway
     const game = new Game(gameEntity, this.userService);
     const socket1 = this.server.sockets.get(user1.gameSocketId);
     this.logger.log('after createGame');
-    // this.logger.log('socket1: ' + user1.gameSocketId);
-    //const socket2 = this.server.sockets.get(user2.gameSocketId);
-    // this.logger.log('socket2: ' + user2.gameSocketId);
+    this.logger.log('socket1: ' + user1.gameSocketId);
+    const socket2 = this.server.sockets.get(user2.gameSocketId);
+    this.logger.log('socket2: ' + user2.gameSocketId);
     socket1.join(game.getRoomId());
-    //socket2.join(game.getRoomId());
+    socket2.join(game.getRoomId());
     this.gameToUserMap.set(user1.id, gameEntity.id);
-    //this.gameToUserMap.set(user2.id, gameEntity.id);
-    // this.logger.log('before game');
+    this.gameToUserMap.set(user2.id, gameEntity.id);
     const gameUpdateDto: GameUpdateDto = game.init(false);
-    this.logger.log('after game');
     this.gameMap.set(gameEntity.id, game);
-    this.logger.log('set After game');
     // user1과 user2에게 game ready emit
     this.server.to(user1.gameSocketId).emit('gameReady', {
       gameInfo: gameUpdateDto,
@@ -186,6 +183,9 @@ export class GameGateway
     //   whoAmI: user2.id === gameEntity.winner.id ? 'left' : 'right',
     //   nickname: user2.nickname,
     // });
+    await this.userService.updateUserElements(user1.id, {
+      userState: UserState.INGAME,
+    });
   }
   // socket 연결 여부 확인
   private isSocketConnected(socketId: string): boolean {
@@ -198,6 +198,7 @@ export class GameGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() racketUpdate: RacketUpdatesDto,
   ) {
+    this.logger.log('updateRacket', racketUpdate);
     const userId = this.authService.getUserIdFromSocket(client);
     if (!userId) return;
     const gameId = this.gameToUserMap.get(userId);
@@ -224,7 +225,7 @@ export class GameGateway
     const timerId = setInterval(() => {
       // this.logger.log('gameLoop');
       this.gameLoop(game);
-      if (game.isGameOver()) {
+      if (game.isGameOver() || !this.isSocketConnected(client.id)) {
         this.logger.log(`${userId} :  ${game.getRoomId()} is  gameOver`);
         const gameEntity = game.exportToGameEntity();
         gameEntity.gameStatus = GameStatus.FINISHED;

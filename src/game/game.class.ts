@@ -59,12 +59,13 @@ export class Game {
     this.racket = new Array(2);
     //player1 init
     this.racket[0] = [
-      0, // x
+      150, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
     //player2 init
     this.racket[1] = [
-      this.canvasWidth, // x
+      1250,
+      //this.canvasWidth - 200, // x
       this.canvasHeight / 2 - this.racketHeight / 2, // y
     ];
 
@@ -119,18 +120,28 @@ export class Game {
 
   private isInRacket(ball: number[]): boolean {
     let ret = false;
-    for (const userId in this.racket) {
+    // for (const userId in this.racket) {
+    //   if (
+    //     // 원의 중심 기준
+    //     ball[0] - this.ballRadius >= this.racket[userId][0] &&
+    //     ball[0] + this.ballRadius <=
+    //       this.racket[userId][0] + this.racketWidth &&
+    //     ball[1] - this.ballRadius >= this.racket[userId][1] &&
+    //     ball[1] + this.ballRadius <= this.racket[userId][1] + this.racketHeight
+    //   ) {
+    //     ret = true;
+    //   }
+    // }
+    this.racket.forEach((racket) => {
       if (
-        // 원의 중심 기준
-        ball[0] - this.ballRadius >= this.racket[userId][0] &&
-        ball[0] + this.ballRadius <=
-          this.racket[userId][0] + this.racketWidth &&
-        ball[1] - this.ballRadius >= this.racket[userId][1] &&
-        ball[1] + this.ballRadius <= this.racket[userId][1] + this.racketHeight
+        ball[0] - this.ballRadius >= racket[0] &&
+        ball[0] + this.ballRadius <= racket[0] + this.racketWidth &&
+        ball[1] - this.ballRadius >= racket[1] &&
+        ball[1] + this.ballRadius <= racket[1] + this.racketHeight
       ) {
         ret = true;
       }
-    }
+    });
     return ret;
   }
 
