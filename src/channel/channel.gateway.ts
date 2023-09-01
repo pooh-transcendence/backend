@@ -40,6 +40,7 @@ import {
 } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelService } from './channel.service';
+import { ChannelController } from './channel.controller';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -155,9 +156,6 @@ export class ChannelGateway
         channelId,
       );
       client.emit('addChannelToUserChannelList', channel);
-      channel['channelUser'] = await this.channelService.getChannelUser(
-        channel.id,
-      );
       ChannelGateway.server.emit('changeChannelState', channel);
       //ChannelGateway.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
@@ -366,11 +364,14 @@ export class ChannelGateway
         userSocket.join(result.id.toString());
       }
       result['ownerNickname'] = user.nickname;
+      result['channelUser'] = channelUsers;
       client.emit('addChannelToUserChannelList', result);
       // 서버에있는 소켓들 에게 이벤트 보내기
       if (result.password) result.password = undefined;
-      if (result.channelType !== ChannelType.PRIVATE)
+      if (result.channelType !== ChannelType.PRIVATE) {
         ChannelGateway.server.emit('addChannelToAllChannelList', result);
+        this.logger.log('FUCK');
+      }
       return result;
     } catch (err) {
       this.logger.log(err);
@@ -400,12 +401,12 @@ export class ChannelGateway
     if (channel.password) channel.password = undefined;
     client.emit('deleteChannelToUserChannelList', channel);
     if (result) {
-      ChannelGateway.server.emit('deleteChannelToAllChannelList', {
-        id: channelId,
-      });
       channel['channelUser'] = await this.channelService.getChannelUser(
         channel.id,
       );
+      ChannelGateway.server.emit('deleteChannelToAllChannelList', {
+        id: channelId,
+      });
       ChannelGateway.server.emit('changeChannelState', result);
     }
   }

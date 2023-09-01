@@ -61,7 +61,6 @@ export class GameController {
     @Body() createOneToOneGameDto: CreateOneToOneGameDto,
   ) {
     // this.logger.log(`createOneToOneGame`);
-
     const game = await this.gameService.createOneToOneGame(
       user,
       createOneToOneGameDto,
@@ -82,7 +81,8 @@ export class GameController {
       );
     } else {
       // publicOneToOneGame의 경우
-      // console.log('emitToAllClient');
+      console.log('publicOneToOneGame');
+      console.log('game: ', game);
       GameGateway.emitToAllClient('addOneToOneGame', game);
     }
     return { gameId: game.id };

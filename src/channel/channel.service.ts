@@ -203,7 +203,9 @@ export class ChannelService {
       channel.channelType = ChannelType.PUBLIC;
       channel.password = undefined;
     }
-    await this.channelRepository.update(channelId, channel);
+    await this.channelRepository.update(channelId, {
+      password: channel.password,
+    });
     channel.password = undefined;
     return channel;
   }
@@ -215,6 +217,8 @@ export class ChannelService {
     );
     if (!channel)
       throw new NotFoundException(`There is no Channel ${channelId}`);
+    channel['channelUser'] = await this.getChannelUser(channelId);
+    channel['userCount'] = channel['channelUser'].length;
     return channel;
   }
 
