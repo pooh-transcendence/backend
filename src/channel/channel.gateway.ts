@@ -407,8 +407,9 @@ export class ChannelGateway
       ChannelGateway.server.emit('deleteChannelToAllChannelList', {
         id: channelId,
       });
-      ChannelGateway.server.emit('changeChannelState', result);
     }
+    channel.userCount -= 1;
+    ChannelGateway.emitToAllClient('changeChannelState', channel);
   }
 
   async emitToUser(
