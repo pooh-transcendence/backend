@@ -79,43 +79,60 @@ export class GameRepository extends Repository<GameEntity> {
   }
 
   async getAllPublicWaitingGame(): Promise<GameEntity[]> {
-    const publicWaitingGames = await this.createQueryBuilder('game')
-      // .select('DISTINCT game.id', 'id')
-      // .addSelect('game.gameType', 'gameType')
-      // .addSelect('game.winnerId', 'userId')
-      // .addSelect('game.ballSpeed', 'ballSpeed')
-      // .addSelect('game.racketSize', 'racketSize')
-      // .from(GameEntity, 'game')
-      .select([
-        'game.id',
-        'game.gameType',
-        'game.winnerId',
-        'game.ballSpeed',
-        'game.racketSize',
-      ])
-      .where('game.gameStatus = :gameStatus AND game.gameType = :gameType', {
+    // const publicWaitingGames = await this.createQueryBuilder('game')
+    //   // .select('DISTINCT game.id', 'id')
+    //   // .addSelect('game.gameType', 'gameType')
+    //   // .addSelect('game.winnerId', 'userId')
+    //   // .addSelect('game.ballSpeed', 'ballSpeed')
+    //   // .addSelect('game.racketSize', 'racketSize')
+    //   // .from(GameEntity, 'game')
+    //   .select([
+    //     'game.id',
+    //     'game.gameType',
+    //     'game.winnerId',
+    //     'game.ballSpeed',
+    //     'game.racketSize',
+    //   ])
+    //   .where('game.gameStatus = :gameStatus AND game.gameType = :gameType', {
+    //     gameStatus: GameStatus.WAITING,
+    //     gameType: GameType.ONEVSONE_PUBLIC,
+    //   })
+    //   .getRawMany();
+    const publicWaitingGames = await this.find({
+      relations: ['winner', 'loser'],
+      where: {
         gameStatus: GameStatus.WAITING,
         gameType: GameType.ONEVSONE_PUBLIC,
-      })
-      .getRawMany();
+      },
+      order: { id: 'ASC' },
+    });
     return publicWaitingGames;
   }
 
   async getAllPrivateWaitingGame(userId: number): Promise<GameEntity[]> {
-    const privateWaitingGames = await this.createQueryBuilder('game')
-      .select([
-        'game.id',
-        'game.gameType',
-        'game.winnerId',
-        'game.ballSpeed',
-        'game.racketSize',
-      ])
-      .where('game.gameStatus = :gameStatus AND game.gameType = :gameType', {
+    // const privateWaitingGames = await this.createQueryBuilder('game')
+    //   .select([
+    //     'game.id',
+    //     'game.gameType',
+    //     'game.winnerId',
+    //     'game.ballSpeed',
+    //     'game.racketSize',
+    //   ])
+    //   .where('game.gameStatus = :gameStatus AND game.gameType = :gameType', {
+    //     gameStatus: GameStatus.WAITING,
+    //     gameType: GameType.ONEVSONE_PRIVATE,
+    //   })
+    //   .andWhere('game.loserId = :userId', { userId: userId })
+    //   .getRawMany();
+    const privateWaitingGames = await this.find({
+      relations: ['winner', 'loser'],
+      where: {
         gameStatus: GameStatus.WAITING,
         gameType: GameType.ONEVSONE_PRIVATE,
-      })
-      .andWhere('game.loserId = :userId', { userId: userId })
-      .getRawMany();
+        loser: { id: userId },
+      },
+      order: { id: 'ASC' },
+    });
     return privateWaitingGames;
   }
 }
