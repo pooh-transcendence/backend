@@ -2,7 +2,11 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
-import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
+import {
+  CreateGameDto,
+  CreateOneToOneGameDto,
+  OneToOneGameInfoDto,
+} from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameRepository } from './game.repository';
 
@@ -45,12 +49,16 @@ export class GameService {
     await this.gameRepository.updateGame(game);
   }
 
-  async getAllOneToOneGame(userId: number): Promise<GameEntity[]> {
-    const publicGame = await this.gameRepository.getAllPublicWaitingGame();
+  async getAllOneToOneGame(userId: number): Promise<OneToOneGameInfoDto[]> {
+    const publicGames = await this.gameRepository.getAllPublicWaitingGame();
     const privateGames = await this.gameRepository.getAllPrivateWaitingGame(
       userId,
     );
-    return [...publicGame, ...privateGames];
+    const games = [...publicGames, ...privateGames];
+    return games.map((game) => this.mapGameEntityToOneToOneGameInfoDto(game));
+    // console.log('games : ', games);
+    // console.log('oneToOneGameInfoDtoList: ', oneToOneGameInfoDtoList);
+    // return oneToOneGameInfoDtoList;
   }
 
   async createOneToOneGame(
@@ -113,5 +121,15 @@ export class GameService {
     if (!game) throw new NotFoundException("Couldn't find game");
     if (game.gameStatus !== GameStatus.WAITING)
       throw new NotFoundException('Game is not waiting');
+  }
+
+  mapGameEntityToOneToOneGameInfoDto(game: GameEntity): OneToOneGameInfoDto {
+    const dto = new OneToOneGameInfoDto();
+    dto.id = game.id;
+    dto.gameType = game.gameType;
+    dto.ballSpeed = game.ballSpeed;
+    dto.racketSize = game.racketSize;
+    dto.userId = game.winner.id;
+    return dto;
   }
 }

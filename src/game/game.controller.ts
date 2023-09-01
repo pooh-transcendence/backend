@@ -19,7 +19,11 @@ import { TransformInterceptor } from 'src/common/interceptors/tranform.intercept
 import { PositiveIntPipe } from 'src/common/pipes/positiveInt.pipe';
 import { UserEntity } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
-import { CreateGameDto, CreateOneToOneGameDto } from './game.dto';
+import {
+  CreateGameDto,
+  CreateOneToOneGameDto,
+  OneToOneGameInfoDto,
+} from './game.dto';
 import { GameEntity } from './game.entity';
 import { GameGateway } from './game.gateway';
 import { GameService } from './game.service';
@@ -43,7 +47,9 @@ export class GameController {
    * @returns GameEntity[]
    */
   @Get('/allOneToOneGame')
-  async getAllOneToOneGame(@GetUser() user: UserEntity): Promise<GameEntity[]> {
+  async getAllOneToOneGame(
+    @GetUser() user: UserEntity,
+  ): Promise<OneToOneGameInfoDto[]> {
     this.logger.log(`getAllOneToOneGame`);
     return await this.gameService.getAllOneToOneGame(user.id);
   }
