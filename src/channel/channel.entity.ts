@@ -39,6 +39,8 @@ export class ChannelEntity extends CommonEntity {
   @Length(1, 12)
   password: string;
 
+  userCount: number;
+
   /*@OneToMany(() => ChannelUserEntity, (channelUser) => channelUser.channel, {
     eager: false,
   })

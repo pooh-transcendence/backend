@@ -91,6 +91,7 @@ export class ChannelController {
         'addChannelToUserChannelList',
         resultChannel,
       );
+    ChannelGateway.emitToAllClient('changeChannelState', resultChannel);
     return result;
   }
 
@@ -138,6 +139,8 @@ export class ChannelController {
       );
       userSocket.leave(channelId.toString());
     }
+    const channel = await this.channelService.getChannelByChannelId(channelId);
+    ChannelGateway.emitToAllClient('changeChannelState', channel);
     if (result) {
       ChannelGateway.emitToAllClient('deleteChannelToAllChannelList', {
         channelId,

@@ -192,7 +192,6 @@ export class ChannelGateway
   async getVisibleChannel(@ConnectedSocket() client: Socket) {
     const channels = await this.channelService.getVisibleChannel();
     ChannelGateway.server.to(client.id).emit('visibleChannel', channels);
-    return channels;
   }
 
   @SubscribeMessage('kickChannelUser')
@@ -309,7 +308,7 @@ export class ChannelGateway
         );
         targetUserSocket.emit('changeUserTypeToMod', { id: channelId });
       }
-      return await this.channelService.setAdmin(user.id, channelUserInfo);
+      await this.channelService.setAdmin(user.id, channelUserInfo);
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -330,7 +329,6 @@ export class ChannelGateway
       );
       if (result.password) result.password = undefined;
       ChannelGateway.emitToAllClient('changeChannelState', result);
-      return result;
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -372,7 +370,6 @@ export class ChannelGateway
         ChannelGateway.server.emit('addChannelToAllChannelList', result);
         this.logger.log('FUCK');
       }
-      return result;
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -407,8 +404,9 @@ export class ChannelGateway
       ChannelGateway.server.emit('deleteChannelToAllChannelList', {
         id: channelId,
       });
-      ChannelGateway.server.emit('changeChannelState', result);
     }
+    channel.userCount -= 1;
+    ChannelGateway.emitToAllClient('changeChannelState', channel);
   }
 
   async emitToUser(
@@ -550,7 +548,6 @@ export class ChannelGateway
       avatar: taragetUser.avatar,
       userState: taragetUser.userState,
     });
-    //return { sucess: true, createBlock };
   }
 
   @SubscribeMessage('deleteBlock')
@@ -596,7 +593,6 @@ export class ChannelGateway
       );
     }
     client.emit('getFriendList', friendList);
-    //return friendList;
   }
 
   @SubscribeMessage('createFriend')
@@ -626,7 +622,6 @@ export class ChannelGateway
       avatar: targetUser.avatar,
       userState: targetUser.userState,
     });
-    return { success: true, friend };
   }
 
   @SubscribeMessage('deleteFriend')
@@ -700,7 +695,7 @@ export class ChannelGateway
       ]);
       targetSocket.emit('addChannelToUserChannelList', channel);
     }
-    return ret;
+    //return ret;
   }
 
   @SubscribeMessage('allUser')
