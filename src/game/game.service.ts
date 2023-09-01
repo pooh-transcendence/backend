@@ -64,7 +64,7 @@ export class GameService {
   async createOneToOneGame(
     user: UserEntity,
     createOneToOneGameDto: CreateOneToOneGameDto,
-  ): Promise<GameEntity> {
+  ): Promise<OneToOneGameInfoDto> {
     // console.log('createOneToOneGameDto: ', createOneToOneGameDto);
     const game = new GameEntity();
     // console.log('user: ', user);
@@ -92,7 +92,8 @@ export class GameService {
     game.ballSpeed = createOneToOneGameDto.ballSpeed;
     game.gameStatus = GameStatus.WAITING;
 
-    return await this.gameRepository.createOneToOneGame(game);
+    const gameEntity = await this.gameRepository.createOneToOneGame(game);
+    return this.mapGameEntityToOneToOneGameInfoDto(gameEntity);
   }
 
   async cancelOneToOneGame(user: UserEntity, gameId: number): Promise<void> {
