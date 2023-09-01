@@ -46,7 +46,6 @@ export class GameService {
   }
 
   async getAllOneToOneGame(userId: number): Promise<GameEntity[]> {
-    console.log('userId: ', userId);
     const publicGame = await this.gameRepository.getAllPublicWaitingGame();
     const privateGames = await this.gameRepository.getAllPrivateWaitingGame(
       userId,
