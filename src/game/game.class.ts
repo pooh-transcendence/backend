@@ -118,22 +118,15 @@ export class Game {
   }
 
   private ballInRacket(ball: number[]): boolean {
-    let ret = false;
-    this.racket.forEach((racket) => {
-      const dists = [
-        Math.abs(ball[0] - racket[0]),
-        Math.abs(ball[1] - racket[1]),
-      ];
-      const delta = [
-        Math.max(dists[0] - this.racketWidth, 0),
-        Math.max(dists[1] - this.racketHeight, 0),
-      ];
-      if (
-        Math.sqrt(Math.pow(delta[0], 2) + Math.pow(delta[1], 2)) <= this.ball[2]
-      )
-        ret = true;
-    });
-    return ret;
+    const distX = Math.abs(ball[0] - this.racket[0][0] - this.racketWidth / 2);
+    const distY = Math.abs(ball[1] - this.racket[0][1] - this.racketHeight / 2);
+
+    if (
+      distX <= this.racketWidth / 2 + this.ballRadius &&
+      distY <= this.racketHeight / 2 + this.ballRadius
+    )
+      return true;
+    return false;
   }
 
   private isInRacket(ball: number[]): boolean {
