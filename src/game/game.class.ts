@@ -58,24 +58,25 @@ export class Game {
       this.canvasHeight / 2 + Math.random() * 30, // y
       Math.random() * 2 * Math.PI, // radian
     ];
-    this.racket = new Array(2);
     //player1 init
-    this.racket[0] = [
-      150, // x
-      this.canvasHeight / 2 - this.racketHeight / 2, // y
-    ];
-    //player2 init
-    this.racket[1] = [
-      1250,
-      // this.canvasWidth - 200, // x
-      this.canvasHeight / 2 - this.racketHeight / 2, // y
-    ];
 
     //console.log('this.racket: ', this.racket);
     if (!isUpdate) {
       this.score = new Array(2);
       this.score[0] = 0;
       this.score[1] = 0;
+
+      this.racket = new Array(2);
+      this.racket[0] = [
+        150, // x
+        this.canvasHeight / 2 - this.racketHeight / 2, // y
+      ];
+      //player2 init
+      this.racket[1] = [
+        1250,
+        // this.canvasWidth - 200, // x
+        this.canvasHeight / 2 - this.racketHeight / 2, // y
+      ];
     }
     //console.log('this.score: ', this.score);
     this.playersStatus = new Array(2);
@@ -113,7 +114,7 @@ export class Game {
     gameEntity.loser = this.loser;
     gameEntity.winScore = Math.max(this.score[0], this.score[1]);
     gameEntity.loseScore = Math.min(this.score[0], this.score[1]);
-    gameEntity.ballSpeed = this.ballSpeed;
+    gameEntity.ballSpeed = this.ballSpeed; //
     return gameEntity;
   }
 
@@ -175,10 +176,10 @@ export class Game {
       if (this.racket[userId][1] < 0) {
         this.racket[userId][1] = 0;
       } else if (
-        this.racket[userId][1] + this.racketHeight * 2 >=
+        this.racket[userId][1] + this.racketHeight >=
         this.canvasHeight
       ) {
-        this.racket[userId][1] = this.canvasHeight - this.racketHeight * 2;
+        this.racket[userId][1] = this.canvasHeight - this.racketHeight;
       }
     });
     this.playersStatus[0] = PlayerStatus.NONE;
@@ -197,7 +198,7 @@ export class Game {
     ) {
       this.ball[2] = -this.ball[2];
     } // racket에 부딪힐 때
-    else if (this.isInRacket(this.ball)) {
+    else if (this.ballInRacket(this.ball)) {
       this.ball[2] = Math.PI - this.ball[2];
     } // 왼쪽 벽에 부딪힐 때 : player2 승
     else if (this.ball[0] - this.ballRadius <= 0) ret = 2;
