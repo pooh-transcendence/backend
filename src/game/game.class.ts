@@ -1,3 +1,4 @@
+import { redisStore } from 'cache-manager-redis-store';
 import { UserEntity } from 'src/user/user.entity';
 import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
@@ -39,7 +40,7 @@ export class Game {
     private readonly racketSpeed = 10,
     private readonly ballRadius = 9,
     private readonly maxScore = 6,
-    private readonly ballVelocity = 5,
+    private readonly ballVelocity = 2,
   ) {
     this.player1 = gameInfo.winner;
     this.player2 = gameInfo.loser;
@@ -52,11 +53,11 @@ export class Game {
   }
 
   init(isUpdate: boolean): GameUpdateDto {
-    //console.log('init');
     this.ball = [
       this.canvasWidth / 2, // x
       this.canvasHeight / 2 + Math.random() * 30, // y
-      Math.random() * 2 * Math.PI, // radian
+      (Math.random() * (1 / 3) - 1 / 6) * Math.PI,
+      //: (Math.random() * (5 / 3) - 5 / 6) * Math.PI, // radian
     ];
     //player1 init
 
@@ -119,15 +120,17 @@ export class Game {
   }
 
   private ballInRacket(ball: number[]): boolean {
-    const distX = Math.abs(ball[0] - this.racket[0][0] - this.racketWidth / 2);
-    const distY = Math.abs(ball[1] - this.racket[0][1] - this.racketHeight / 2);
-
-    if (
-      distX <= this.racketWidth / 2 + this.ballRadius &&
-      distY <= this.racketHeight / 2 + this.ballRadius
-    )
-      return true;
-    return false;
+    let ret: boolean = false;
+    this.racket.forEach((racket) => {
+      const distX = Math.abs(ball[0] - racket[0] - this.racketWidth / 2);
+      const distY = Math.abs(ball[1] - racket[1] - this.racketHeight / 2);
+      if (
+        distX < this.racketWidth / 2 + this.ballRadius &&
+        distY < this.racketHeight / 2 + this.ballRadius
+      )
+        ret = true;
+    });
+    return ret;
   }
 
   private isInRacket(ball: number[]): boolean {
@@ -161,6 +164,20 @@ export class Game {
     } else if (racketUpdate.userId === this.player2.id) {
       this.playersStatus[1] = racketUpdate.direction;
     }
+    // userId 예외처리
+    if (
+      racketUpdate.userId !== this.player1.id &&
+      racketUpdate.userId !== this.player2.id
+    ) {
+      throw new Error('Invalid user');
+    }
+  }
+
+  tmpGetUpdateRacket(racketUpdate: RacketUpdatesDto) {
+    if (racketUpdate.userId === this.player1.id)
+      this.playersStatus[0] = racketUpdate.direction;
+    if (racketUpdate.userId === this.player2.id)
+      this.playersStatus[1] = racketUpdate.direction;
     // userId 예외처리
     if (
       racketUpdate.userId !== this.player1.id &&

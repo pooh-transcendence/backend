@@ -181,7 +181,7 @@ export class GameGateway
     const gameUpdateDto: GameUpdateDto = game.init(false);
     this.gameMap.set(gameEntity.id, game);
     // user1과 user2에게 game ready emit
-
+    console.log('FUCK');
     const users = [user1, user2];
     users.forEach(async (user) => {
       const toFriendList = await this.friendService.getFriendListByToId(
@@ -211,7 +211,7 @@ export class GameGateway
 
   // socket 연결 여부 확인
   private isSocketConnected(socketId: string): boolean {
-    //return this.connectedSockets.has(socketId);
+    //return this.connectedSocgaets.has(socketId);
     return GameGateway.server.sockets.get(socketId)?.connected;
   }
 
@@ -226,7 +226,8 @@ export class GameGateway
     if (!gameId) return;
     const game: Game = this.gameMap.get(gameId);
     if (!game) return;
-    game.getUpdateRacket(racketUpdate);
+    //game.getUpdateRacket(racketUpdate);
+    game.tmpGetUpdateRacket(racketUpdate);
   }
 
   @SubscribeMessage('gameStart')
@@ -244,7 +245,7 @@ export class GameGateway
     // this.logger.log('gameStart');
     // 1초에 60번 update
     if (game.readyCount()) return;
-    const timerId = setInterval(() => {
+    const timerId: NodeJS.Timeout = setInterval(() => {
       // this.logger.log('gameLoop');
       this.gameLoop(game);
       if (
@@ -252,40 +253,45 @@ export class GameGateway
         !this.isSocketConnected(game.getPlayer1().gameSocketId) ||
         !this.isSocketConnected(game.getPlayer2().gameSocketId)
       ) {
-        this.logger.log(
-          `${game.getPlayer1().nickname} ${
-            game.getPlayer2().nickname
-          }:  ${game.getRoomId()} is  gameOver`,
-        );
-        const gameEntity = game.exportToGameEntity();
-        gameEntity.gameStatus = GameStatus.FINISHED;
-        const isConnect = [
-          this.isSocketConnected(game.getPlayer1().gameSocketId),
-          this.isSocketConnected(game.getPlayer2().gameSocketId),
-        ];
-        game.getGiveUp(isConnect);
-        this.gameService.updateGame(gameEntity);
-        game.setGameOver(true);
-        clearInterval(timerId);
-        const users = [game.getPlayer1(), game.getPlayer2()];
-        users.forEach(async (user) => {
-          const friendLists = await this.friendService.getFriendListByToId(
-            user.id,
-          );
-          for (const friendList of friendLists) {
-            const friend = await this.userService.getUserById(friendList.from);
-            if (!friend.channelSocketId) continue;
-            ChannelGateway.server
-              .to(friend.channelSocketId)
-              .emit('changeFriendState', {
-                id: user.id,
-                nickname: user.nickname,
-                userState: UserState.ONLINE,
-              });
-          }
-        });
+        this.gameEnd(game, timerId);
       }
     }, 1000 / 60);
+  }
+
+  private gameEnd(game: Game, timerId: NodeJS.Timeout) {
+    this.logger.log(
+      `${game.getPlayer1().nickname} ${
+        game.getPlayer2().nickname
+      }:  ${game.getRoomId()} is  gameOver`,
+    );
+    const gameEntity = game.exportToGameEntity();
+    gameEntity.gameStatus = GameStatus.FINISHED;
+    const isConnect = [
+      this.isSocketConnected(game.getPlayer1().gameSocketId),
+      this.isSocketConnected(game.getPlayer2().gameSocketId),
+    ];
+    game.getGiveUp(isConnect);
+    this.gameService.updateGame(gameEntity);
+    game.setGameOver(true);
+    clearInterval(timerId);
+    const users = [game.getPlayer1(), game.getPlayer2()];
+    users.forEach(async (user) => {
+      const socket = GameGateway.server.sockets.get(user.gameSocketId);
+      this.logger.log('?');
+      if (socket) socket.emit('gameEnd', game.exportToGameEntity());
+      const friendLists = await this.friendService.getFriendListByToId(user.id);
+      for (const friendList of friendLists) {
+        const friend = await this.userService.getUserById(friendList.from);
+        if (!friend.channelSocketId) continue;
+        ChannelGateway.server
+          .to(friend.channelSocketId)
+          .emit('changeFriendState', {
+            id: user.id,
+            nickname: user.nickname,
+            userState: UserState.ONLINE,
+          });
+      }
+    });
   }
 
   private gameLoop(game: Game) {

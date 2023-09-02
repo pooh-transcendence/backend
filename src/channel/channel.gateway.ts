@@ -405,6 +405,14 @@ export class ChannelGateway
         id: channelId,
       });
     }
+    client.emit('channelMessage', [
+      {
+        nickname: null,
+        userId: null,
+        channelId: channelId,
+        message: `${user.nickname}님이 ${channel.channelName}방을 나가셨습니다.`,
+      },
+    ]);
     channel.userCount -= 1;
     ChannelGateway.emitToAllClient('changeChannelState', channel);
   }
