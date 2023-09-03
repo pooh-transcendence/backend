@@ -68,12 +68,13 @@ export class GameService {
     // console.log('createOneToOneGameDto: ', createOneToOneGameDto);
     const game = new GameEntity();
     // console.log('user: ', user);
-    if (createOneToOneGameDto.targetNickname) {
-      if (createOneToOneGameDto.targetNickname === user.nickname)
+    if (createOneToOneGameDto.targetUserId) {
+      // console.log('PRIVATE targetUserId: ', createOneToOneGameDto.targetUserId);
+      if (createOneToOneGameDto.targetUserId === user.id)
         throw new NotFoundException("Target user can't be same as user");
       // console.log('targetNickname: ', createOneToOneGameDto.targetNickname);
-      const targetUser = await this.userRepository.getUserByNickname(
-        createOneToOneGameDto.targetNickname,
+      const targetUser = await this.userRepository.getUserByUserId(
+        createOneToOneGameDto.targetUserId,
       );
       if (!targetUser || !targetUser.gameSocketId)
         throw new NotFoundException("Couldn't find target user");
@@ -89,6 +90,7 @@ export class GameService {
     game.winner = user;
     game.winScore = 0;
     game.loseScore = 0;
+    game.racketSize = createOneToOneGameDto.racketSize;
     game.ballSpeed = createOneToOneGameDto.ballSpeed;
     game.gameStatus = GameStatus.WAITING;
 
