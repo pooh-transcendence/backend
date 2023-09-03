@@ -57,7 +57,7 @@ export class UserRepository extends Repository<UserEntity> {
       .leftJoinAndSelect('loserGame.loser', 'loserGameLoser')
       .where('user.id = :userId', { userId: userId })
       .getOne();
-    console.log('user: ', user);
+    // console.log('user: ', user);
     return user;
     // return await this.findOne({
     //   where: { id: userId },
