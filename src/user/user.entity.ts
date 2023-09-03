@@ -50,10 +50,10 @@ export class UserEntity extends CommonEntity {
   @IsString()
   token: string;
 
-  @OneToMany(() => GameEntity, (game) => game.winner, { eager: true })
+  @OneToMany(() => GameEntity, (game) => game.winner)
   winnerGame: GameEntity[];
 
-  @OneToMany(() => GameEntity, (game) => game.loser, { eager: true })
+  @OneToMany(() => GameEntity, (game) => game.loser)
   loserGame: GameEntity[];
 
   @Column({ nullable: true })
