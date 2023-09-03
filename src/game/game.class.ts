@@ -13,6 +13,7 @@ export enum PlayerStatus {
 export class Game {
   private id: number;
   private ballSpeed: number;
+  private originBallSpeed: number;
   private status: GameStatus;
   private ball: number[]; // [x, y, radion]
   private score: number[];
@@ -46,7 +47,8 @@ export class Game {
     this.player2 = gameInfo.loser;
     this.type = gameInfo.gameType;
     this.id = gameInfo.id;
-    this.ballSpeed = gameInfo.ballSpeed * 2 - 1; // 1, 3, 5
+    this.originBallSpeed = gameInfo.ballSpeed * 2; // 2, 4, 6
+    this.ballSpeed = this.originBallSpeed;
     this.gameOver = false;
     this.readyCountPlayer = 0;
     this.racketHeight = gameInfo.racketSize * 90;
@@ -60,6 +62,8 @@ export class Game {
       //: (Math.random() * (5 / 3) - 5 / 6) * Math.PI, // radian
     ];
     //player1 init
+
+    this.ballSpeed = this.originBallSpeed;
 
     //console.log('this.racket: ', this.racket);
     if (!isUpdate) {
@@ -115,7 +119,7 @@ export class Game {
     gameEntity.loser = this.loser;
     gameEntity.winScore = Math.max(this.score[0], this.score[1]);
     gameEntity.loseScore = Math.min(this.score[0], this.score[1]);
-    gameEntity.ballSpeed = this.ballSpeed; //
+    gameEntity.ballSpeed = this.originBallSpeed / 2; //
     return gameEntity;
   }
 
@@ -127,8 +131,10 @@ export class Game {
       if (
         distX < this.racketWidth / 2 + this.ballRadius &&
         distY < this.racketHeight / 2 + this.ballRadius
-      )
+      ) {
         ret = true;
+        this.ballSpeed *= 1.2;
+      }
     });
     return ret;
   }

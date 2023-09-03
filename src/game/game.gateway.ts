@@ -66,7 +66,7 @@ export class GameGateway
 
   async handleConnection(client: any) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!client.id || !user || user.gameSocketId) return client.disconnect();
+    if (!client.id || !user) return client.disconnect(); // TODO: user.gameSocketId 검사해야하는지 확인
     this.logger.log(
       `Game Client connected: ${user.nickname}, clientId : ${client.id}`,
     );
@@ -114,7 +114,7 @@ export class GameGateway
     }
     GameGateway.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
-    while (this.queueUser.length >= 1) {
+    while (this.queueUser.length >= 2) {
       const ret = await this.generateGame();
       this.logger.log(`generateGame: ${ret}`);
       if (!ret) break;
@@ -127,17 +127,17 @@ export class GameGateway
       this.logger.log('user1 is null');
       return false;
     }
-    // const user2 = this.queueUser.shift();
-    // if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
-    //   this.logger.log('user2 is null');
-    //   this.queueUser.push(user1);
-    //   return false;
-    // }
+    const user2 = this.queueUser.shift();
+    if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
+      this.logger.log('user2 is null');
+      this.queueUser.push(user1);
+      return false;
+    }
     this.logger.log(
-      'generateGame: ' + user1.nickname + ' vs ' + user1.nickname,
+      'generateGame: ' + user1.nickname + ' vs ' + user2.nickname,
     );
     const createGameDto = {
-      participants: [user1.id, user1.id], //user2.id],
+      participants: [user1.id, user2.id],
       gameType: GameType.LADDER,
       ballSpeed: randomInt(1, 3),
       ballCount: randomInt(1, 3),
@@ -146,7 +146,7 @@ export class GameGateway
     };
     this.logger.log('prev createGame');
     const gameEntity = await this.gameService.createGame(createGameDto);
-    await this.gameReady(user1, user1, gameEntity);
+    await this.gameReady(user1, user2, gameEntity);
     return true;
   }
 
