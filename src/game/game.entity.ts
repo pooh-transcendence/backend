@@ -18,10 +18,10 @@ export enum GameStatus {
 
 @Entity()
 export class GameEntity extends CommonEntity {
-  @ManyToOne(() => UserEntity, (user) => user.winnerGame)
+  @ManyToOne(() => UserEntity, (user) => user.winnerGame, { eager: true })
   winner: UserEntity;
 
-  @ManyToOne(() => UserEntity, (user) => user.loserGame)
+  @ManyToOne(() => UserEntity, (user) => user.loserGame, { eager: true })
   loser: UserEntity;
 
   @Column()

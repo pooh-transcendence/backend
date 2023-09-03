@@ -1,11 +1,11 @@
-import { DataSource, Repository } from 'typeorm';
-import { UserEntity, UserState } from './user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import {
   ConflictException,
   InternalServerErrorException,
 } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from './user.dto';
+import { UserEntity, UserState } from './user.entity';
 
 export class UserRepository extends Repository<UserEntity> {
   constructor(@InjectRepository(UserEntity) private dataSource: DataSource) {
@@ -27,20 +27,55 @@ export class UserRepository extends Repository<UserEntity> {
   }
 
   async getUserByUserId(userId: number): Promise<UserEntity> {
-    return await this.findOne({
-      where: { id: userId },
-      select: {
-        id: true,
-        nickname: true,
-        avatar: true,
-        winScore: true,
-        loseScore: true,
-        userState: true,
-        secret: true,
-        channelSocketId: true,
-        gameSocketId: true,
-      },
-    });
+    const user = await this.createQueryBuilder('user')
+      .select([
+        'user.id',
+        'user.nickname',
+        'user.avatar',
+        'user.winScore',
+        'user.loseScore',
+        'user.userState',
+        'user.secret',
+        'user.channelSocketId',
+        'user.gameSocketId',
+      ])
+      .leftJoinAndSelect(
+        'user.winnerGame',
+        'winnerGame',
+        'winnerGame.gameStatus = :status',
+        { status: 'FINISHED' },
+      )
+      .leftJoinAndSelect(
+        'user.loserGame',
+        'loserGame',
+        'loserGame.gameStatus = :status',
+        { status: 'FINISHED' },
+      )
+      .leftJoinAndSelect('winnerGame.winner', 'winnerGameWinner')
+      .leftJoinAndSelect('winnerGame.loser', 'winnerGameLoser')
+      .leftJoinAndSelect('loserGame.winner', 'loserGameWinner')
+      .leftJoinAndSelect('loserGame.loser', 'loserGameLoser')
+      .where('user.id = :userId', { userId: userId })
+      .getOne();
+    console.log('user: ', user);
+    return user;
+    // return await this.findOne({
+    //   where: { id: userId },
+    //   select: {
+    //     id: true,
+    //     nickname: true,
+    //     avatar: true,
+    //     winScore: true,
+    //     loseScore: true,
+    //     userState: true,
+    //     secret: true,
+    //     channelSocketId: true,
+    //     gameSocketId: true,
+    //     winnerGame: true,
+    //     loserGame: true,
+    //   },
+    //   relations: ['winnerGame', 'loserGame'],
+    // });
   }
 
   async getUserByNickname(nickname: string): Promise<UserEntity> {
