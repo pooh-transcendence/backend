@@ -74,9 +74,9 @@ export class GameController {
     // console.log('game---------: ', game);
     // socket.io를 통해 게임 매칭 요청을 전달
     // privateOneToOneGame의 경우
-    if (createOneToOneGameDto.targetNickname) {
-      const targetUser = await this.userService.getUserByNickname(
-        createOneToOneGameDto.targetNickname,
+    if (createOneToOneGameDto.targetUserId) {
+      const targetUser = await this.userService.getUserById(
+        createOneToOneGameDto.targetUserId,
       );
       if (!targetUser || !targetUser.gameSocketId)
         throw new NotFoundException("Couldn't find target user");
@@ -87,8 +87,8 @@ export class GameController {
       );
     } else {
       // publicOneToOneGame의 경우
-      console.log('publicOneToOneGame');
-      console.log('game: ', game);
+      // console.log('publicOneToOneGame');
+      // console.log('game: ', game);
       GameGateway.emitToAllClient('addOneToOneGame', game);
     }
     return { gameId: game.id };
