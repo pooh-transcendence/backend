@@ -27,6 +27,7 @@ export class Game {
   private playersStatus: number[];
   private gameOver: boolean;
   private readyCountPlayer: number;
+  private loopOver: boolean;
 
   // paddle 로 바꾸기
   constructor(
@@ -51,6 +52,7 @@ export class Game {
     this.gameOver = false;
     this.readyCountPlayer = 0;
     this.racketHeight = gameInfo.racketSize * 90;
+    this.loopOver = false;
   }
 
   init(isUpdate: boolean): GameUpdateDto {
@@ -266,7 +268,7 @@ export class Game {
 
   getGiveUp(isConnect: boolean[]) {
     if (this.isGiveUp) return true;
-    this.isGiveUp = Math.max(this.score[0], this.score[1]) === this.maxScore;
+    this.isGiveUp = Math.max(this.score[0], this.score[1]) !== this.maxScore;
     if (this.isGiveUp)
       this.giveUpUser = !isConnect[0] ? this.player1.id : this.player2.id;
     return this.isGiveUp;
@@ -282,5 +284,17 @@ export class Game {
   readyCount(): boolean {
     this.readyCountPlayer++;
     return this.readyCountPlayer !== 2;
+  }
+
+  getType(): GameType {
+    return this.type;
+  }
+
+  setLoop(loopOver: boolean) {
+    this.loopOver = loopOver;
+  }
+
+  isLoop(): boolean {
+    return this.loopOver;
   }
 }
