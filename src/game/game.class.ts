@@ -1,4 +1,3 @@
-import { redisStore } from 'cache-manager-redis-store';
 import { UserEntity } from 'src/user/user.entity';
 import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
@@ -55,6 +54,7 @@ export class Game {
   }
 
   init(isUpdate: boolean): GameUpdateDto {
+    //const left: number = (this.score[0] + this.score[1]) % 2 === 0 ? 1 : -1;
     this.ball = [
       this.canvasWidth / 2, // x
       this.canvasHeight / 2 + Math.random() * 30, // y

@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -89,6 +90,8 @@ export class UserController {
     @GetUser() user: UserEntity,
     @Body('nickname') nickname: string,
   ) {
+    if (nickname.length < 2 || nickname.length > 10)
+      throw new BadRequestException('Nickname is empty');
     return await this.userService.updateUserElements(user.id, { nickname });
   }
 
