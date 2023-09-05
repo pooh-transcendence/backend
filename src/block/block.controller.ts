@@ -52,10 +52,11 @@ export class BlockController {
   ) {
     if (user.id === bannedUserId)
       throw new HttpException(`Can't unblock yourself`, HttpStatus.BAD_REQUEST);
-    return await this.blockService.deleteBlock({
+    const result = await this.blockService.deleteBlock({
       from: user.id,
       to: bannedUserId,
     });
+    return result;
   }
 
   @Post()

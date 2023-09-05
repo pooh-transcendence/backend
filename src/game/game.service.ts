@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UserEntity } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
@@ -9,6 +13,8 @@ import {
 } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameRepository } from './game.repository';
+import { isIn } from 'class-validator';
+import { ConnectionTimeoutError } from 'redis';
 
 @Injectable()
 export class GameService {
@@ -56,18 +62,20 @@ export class GameService {
     );
     const games = [...publicGames, ...privateGames];
     return games.map((game) => this.mapGameEntityToOneToOneGameInfoDto(game));
-    // console.log('games : ', games);
-    // console.log('oneToOneGameInfoDtoList: ', oneToOneGameInfoDtoList);
-    // return oneToOneGameInfoDtoList;
   }
 
   async createOneToOneGame(
     user: UserEntity,
     createOneToOneGameDto: CreateOneToOneGameDto,
   ): Promise<OneToOneGameInfoDto> {
-    // console.log('createOneToOneGameDto: ', createOneToOneGameDto);
+    if (
+      await this.canMakeOneToOneGame(
+        user.id,
+        createOneToOneGameDto.targetUserId,
+      )
+    )
+      throw new BadRequestException('You are already in a game');
     const game = new GameEntity();
-    // console.log('user: ', user);
     if (createOneToOneGameDto.targetUserId) {
       // console.log('PRIVATE targetUserId: ', createOneToOneGameDto.targetUserId);
       if (createOneToOneGameDto.targetUserId === user.id)
@@ -134,5 +142,26 @@ export class GameService {
     dto.racketSize = game.racketSize;
     dto.userId = game.winner.id;
     return dto;
+  }
+
+  async canMakeOneToOneGame(
+    userId: number,
+    targetUserId: number | null,
+  ): Promise<boolean> {
+    const userIds = [userId, targetUserId];
+    let isInGame = false;
+    userIds.forEach(async (id) => {
+      if (id) {
+        const gameList: GameEntity[] = await this.getGameByUserId(id);
+        gameList.forEach((game) => {
+          if (
+            game.gameStatus === GameStatus.WAITING ||
+            game.gameStatus === GameStatus.PLAYING
+          )
+            isInGame = true;
+        });
+      }
+    });
+    return isInGame;
   }
 }

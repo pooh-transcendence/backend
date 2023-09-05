@@ -201,9 +201,10 @@ export class ChannelService {
     } else {
       // ChannelType 변경
       channel.channelType = ChannelType.PUBLIC;
-      channel.password = undefined;
+      channel.password = null;
     }
     await this.channelRepository.update(channelId, {
+      channelType: channel.channelType,
       password: channel.password,
     });
     channel.password = undefined;

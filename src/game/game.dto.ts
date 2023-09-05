@@ -15,6 +15,7 @@ export class CreateGameDto extends PickType(GameEntity, [
   'ballSpeed',
   'winner',
   'loser',
+  'racketSize',
 ] as const) {
   @IsNotEmpty()
   @IsArray()

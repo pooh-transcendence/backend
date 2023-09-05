@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -101,7 +102,7 @@ export class GameController {
     @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
   ): Promise<void> {
     await this.gameService.cancelOneToOneGame(user, gameId);
-    GameGateway.emitToAllClient('deleteOneToOneGame', gameId);
+    GameGateway.emitToAllClient('deleteOneToOneGame', { id: gameId });
   }
 
   @Get()

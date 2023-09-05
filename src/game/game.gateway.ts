@@ -20,7 +20,7 @@ import { UserEntity, UserState } from 'src/user/user.entity';
 import { UserService } from 'src/user/user.service';
 import { Server } from 'ws';
 import { Game } from './game.class';
-import { GameUpdateDto, RacketUpdatesDto } from './game.dto';
+import { CreateGameDto, GameUpdateDto, RacketUpdatesDto } from './game.dto';
 import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameService } from './game.service';
 
@@ -66,10 +66,11 @@ export class GameGateway
 
   async handleConnection(client: any) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!client.id || !user) return client.disconnect(); // TODO: user.gameSocketId 검사해야하는지 확인
+    if (!client.id || !user || user.gameSocketId) return client.disconnect(); // TODO: user.gameSocketId 검사해야하는지 확인
     this.logger.log(
       `Game Client connected: ${user.nickname}, clientId : ${client.id}`,
     );
+    client.rooms.clear();
     await this.userService.updateUserElements(user.id, {
       gameSocketId: client.id,
       //userState: UserState.INGAME,
@@ -102,7 +103,6 @@ export class GameGateway
 
   @SubscribeMessage('joinQueue')
   async handleJoinQueue(@ConnectedSocket() client: Socket) {
-    this.logger.log('joinQueue');
     const __user = await this.authService.getUserFromSocket(client);
     if (!__user) client.disconnect();
     const user = await this.userService.getUserById(__user.id);
@@ -111,42 +111,42 @@ export class GameGateway
     if (!this.queueUser.find((u) => u.id === user.id)) {
       this.queueUser.push(user);
       this.logger.log(`${user.nickname} JOIN QUEUE`);
+      GameGateway.server.to(client.id).emit('joinQueue', { status: 'success' });
     }
-    GameGateway.server.to(client.id).emit('joinQueue', { status: 'success' });
     // queue 2명 이상이면 game 시작
-    while (this.queueUser.length >= 2) {
-      const ret = await this.generateGame();
+    while (this.queueUser.length >= 1) {
+      const ret = await this.generateGame(GameType.LADDER);
       this.logger.log(`generateGame: ${ret}`);
       if (!ret) break;
     }
   }
 
-  private async generateGame(): Promise<boolean> {
+  private async generateGame(gameType: GameType): Promise<boolean> {
     const user1 = this.queueUser.shift();
     if (!user1 || !this.isSocketConnected(user1.gameSocketId)) {
       this.logger.log('user1 is null');
       return false;
     }
-    const user2 = this.queueUser.shift();
-    if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
-      this.logger.log('user2 is null');
-      this.queueUser.push(user1);
-      return false;
-    }
-    this.logger.log(
-      'generateGame: ' + user1.nickname + ' vs ' + user2.nickname,
-    );
-    const createGameDto = {
-      participants: [user1.id, user2.id],
-      gameType: GameType.LADDER,
+    // const user2 = this.queueUser.shift();
+    // if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
+    //   this.logger.log('user2 is null');
+    //   this.queueUser.push(user1);
+    //   return false;
+    // }
+    // this.logger.log(
+    //   'generateGame: ' + user1.nickname + ' vs ' + user2.nickname,
+    // );
+    const createGameDto: CreateGameDto = {
+      participants: [user1.id, user1.id],
+      gameType: gameType,
       ballSpeed: randomInt(1, 3),
-      ballCount: randomInt(1, 3),
+      racketSize: randomInt(1, 3),
       winner: null,
       loser: null,
     };
     this.logger.log('prev createGame');
     const gameEntity = await this.gameService.createGame(createGameDto);
-    await this.gameReady(user1, user2, gameEntity);
+    await this.gameReady(user1, /*user2*/ user1, gameEntity);
     return true;
   }
 
@@ -155,6 +155,8 @@ export class GameGateway
   async handleLeaveQueue(@ConnectedSocket() client: Socket) {
     const user = await this.authService.getUserFromSocket(client);
     if (!user) client.disconnect();
+    this.logger.log(`${user.nickname} leave Queue`);
+    this.logger.log('leaveQueue: ' + user.nickname);
     this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
     GameGateway.server.to(client.id).emit('leaveQueue', { status: 'success' });
   }
@@ -181,7 +183,6 @@ export class GameGateway
     const gameUpdateDto: GameUpdateDto = game.init(false);
     this.gameMap.set(gameEntity.id, game);
     // user1과 user2에게 game ready emit
-    console.log('FUCK');
     const users = [user1, user2];
     users.forEach(async (user) => {
       const toFriendList = await this.friendService.getFriendListByToId(
@@ -202,6 +203,7 @@ export class GameGateway
         gameInfo: gameUpdateDto,
         whoAmI: user.id === gameEntity.winner.id ? 'left' : 'right',
         nickname: user.nickname,
+        paddleSize: gameEntity.racketSize * 90,
       });
       await this.userService.updateUserElements(user.id, {
         userState: UserState.INGAME,
@@ -264,20 +266,19 @@ export class GameGateway
         game.getPlayer2().nickname
       }:  ${game.getRoomId()} is  gameOver`,
     );
-    const gameEntity = game.exportToGameEntity();
-    gameEntity.gameStatus = GameStatus.FINISHED;
     const isConnect = [
       this.isSocketConnected(game.getPlayer1().gameSocketId),
       this.isSocketConnected(game.getPlayer2().gameSocketId),
     ];
     game.getGiveUp(isConnect);
-    this.gameService.updateGame(gameEntity);
     game.setGameOver(true);
+    const gameEntity = game.exportToGameEntity();
+    gameEntity.gameStatus = GameStatus.FINISHED;
+    this.gameService.updateGame(gameEntity);
     clearInterval(timerId);
     const users = [game.getPlayer1(), game.getPlayer2()];
     users.forEach(async (user) => {
       const socket = GameGateway.server.sockets.get(user.gameSocketId);
-      this.logger.log('?');
       if (socket) socket.emit('gameEnd', game.exportToGameEntity());
       const friendLists = await this.friendService.getFriendListByToId(user.id);
       for (const friendList of friendLists) {
@@ -291,6 +292,9 @@ export class GameGateway
             userState: UserState.ONLINE,
           });
       }
+      await this.userService.updateUserElements(user.id, {
+        userState: UserState.ONLINE,
+      });
     });
   }
 
@@ -308,26 +312,25 @@ export class GameGateway
     GameGateway.server.to(roomId).emit('gameUpdate', updateInfo);
     if (game.isGameOver()) {
       const gameEntity: GameEntity = game.exportToGameEntity();
+      // // gameEntity 저장
+      // this.gameService.updateGame(gameEntity);
+      // gameEntity.winner.accessToken = undefined;
+      // gameEntity.winner.refreshToken = undefined;
+      // gameEntity.winner.ftId = undefined;
+      // gameEntity.winner.winnerGame = undefined;
+      // gameEntity.winner.loserGame = undefined;
+      // gameEntity.winner.channelSocketId = undefined;
+      // gameEntity.winner.gameSocketId = undefined;
 
-      // gameEntity 저장
-      this.gameService.updateGame(gameEntity);
-      gameEntity.winner.accessToken = undefined;
-      gameEntity.winner.refreshToken = undefined;
-      gameEntity.winner.ftId = undefined;
-      gameEntity.winner.winnerGame = undefined;
-      gameEntity.winner.loserGame = undefined;
-      gameEntity.winner.channelSocketId = undefined;
-      gameEntity.winner.gameSocketId = undefined;
+      // gameEntity.loser.accessToken = undefined;
+      // gameEntity.loser.refreshToken = undefined;
+      // gameEntity.loser.ftId = undefined;
+      // gameEntity.loser.winnerGame = undefined;
+      // gameEntity.loser.loserGame = undefined;
+      // gameEntity.loser.channelSocketId = undefined;
+      // gameEntity.loser.gameSocketId = undefined;
 
-      gameEntity.loser.accessToken = undefined;
-      gameEntity.loser.refreshToken = undefined;
-      gameEntity.loser.ftId = undefined;
-      gameEntity.loser.winnerGame = undefined;
-      gameEntity.loser.loserGame = undefined;
-      gameEntity.loser.channelSocketId = undefined;
-      gameEntity.loser.gameSocketId = undefined;
-
-      GameGateway.server.to(roomId).emit('gameOver', gameEntity);
+      // GameGateway.server.to(roomId).emit('gameOver', gameEntity);
 
       this.gameMap.delete(gameEntity.id);
       this.gameToUserMap.delete(gameEntity.winner.id);
@@ -337,7 +340,6 @@ export class GameGateway
       GameGateway.server.socketsLeave(roomId);
     }
   }
-
   @SubscribeMessage('socketTest')
   async socketTest(
     @ConnectedSocket() client: Socket,
@@ -360,7 +362,7 @@ export class GameGateway
 
   // @SubscribeMessage('createOneToOneGame')
   // async createOneToOneGame(
-  //   @ConnectedSocket() client: Socket,
+  //   @ConnectedSocket() client: Socket
   //   @MessageBody('createOneToOneGameDto')
   //   createOneToOneGameDto: CreateOneToOneGameDto,
   // ) {

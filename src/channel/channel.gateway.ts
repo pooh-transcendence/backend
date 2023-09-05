@@ -40,7 +40,7 @@ import {
 } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelService } from './channel.service';
-import { ChannelController } from './channel.controller';
+import { BlockEntity } from 'src/block/block.entity';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -547,15 +547,21 @@ export class ChannelGateway
         to: blockUserId,
       };
       await this.friendService.deleteFriend(freindDto);
+      await this.blockService.createBlock({
+        from: userId,
+        to: blockUserId,
+      });
+      const taragetUser = await this.userService.getUserById(blockUserId);
+      if (!taragetUser) throw new WsException('User not found');
+      this.logger.log('createBlock1');
+      client.emit('createBlockToBlockList', {
+        id: taragetUser.id,
+        nickname: taragetUser.nickname,
+        avatar: taragetUser.avatar,
+        userState: taragetUser.userState,
+      });
+      this.logger.log('createBlock2');
     } catch (err) {}
-    const taragetUser = await this.userService.getUserById(blockUserId);
-    if (!taragetUser) throw new WsException('User not found');
-    client.emit('createBlockToBlockList', {
-      id: taragetUser.id,
-      nickname: taragetUser.nickname,
-      avatar: taragetUser.avatar,
-      userState: taragetUser.userState,
-    });
   }
 
   @SubscribeMessage('deleteBlock')
@@ -721,8 +727,21 @@ export class ChannelGateway
     // Json { event : "getPaddleSize"
     //        data : {paddleSize : 3, x : 3 , y : 3}
     //  }
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('Unauthorized');
+    //const user = await this.authService.getUserFromSocket(client);
+    //if (!user) throw new WsException('Unauthorized');
+    console.log(data);
     client.emit(data.event, data.data);
+  }
+
+  @SubscribeMessage('gameReady')
+  async gameReady(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
+    this.logger.log(data);
+    client.emit('gameStart', data);
+  }
+
+  @SubscribeMessage('gameStart')
+  async gameStart(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
+    this.logger.log(data);
+    client.emit('gameStart', data);
   }
 }
