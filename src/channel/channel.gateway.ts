@@ -74,7 +74,11 @@ export class ChannelGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || !client.id || user.channelSocketId) {
+    if (!user || !client.id) {
+      return client.disconnect();
+    }
+    if (user.channelSocketId) {
+      client.emit('duplicateSocket');
       return client.disconnect();
     }
     this.logger.log(`Client connected: ${user.nickname}`);
