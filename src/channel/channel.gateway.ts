@@ -727,8 +727,21 @@ export class ChannelGateway
     // Json { event : "getPaddleSize"
     //        data : {paddleSize : 3, x : 3 , y : 3}
     //  }
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('Unauthorized');
+    //const user = await this.authService.getUserFromSocket(client);
+    //if (!user) throw new WsException('Unauthorized');
+    console.log(data);
     client.emit(data.event, data.data);
+  }
+
+  @SubscribeMessage('gameReady')
+  async gameReady(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
+    this.logger.log(data);
+    client.emit('gameStart', data);
+  }
+
+  @SubscribeMessage('gameStart')
+  async gameStart(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
+    this.logger.log(data);
+    client.emit('gameStart', data);
   }
 }

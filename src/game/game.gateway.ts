@@ -340,7 +340,6 @@ export class GameGateway
       GameGateway.server.socketsLeave(roomId);
     }
   }
-
   @SubscribeMessage('socketTest')
   async socketTest(
     @ConnectedSocket() client: Socket,
