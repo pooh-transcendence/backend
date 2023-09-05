@@ -15,6 +15,7 @@ import { GameEntity, GameStatus, GameType } from './game.entity';
 import { GameRepository } from './game.repository';
 import { isIn } from 'class-validator';
 import { ConnectionTimeoutError } from 'redis';
+import { Game } from './game.class';
 
 @Injectable()
 export class GameService {
