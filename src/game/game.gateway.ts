@@ -66,7 +66,11 @@ export class GameGateway
 
   async handleConnection(client: any) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!client.id || !user || user.gameSocketId) return client.disconnect(); // TODO: user.gameSocketId 검사해야하는지 확인
+    if (!client.id || !user) return client.disconnect(); // TODO: user.gameSocketId 검사해야하는지 확인
+    if (user.gameSocketId) {
+      client.emit('duplicateSocket');
+      return client.disconnect();
+    }
     this.logger.log(
       `Game Client connected: ${user.nickname}, clientId : ${client.id}`,
     );
@@ -168,14 +172,14 @@ export class GameGateway
     gameEntity: GameEntity,
   ) {
     // this.logger.log('gameReady');
-    console.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
+    this.logger.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
     // console.log('createGame: ' + gameEntity);
     const game = new Game(gameEntity, this.userService);
     const socket1 = GameGateway.server.sockets.get(user1.gameSocketId);
-    console.log('after createGame');
-    console.log('socket1: ' + user1.gameSocketId);
+    this.logger.log('after createGame');
+    // this.logger.log('socket1: ' + user1.gameSocketId);
     const socket2 = GameGateway.server.sockets.get(user2.gameSocketId);
-    console.log('socket2: ' + user2.gameSocketId);
+    // this.logger.log('socket2: ' + user2.gameSocketId);
     socket1.join(game.getRoomId());
     socket2.join(game.getRoomId());
     this.gameToUserMap.set(user1.id, gameEntity.id);
@@ -183,7 +187,6 @@ export class GameGateway
     const gameUpdateDto: GameUpdateDto = game.init(false);
     this.gameMap.set(gameEntity.id, game);
     // user1과 user2에게 game ready emit
-    this.logger.log(`this is GameType is ${game.getType()}`);
     const users = [user1, user2];
     users.forEach(async (user) => {
       const toFriendList = await this.friendService.getFriendListByToId(
@@ -238,7 +241,6 @@ export class GameGateway
   gameStart(@ConnectedSocket() client: Socket) {
     const userId = this.authService.getUserIdFromSocket(client);
     if (!userId) {
-      // this.logger.log('gameStart: userId is null');
       client.disconnect();
       return;
     }
@@ -265,6 +267,8 @@ export class GameGateway
   }
 
   private async gameEnd(game: Game) {
+    if (game.isLoop()) return;
+    game.setLoop(true);
     this.logger.log(
       `${game.getPlayer1().nickname} ${
         game.getPlayer2().nickname
@@ -274,24 +278,17 @@ export class GameGateway
       this.isSocketConnected(game.getPlayer1().gameSocketId),
       this.isSocketConnected(game.getPlayer2().gameSocketId),
     ];
-    this.logger.log(`this Game Type is ${game.getType()}}`);
     game.getGiveUp(isConnect);
     game.setGameOver(true);
     const gameEntity = game.exportToGameEntity();
     gameEntity.gameStatus = GameStatus.FINISHED;
     this.gameService.updateGame(gameEntity);
 
-    // this.gameMap.delete(gameEntity.id);
-    // this.gameToUserMap.delete(gameEntity.winner.id);
-    // this.gameToUserMap.delete(gameEntity.loser.id);
-
-    // // leave room
-    // GameGateway.server.socketsLeave(game.getRoomId());
-
     const users = [game.getPlayer1(), game.getPlayer2()];
     users.forEach(async (user) => {
       const socket = GameGateway.server.sockets.get(user.gameSocketId);
       if (socket) socket.emit('gameEnd', gameEntity);
+      socket.leave(game.getRoomId());
       const friendLists = await this.friendService.getFriendListByToId(user.id);
       for (const friendList of friendLists) {
         const friend = await this.userService.getUserById(friendList.from);
@@ -347,42 +344,10 @@ export class GameGateway
       this.gameMap.delete(gameEntity.id);
       this.gameToUserMap.delete(gameEntity.winner.id);
       this.gameToUserMap.delete(gameEntity.loser.id);
-
       // leave room
       GameGateway.server.socketsLeave(roomId);
     }
   }
-  @SubscribeMessage('socketTest')
-  async socketTest(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: any,
-  ) {
-    const user = await this.authService.getUserFromSocket(client);
-    if (!user) throw new WsException('Unauthorized');
-    client.emit(data.event, data.data);
-  }
-
-  /* 1VS1 Game */
-
-  // @SubscribeMessage('getAllOneToOneGame')
-  // async getAllWaitingGame(@ConnectedSocket() client: Socket) {
-  //   const user = await this.authService.getUserFromSocket(client);
-  //   if (!user) throw new WsException('Unauthorized');
-  //   const games = await this.gameService.getAllOneToOneGame(user.id);
-  //   client.emit('getAllOneToOneGame', games);
-  // }
-
-  // @SubscribeMessage('createOneToOneGame')
-  // async createOneToOneGame(
-  //   @ConnectedSocket() client: Socket
-  //   @MessageBody('createOneToOneGameDto')
-  //   createOneToOneGameDto: CreateOneToOneGameDto,
-  // ) {
-  //   const user = await this.authService.getUserFromSocket(client);
-  //   if (!user) throw new WsException('Unauthorized');
-  //   await this.gameService.createOneToOneGame(user.id, createOneToOneGameDto);
-  //   client.emit('createOneToOneGame', { status: 'success' });
-  // }
 
   @SubscribeMessage('startOneToOneGame')
   async startOneToOneGame(
