@@ -10,7 +10,7 @@ import { Column, Entity, OneToMany, Unique } from 'typeorm';
 export enum UserState {
   OFFLINE = 'OFFLINE',
   ONLINE = 'ONLINE',
-  INGAME = 'INGAME',
+  INGAME = 'GAMING',
 }
 
 @Entity()
