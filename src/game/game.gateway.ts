@@ -172,7 +172,6 @@ export class GameGateway
     user2: UserEntity,
     gameEntity: GameEntity,
   ) {
-    // this.logger.log('gameReady');
     this.logger.log(`gameReady: ${user1.nickname} vs ${user2.nickname}`);
     // console.log('createGame: ' + gameEntity);
     const game = new Game(gameEntity, this.userService);
@@ -206,7 +205,7 @@ export class GameGateway
       }
       GameGateway.server.to(user.gameSocketId).emit('gameReady');
       GameGateway.server.to(user.gameSocketId).emit('gameStart', {
-        gameInfo: gameUpdateDto,
+        gameData: gameUpdateDto,
         whoAmI: user.id === gameEntity.winner.id ? 'left' : 'right',
         nickname: user.nickname,
         paddleSize: gameEntity.racketSize * 90,
@@ -239,7 +238,7 @@ export class GameGateway
   }
 
   @SubscribeMessage('gameStart')
-  gameStart(@ConnectedSocket() client: Socket) {
+  async gameStart(@ConnectedSocket() client: Socket) {
     const userId = this.authService.getUserIdFromSocket(client);
     if (!userId) {
       client.disconnect();
@@ -253,6 +252,7 @@ export class GameGateway
     // 1초에 60번 update
     this.logger.log(`start Game Type ! ! is ${game.getType()}`);
     if (game.readyCount()) return;
+    await this.sleep(1000 * 3);
     const timerId: NodeJS.Timeout = setInterval(async () => {
       // this.logger.log('gameLoop');
       this.gameLoop(game);
@@ -265,6 +265,10 @@ export class GameGateway
         await this.gameEnd(game);
       }
     }, 1000 / 60);
+  }
+
+  async sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async gameEnd(game: Game) {

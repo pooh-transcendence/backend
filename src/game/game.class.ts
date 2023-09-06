@@ -28,7 +28,7 @@ export class Game {
   private gameOver: boolean;
   private readyCountPlayer: number;
   private loopOver: boolean;
-
+  private gameUpdateDto: GameUpdateDto;
   // paddle 로 바꾸기
   constructor(
     private gameInfo: GameEntity,
@@ -56,15 +56,6 @@ export class Game {
   }
 
   init(isUpdate: boolean): GameUpdateDto {
-    this.ball = [
-      this.canvasWidth / 2, // x
-      this.canvasHeight / 2 + Math.random() * 30, // y
-      (Math.random() * (1 / 3) - 1 / 6) * Math.PI,
-    ];
-
-    if ((this.score[0] + this.score[1]) % 2 === 0)
-      this.ball[2] = Math.PI - this.ball[2];
-
     this.ballSpeed = this.originBallSpeed;
 
     //console.log('this.racket: ', this.racket);
@@ -84,9 +75,18 @@ export class Game {
         // this.canvasWidth - 200, // x
         this.canvasHeight / 2 - this.racketHeight / 2, // y
       ];
+
+      this.playersStatus = new Array(2);
     }
     //console.log('this.score: ', this.score);
-    this.playersStatus = new Array(2);
+    this.ball = [
+      this.canvasWidth / 2, // x
+      this.canvasHeight / 2 + Math.random() * 30, // y
+      (Math.random() * (1 / 3) - 1 / 6) * Math.PI,
+    ];
+    if ((this.score[0] + this.score[1]) % 2 === 0)
+      this.ball[2] = Math.PI - this.ball[2];
+
     this.playersStatus[0] = PlayerStatus.NONE;
     this.playersStatus[1] = PlayerStatus.NONE;
 
@@ -99,8 +99,13 @@ export class Game {
       ball: this.ball,
       isGetScore: false,
     };
+    this.gameUpdateDto = gameUpdateDto;
     //console.log('gameUpdateDto: ', gameUpdateDto);
     return gameUpdateDto;
+  }
+
+  getGameUpdateDto(): GameUpdateDto {
+    return this.gameUpdateDto;
   }
 
   exportToGameEntity() {
