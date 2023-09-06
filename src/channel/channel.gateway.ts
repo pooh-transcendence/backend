@@ -78,6 +78,7 @@ export class ChannelGateway
       return client.disconnect();
     }
     if (user.channelSocketId) {
+      this.logger.log('FUCKKING');
       client.emit('duplicateSocket');
       return client.disconnect();
     }
@@ -212,7 +213,12 @@ export class ChannelGateway
         channelUserInfo.userId,
       );
       if (!targetUser) throw new NotFoundException({ error: 'User not found' });
-      await this.channelService.kickChannelUser(user.id, channelUserInfo);
+      const channelUser = await this.channelService.getChannelUserByIds(
+        channelId,
+        userId,
+      );
+      if (!channelUser)
+        throw new NotFoundException({ error: 'User not found' });
       const channel = await this.channelService.getChannelByChannelId(
         channelId,
       );
@@ -221,7 +227,9 @@ export class ChannelGateway
         const targetUserSocket: Socket = ChannelGateway.server.sockets.get(
           targetUser.channelSocketId,
         );
-        targetUserSocket.to(channelId.toString()).emit('channelMessage', [
+        targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
+        targetUserSocket.emit('deleteChannelToUserChannelList', channel);
+        ChannelGateway.server.to(channelId.toString()).emit('channelMessage', [
           {
             nickname: null,
             userId: null,
@@ -229,12 +237,9 @@ export class ChannelGateway
             message: `${targetUser.nickname}님이 강퇴당하셨습니다.`,
           },
         ]);
-        targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
-        targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
-      channel['channelUser'] = await this.channelService.getChannelUser(
-        channel.id,
-      );
+      await this.channelService.kickChannelUser(user.id, channelUserInfo);
+      channel.userCount -= 1;
       ChannelGateway.server.emit('changeChannelState', channel);
     } catch (err) {
       this.logger.log(err);
@@ -259,8 +264,8 @@ export class ChannelGateway
       const channel = await this.channelService.getChannelByChannelId(
         channelId,
       );
-      if (channel) throw new NotFoundException({ error: `Channel not found` });
-      client.to(channelId.toString()).emit('channelMessage', [
+      if (!channel) throw new NotFoundException({ error: `Channel not found` });
+      ChannelGateway.server.to(channelId.toString()).emit('channelMessage', [
         {
           nickname: null,
           userId: null,
@@ -268,17 +273,21 @@ export class ChannelGateway
           message: `${targetUser.nickname} 님이 ${user.nickname}에 의해 밴을 당하셨음!`,
         },
       ]);
-      const reuslt = await this.channelService.banChannelUser(
+      channel.userCount -= 1;
+      ChannelGateway.emitToAllClient('changeChannelState', channel);
+      //await this.channelService.leaveChannel(userId, channelId);
+      const result = await this.channelService.banChannelUser(
         user.id,
         channelUserInfo,
       );
       if (targetUser.channelSocketId) {
-        const targetUserSocket = ChannelGateway.server.get(
+        const targetUserSocket = ChannelGateway.server.sockets.get(
           targetUser.channelSocketId,
         );
+        targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
         targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
-      return reuslt;
+      return result;
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -298,7 +307,7 @@ export class ChannelGateway
       const targetUser = await this.userService.getUserById(userId);
       if (!targetUser)
         throw new NotFoundException(`${userId} 아이디를 찾지 못함`);
-      client.to(channelId.toString()).emit('channelMessage', [
+      ChannelGateway.server.to(channelId.toString()).emit('channelMessage', [
         {
           nickname: null,
           userId: null,

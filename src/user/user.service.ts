@@ -1,12 +1,13 @@
 import { ChannelUserRepository } from 'src/channel/channel-user.repository';
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-import { UserEntity, UserState } from './user.entity';
+import { UserEntity, UserState, UserType } from './user.entity';
 import { BlockService } from 'src/block/block.service';
 import { FriendService } from 'src/friend/friend.service';
 import { CreateUserDto, UserProfileDto } from './user.dto';
 import { ChannelService } from 'src/channel/channel.service';
 import { ChannelEntity } from 'src/channel/channel.entity';
+import { Channel } from 'diagnostics_channel';
 
 @Injectable()
 export class UserService {
@@ -24,14 +25,24 @@ export class UserService {
     return await this.userRepository.getAllUser();
   }
 
-  async getUserById(userId: number): Promise<any> {
+  async userEntityToUserType(_user: UserEntity): Promise<UserType> {
+    const user: UserType = {
+      ..._user,
+      channels: [],
+      friends: [],
+      blocks: [],
+    };
+    user.friends = await this.getFriendListByUserId(_user.id);
+    user.blocks = await this.getBlockListByUserId(_user.id);
+    user.channels = await this.getChannelListByUserId(_user.id);
+    return user;
+  }
+
+  async getUserById(userId: number): Promise<UserType> {
     const user = await this.userRepository.getUserByUserId(userId);
     if (!user)
       throw new NotFoundException(`There is no user with id ${userId}`);
-    user['friends'] = await this.getFriendListByUserId(userId);
-    user['blocks'] = await this.getBlockListByUserId(userId);
-    user['channels'] = await this.getChannelListByUserId(userId);
-    return user;
+    return await this.userEntityToUserType(user);
   }
 
   async getUserByNickname(nickname: string): Promise<UserEntity> {
@@ -80,9 +91,7 @@ export class UserService {
     return blockList;
   }
 
-  async getChannelListByUserId(
-    userId: number,
-  ): Promise</*ChannelEntity[]*/ any[]> {
+  async getChannelListByUserId(userId: number): Promise<ChannelEntity[]> {
     const channelUserList =
       await this.channelUserRepository.findChannelUserByUserId(userId);
     const channelList: ChannelEntity[] = [];

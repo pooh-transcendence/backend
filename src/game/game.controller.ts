@@ -68,12 +68,10 @@ export class GameController {
     @Body() createOneToOneGameDto: CreateOneToOneGameDto,
   ) {
     // this.logger.log(`createOneToOneGame`);
-    console.log(createOneToOneGameDto);
     const game = await this.gameService.createOneToOneGame(
       user,
       createOneToOneGameDto,
     );
-    console.log('game---------: ', game);
     // socket.io를 통해 게임 매칭 요청을 전달
     // privateOneToOneGame의 경우
     if (createOneToOneGameDto.targetUserId) {
