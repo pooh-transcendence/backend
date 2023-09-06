@@ -59,7 +59,7 @@ export class GameGateway
       }
       await this.userService.updateUserElements(user.id, {
         gameSocketId: null,
-        userState: UserState.OFFLINE,
+        //userState: UserState.OFFLINE,
       });
     }
   }
@@ -68,6 +68,7 @@ export class GameGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!client.id || !user) return client.disconnect(); // TODO: user.gameSocketId 검사해야하는지 확인
     if (user.gameSocketId) {
+      this.logger.log('FUCKKING');
       client.emit('duplicateSocket');
       return client.disconnect();
     }
@@ -204,7 +205,7 @@ export class GameGateway
           });
       }
       GameGateway.server.to(user.gameSocketId).emit('gameReady');
-      GameGateway.server.to(user.gameSocketId).emit('gameReadyDto', {
+      GameGateway.server.to(user.gameSocketId).emit('gameStart', {
         gameInfo: gameUpdateDto,
         whoAmI: user.id === gameEntity.winner.id ? 'left' : 'right',
         nickname: user.nickname,
@@ -244,7 +245,7 @@ export class GameGateway
       client.disconnect();
       return;
     }
-    // this.logger.log(`gameStart: ${userId}`);
+    this.logger.log(`gameStart: ${userId}`);
     const gameId = this.gameToUserMap.get(userId);
     if (!gameId) return;
     const game: Game = this.gameMap.get(gameId);
@@ -285,10 +286,11 @@ export class GameGateway
     this.gameService.updateGame(gameEntity);
 
     const users = [game.getPlayer1(), game.getPlayer2()];
+    if (!users) return;
     users.forEach(async (user) => {
       const socket = GameGateway.server.sockets.get(user.gameSocketId);
       if (socket) socket.emit('gameEnd', gameEntity);
-      socket.leave(game.getRoomId());
+      socket?.rooms.delete(game.getRoomId());
       const friendLists = await this.friendService.getFriendListByToId(user.id);
       for (const friendList of friendLists) {
         const friend = await this.userService.getUserById(friendList.from);

@@ -89,7 +89,7 @@ export class ChannelService {
     // ban 처리
     channelUser.isBanned = isBanned || false;
     await this.channelUserRepository.update(channelUser.id, {
-      isBanned: false,
+      isBanned: true,
     });
     return channelUser;
   }
@@ -287,7 +287,7 @@ export class ChannelService {
     // channelUser가 이미 banned인지 검사
     this.verifyAlreadyBannedUser(channelUser);
     // channelUser가 owner가 아닌지 검사
-    if (await this.isChannelOwner(userId, channelId))
+    if ((await this.isChannelOwner(userId, channelId)) || channelUser.isAdmin)
       throw new HttpException(
         `User ${userId} is owner in Channel ${channelId}`,
         HttpStatus.BAD_REQUEST,

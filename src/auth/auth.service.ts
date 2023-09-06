@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { CreateUserDto } from 'src/user/user.dto';
-import { UserEntity, UserState } from 'src/user/user.entity';
+import { UserEntity, UserState, UserType } from 'src/user/user.entity';
 import { UserRepository } from 'src/user/user.repository';
 import { UserService } from 'src/user/user.service';
 import * as speakeasy from 'speakeasy';
@@ -103,7 +103,7 @@ export class AuthService {
     return speakeasy.totp.verify({ secret, encoding: 'base32', token });
   }
 
-  async getUserFromSocket(socket: Socket): Promise<any> {
+  async getUserFromSocket(socket: Socket): Promise<UserType> {
     try {
       //const token = socket.handshake.headers.authorization;
       const token = socket.handshake.auth.authorization;
