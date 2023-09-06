@@ -227,6 +227,7 @@ export class ChannelGateway
         const targetUserSocket: Socket = ChannelGateway.server.sockets.get(
           targetUser.channelSocketId,
         );
+        await this.channelService.kickChannelUser(user.id, channelUserInfo);
         targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
         targetUserSocket.emit('deleteChannelToUserChannelList', channel);
         ChannelGateway.server.to(channelId.toString()).emit('channelMessage', [
@@ -238,9 +239,9 @@ export class ChannelGateway
           },
         ]);
       }
-      await this.channelService.kickChannelUser(user.id, channelUserInfo);
       channel.userCount -= 1;
-      ChannelGateway.server.emit('changeChannelState', channel);
+      if (channel.userCount > 0)
+        ChannelGateway.server.emit('changeChannelState', channel);
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -379,10 +380,8 @@ export class ChannelGateway
       client.emit('addChannelToUserChannelList', result);
       // 서버에있는 소켓들 에게 이벤트 보내기
       if (result.password) result.password = undefined;
-      if (result.channelType !== ChannelType.PRIVATE) {
+      if (result.channelType !== ChannelType.PRIVATE)
         ChannelGateway.server.emit('addChannelToAllChannelList', result);
-        this.logger.log('FUCK');
-      }
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -427,7 +426,8 @@ export class ChannelGateway
       },
     ]);
     channel.userCount -= 1;
-    ChannelGateway.emitToAllClient('changeChannelState', channel);
+    if (channel.userCount > 0)
+      ChannelGateway.emitToAllClient('changeChannelState', channel);
   }
 
   async emitToUser(
