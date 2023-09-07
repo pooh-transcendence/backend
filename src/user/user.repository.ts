@@ -6,6 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { CreateUserDto } from './user.dto';
 import { UserEntity, UserState } from './user.entity';
+import * as fs from 'fs';
 
 export class UserRepository extends Repository<UserEntity> {
   constructor(@InjectRepository(UserEntity) private dataSource: DataSource) {
@@ -57,25 +58,14 @@ export class UserRepository extends Repository<UserEntity> {
       .leftJoinAndSelect('loserGame.loser', 'loserGameLoser')
       .where('user.id = :userId', { userId: userId })
       .getOne();
-    // console.log('user: ', user);
+
+    if (user.avatar) {
+      const file = user.avatar.split('.');
+      user.avatar = fs.readFileSync(user.avatar).toString('base64');
+      user.avatar = 'data:' + 'image/' + file[1] + ';base64,' + user.avatar;
+    }
+
     return user;
-    // return await this.findOne({
-    //   where: { id: userId },
-    //   select: {
-    //     id: true,
-    //     nickname: true,
-    //     avatar: true,
-    //     winScore: true,
-    //     loseScore: true,
-    //     userState: true,
-    //     secret: true,
-    //     channelSocketId: true,
-    //     gameSocketId: true,
-    //     winnerGame: true,
-    //     loserGame: true,
-    //   },
-    //   relations: ['winnerGame', 'loserGame'],
-    // });
   }
 
   async getUserByNickname(nickname: string): Promise<UserEntity> {

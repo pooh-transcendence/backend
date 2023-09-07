@@ -40,7 +40,6 @@ import {
 } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelService } from './channel.service';
-import { BlockEntity } from 'src/block/block.entity';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -74,14 +73,7 @@ export class ChannelGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || !client.id) {
-      return client.disconnect();
-    }
-    if (user.channelSocketId) {
-      this.logger.log('FUCKKING');
-      client.emit('duplicateSocket');
-      return client.disconnect();
-    }
+    if (!user || !client.id || user.channelSocketId) return client.disconnect();
     this.logger.log(`Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       channelSocketId: client.id,
@@ -266,6 +258,10 @@ export class ChannelGateway
         channelId,
       );
       if (!channel) throw new NotFoundException({ error: `Channel not found` });
+      const result = await this.channelService.banChannelUser(
+        user.id,
+        channelUserInfo,
+      );
       ChannelGateway.server.to(channelId.toString()).emit('channelMessage', [
         {
           nickname: null,
@@ -274,13 +270,6 @@ export class ChannelGateway
           message: `${targetUser.nickname} 님이 ${user.nickname}에 의해 밴을 당하셨음!`,
         },
       ]);
-      channel.userCount -= 1;
-      ChannelGateway.emitToAllClient('changeChannelState', channel);
-      //await this.channelService.leaveChannel(userId, channelId);
-      const result = await this.channelService.banChannelUser(
-        user.id,
-        channelUserInfo,
-      );
       if (targetUser.channelSocketId) {
         const targetUserSocket = ChannelGateway.server.sockets.get(
           targetUser.channelSocketId,
@@ -288,6 +277,8 @@ export class ChannelGateway
         targetUserSocket.rooms.delete(channelUserInfo.channelId.toString());
         targetUserSocket.emit('deleteChannelToUserChannelList', channel);
       }
+      channel.userCount -= 1;
+      ChannelGateway.emitToAllClient('changeChannelState', channel);
       return result;
     } catch (err) {
       this.logger.log(err);
@@ -464,7 +455,6 @@ export class ChannelGateway
       throw new WsException({ error: 'You are not in this channel' });
     if (!userChannel)
       throw new WsException({ error: 'You are not in this channel' });
-    // 만약에 안쓸거면 controller 를 사용하지 않으면 상관없음
     const channelUsers = await this.channelService.getChannelUser(channelId);
     for (const channelUser of channelUsers) {
       const user = await this.userService.getUserById(channelUser.userId);
@@ -474,44 +464,13 @@ export class ChannelGateway
       if (!userSocket) continue;
       userSocket.join(channelId.toString());
     }
-    // 여기까지
     const userSocket = ChannelGateway.server.sockets.get(user.channelSocketId);
     if (!userSocket) return;
     if (await this.channelService.getChannelUserByIds(channelId, user.id)) {
       userSocket.to(channelId.toString()).emit(event, data);
     }
   }
-  /*
-  private async cacheMessages(data: any): Promise<void> {
-    this.cacheManager.store.lpush(`cachedMessages`, JSON.stringify(data));
-    const cachedMessages = await this.cacheManager.store
-      .getClient()
-      .lrange('cachedMessages', 0, -1);
-    if (cachedMessages.length >= 100) {
-      await this.flushCachedMessages(cachedMessages);
-    }
-  }
 
-  private async flushCachedMessages(messages: string[]): Promise<void> {
-    const entities = messages.map((message) => {
-      const data = JSON.parse(message);
-      const messageData: MessageEntity = {
-        fromId: data.fromId,
-        toChannelId: data.channelId,
-        message: data.message,
-        toUserId: data.toUserId,
-        fromNickname: data.fromNickname,
-        id: undefined,
-        createdAt: undefined,
-        updatedAt: undefined,
-      };
-      return this.messageRepository.create(messageData);
-    });
-    await this.messageRepository.save(entities);
-    // Redis에서 캐싱된 메시지들을 삭제
-    await this.cacheManager.del('cachedMessages');
-  }
-  */
   verifyRequestIdMatch(userId: number, requestBodyUserId: number) {
     if (userId !== requestBodyUserId)
       throw new WsException(`Id in request body doesn't match with your id`);
@@ -737,12 +696,6 @@ export class ChannelGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any,
   ) {
-    // Json { event : "getPaddleSize"
-    //        data : {paddleSize : 3, x : 3 , y : 3}
-    //  }
-    //const user = await this.authService.getUserFromSocket(client);
-    //if (!user) throw new WsException('Unauthorized');
-    console.log(data);
     client.emit(data.event, data.data);
   }
 
@@ -756,5 +709,14 @@ export class ChannelGateway
   async gameStart(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
     this.logger.log(data);
     client.emit('gameStart', data);
+  }
+
+  @SubscribeMessage('duplicateCheck')
+  async duplicateCheck(@ConnectedSocket() client: Socket) {
+    this.logger.log('하나 들어엄');
+    const user = await this.authService.getUserFromSocket(client);
+    if (user?.channelSocketId !== client.id) {
+      client.emit('duplicateSocket', 'HELL');
+    }
   }
 }
