@@ -37,9 +37,10 @@ export class AuthService {
   }
 
   async signInByUserId(userId: number) {
-    const user = await this.userRepository.findOne({
-      where: { id: userId },
-    });
+    // const user = await this.userRepository.findOne({
+    //   where: { id: userId },
+    // });
+    const user = await this.userService.getUserById(userId);
     if (!user)
       throw new HttpException(
         '아이디부터 만들어 주세요',

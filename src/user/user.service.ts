@@ -7,7 +7,8 @@ import { FriendService } from 'src/friend/friend.service';
 import { CreateUserDto, UserProfileDto } from './user.dto';
 import { ChannelService } from 'src/channel/channel.service';
 import { ChannelEntity } from 'src/channel/channel.entity';
-import { Channel } from 'diagnostics_channel';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class UserService {
@@ -20,9 +21,25 @@ export class UserService {
   ) {}
 
   logger = new Logger(UserService.name);
+  private dirPath = path.join(
+    __dirname,
+    '..',
+    '..',
+    'public',
+    'user',
+    'avatar',
+  );
 
   async getAllUser(): Promise<UserEntity[]> {
-    return await this.userRepository.getAllUser();
+    const result = await this.userRepository.getAllUser();
+    result.forEach((user) => {
+      if (user.avatar && user.avatar.substring(0, 4) !== 'data') {
+        const file = user.avatar.split('.');
+        user.avatar = fs.readFileSync(user.avatar).toString('base64');
+        user.avatar = 'data:' + 'image/' + file[1] + ';base64,' + user.avatar;
+      }
+    });
+    return result;
   }
 
   async userEntityToUserType(_user: UserEntity): Promise<UserType> {
@@ -49,6 +66,11 @@ export class UserService {
     const user = await this.userRepository.getUserByNickname(nickname);
     if (!user)
       throw new NotFoundException(`There is no user with nickname ${nickname}`);
+    if (user.avatar && user.avatar.substring(0, 4) !== 'data') {
+      const file = user.avatar.split('.');
+      user.avatar = fs.readFileSync(user.avatar).toString('base64');
+      user.avatar = 'data:' + 'image/' + file[1] + ';base64,' + user.avatar;
+    }
     return user;
   }
 
@@ -135,7 +157,11 @@ export class UserService {
     const user = await this.userRepository.getUserByUserId(userId);
     if (!user)
       throw new NotFoundException(`There is no user with id ${userId}`);
-    return await this.userRepository.updateUserElements(userId, elements);
+    const result = await this.userRepository.updateUserElements(
+      userId,
+      elements,
+    );
+    return result;
   }
 
   async getUserElementsById(userId: number, elements: any): Promise<any> {
@@ -148,7 +174,7 @@ export class UserService {
     return result;
   }
 
-  async convertUserEntityToDto(
+  private async convertUserEntityToDto(
     fromId: number,
     user: UserEntity,
   ): Promise<UserProfileDto> {
@@ -168,8 +194,44 @@ export class UserService {
       isFriend: isFriend,
       isBlocked: isBlocked,
     };
+
+    if (
+      userProfileDto.avatar &&
+      userProfileDto.avatar.substring(0, 4) !== 'data'
+    ) {
+      const file = userProfileDto.avatar.split('.');
+      userProfileDto.avatar = fs
+        .readFileSync(userProfileDto.avatar)
+        .toString('base64');
+      userProfileDto.avatar =
+        'data:' + 'image/' + file[1] + ';base64,' + userProfileDto.avatar;
+    }
+
     return userProfileDto;
   }
 
+  async updateUserAvatar(user: UserType, file: Express.Multer.File) {
+    const dirPath = path.join(this.dirPath, user.id.toString());
+    if (!fs.existsSync(dirPath)) fs.mkdirSync(dirPath, { recursive: true });
+    const type = file.mimetype.split('/')[1];
+    const filePath = path.join(dirPath, 'avatar.' + type);
+    fs.writeFileSync(filePath, file.buffer);
+    return await this.updateUserElements(user.id, {
+      avatar: filePath,
+    });
+  }
+
+  async getUserAvatar(url: string) {
+    url = path.join(this.dirPath, url);
+    const type = url.split('.')[1];
+    if (fs.existsSync(url))
+      return (
+        'data:image/' +
+        type +
+        ';base64,' +
+        fs.readFileSync(url).toString(`base64`)
+      );
+    return null;
+  }
   //TODO: UserEntity Update
 }

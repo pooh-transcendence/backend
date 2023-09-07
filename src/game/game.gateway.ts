@@ -66,12 +66,7 @@ export class GameGateway
 
   async handleConnection(client: any) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!client.id || !user) return client.disconnect(); // TODO: user.gameSocketId 검사해야하는지 확인
-    if (user.gameSocketId) {
-      this.logger.log('FUCKKING');
-      client.emit('duplicateSocket');
-      return client.disconnect();
-    }
+    if (!client.id || !user || user.gameSocketId) return client.disconnect();
     this.logger.log(
       `Game Client connected: ${user.nickname}, clientId : ${client.id}`,
     );

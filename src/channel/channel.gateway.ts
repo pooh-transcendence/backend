@@ -40,7 +40,6 @@ import {
 } from './channel.dto';
 import { ChannelEntity, ChannelType } from './channel.entity';
 import { ChannelService } from './channel.service';
-import { BlockEntity } from 'src/block/block.entity';
 
 @WebSocketGateway({ namespace: 'channel' })
 @UseFilters(AllExceptionsSocketFilter)
@@ -74,14 +73,7 @@ export class ChannelGateway
 
   async handleConnection(client: Socket, ...args: any[]) {
     const user = await this.authService.getUserFromSocket(client);
-    if (!user || !client.id) {
-      return client.disconnect();
-    }
-    if (user.channelSocketId) {
-      this.logger.log('FUCKKING');
-      client.emit('duplicateSocket');
-      return client.disconnect();
-    }
+    if (!user || !client.id || user.channelSocketId) return client.disconnect();
     this.logger.log(`Client connected: ${user.nickname}`);
     await this.userService.updateUserElements(user.id, {
       channelSocketId: client.id,
@@ -266,6 +258,10 @@ export class ChannelGateway
         channelId,
       );
       if (!channel) throw new NotFoundException({ error: `Channel not found` });
+      const result = await this.channelService.banChannelUser(
+        user.id,
+        channelUserInfo,
+      );
       ChannelGateway.server.to(channelId.toString()).emit('channelMessage', [
         {
           nickname: null,
@@ -274,10 +270,6 @@ export class ChannelGateway
           message: `${targetUser.nickname} 님이 ${user.nickname}에 의해 밴을 당하셨음!`,
         },
       ]);
-      const result = await this.channelService.banChannelUser(
-        user.id,
-        channelUserInfo,
-      );
       if (targetUser.channelSocketId) {
         const targetUserSocket = ChannelGateway.server.sockets.get(
           targetUser.channelSocketId,
@@ -704,12 +696,6 @@ export class ChannelGateway
     @ConnectedSocket() client: Socket,
     @MessageBody() data: any,
   ) {
-    // Json { event : "getPaddleSize"
-    //        data : {paddleSize : 3, x : 3 , y : 3}
-    //  }
-    //const user = await this.authService.getUserFromSocket(client);
-    //if (!user) throw new WsException('Unauthorized');
-    console.log(data);
     client.emit(data.event, data.data);
   }
 
@@ -723,5 +709,14 @@ export class ChannelGateway
   async gameStart(@ConnectedSocket() client: Socket, @MessageBody() data: any) {
     this.logger.log(data);
     client.emit('gameStart', data);
+  }
+
+  @SubscribeMessage('duplicateCheck')
+  async duplicateCheck(@ConnectedSocket() client: Socket) {
+    this.logger.log('하나 들어엄');
+    const user = await this.authService.getUserFromSocket(client);
+    if (user?.channelSocketId !== client.id) {
+      client.emit('duplicateSocket', 'HELL');
+    }
   }
 }
