@@ -57,7 +57,6 @@ export class ChannelGateway
 
   @WebSocketServer()
   static server: Server;
-
   private logger = new Logger('ChannelGateway');
 
   async afterInit(server: Server) {
@@ -154,7 +153,6 @@ export class ChannelGateway
       );
       client.emit('addChannelToUserChannelList', channel);
       ChannelGateway.server.emit('changeChannelState', channel);
-      //ChannelGateway.server.emit('changeChannelState', { method: 'MODIFY', channel });
     } catch (err) {
       this.logger.log(err);
       return err;
@@ -671,16 +669,16 @@ export class ChannelGateway
         targetUser.channelSocketId,
       );
       targetSocket.join(ret.channelId.toString());
-      targetSocket.to(ret.channelId.toString()).emit('channelMessage', [
-        {
-          nickname: null,
-          userId: null,
-          channelId: channelId,
-          message: `${user.nickname} 님이 ${targetUser.nickname}을 초대되었습니다.`,
-        },
-      ]);
       targetSocket.emit('addChannelToUserChannelList', channel);
     }
+    ChannelGateway.server.to(ret.channelId.toString()).emit('channelMessage', [
+      {
+        nickname: null,
+        userId: null,
+        channelId: channelId,
+        message: `${user.nickname} 님이 ${targetUser.nickname}을 초대되었습니다.`,
+      },
+    ]);
     //return ret;
   }
 

@@ -48,6 +48,7 @@ export class GameGateway
 
   @WebSocketServer()
   static server: Server;
+  static setUserId : Set<number> = new Set<number>();
 
   async afterInit(server: Server) {
     this.logger.log('afterInit');
@@ -99,6 +100,8 @@ export class GameGateway
       gameSocketId: null,
       //userState: user.channelSocketId ? UserState.ONLINE : UserState.OFFLINE,
     });
+    if (GameGateway.setUserId.has(__user.id))
+      GameGateway.setUserId.delete(__user.id);
   }
 
   @SubscribeMessage('joinQueue')
@@ -108,9 +111,12 @@ export class GameGateway
     const user = await this.userService.getUserById(__user.id);
     if (!user) throw new WsException('Unauthorized');
     user.gameSocketId = client.id;
+    if (GameGateway.setUserId.has(user.id)) return ;
+
     if (!this.queueUser.find((u) => u.id === user.id)) {
       this.queueUser.push(user);
       this.logger.log(`${user.nickname} JOIN QUEUE`);
+      GameGateway.setUserId.add(user.id);
       GameGateway.server.to(client.id).emit('joinQueue', { status: 'success' });
     }
     // queue 2명 이상이면 game 시작
@@ -123,6 +129,7 @@ export class GameGateway
 
   private async generateGame(gameType: GameType): Promise<boolean> {
     const user1 = this.queueUser.shift();
+    GameGateway.setUserId.delete(user1.id);
     if (!user1 || !this.isSocketConnected(user1.gameSocketId)) {
       this.logger.log('user1 is null');
       return false;
@@ -131,8 +138,10 @@ export class GameGateway
     if (!user2 || !this.isSocketConnected(user2.gameSocketId)) {
       this.logger.log('user2 is null');
       this.queueUser.push(user1);
+      GameGateway.setUserId.add(user1.id);
       return false;
     }
+    GameGateway.setUserId.delete(user2.id);
     this.logger.log(
       'generateGame: ' + user1.nickname + ' vs ' + user2.nickname,
     );
@@ -158,6 +167,7 @@ export class GameGateway
     this.logger.log(`${user.nickname} leave Queue`);
     this.logger.log('leaveQueue: ' + user.nickname);
     this.queueUser = this.queueUser.filter((u) => u.id !== user.id);
+    GameGateway.setUserId.delete(user.id);
     GameGateway.server.to(client.id).emit('leaveQueue', { status: 'success' });
   }
 
@@ -358,6 +368,8 @@ export class GameGateway
     const user = await this.authService.getUserFromSocket(client);
     if (!user) throw new WsException('Unauthorized');
     const game = await this.gameService.startOneToOneGame(user, gameId);
+    GameGateway.setUserId.delete(game.winner.id);
+    GameGateway.setUserId.delete(game.loser.id);
     this.gameReady(game.winner, game.loser, game);
   }
 
