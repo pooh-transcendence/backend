@@ -1,6 +1,7 @@
 FROM node:18-alpine
 
 WORKDIR /app
+COPY ./ .
 RUN apk update && apk upgrade && apk add bash vim --no-cache
 RUN npm i -g @nestjs/cli
 

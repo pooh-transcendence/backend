@@ -68,6 +68,9 @@ export class GameController {
     @Body() createOneToOneGameDto: CreateOneToOneGameDto,
   ) {
     // this.logger.log(`createOneToOneGame`);
+    if (GameGateway.setUserId.has(user.id))
+      throw new BadRequestException('Already in game');
+    GameGateway.setUserId.add(user.id);
     const game = await this.gameService.createOneToOneGame(
       user,
       createOneToOneGameDto,
@@ -101,6 +104,7 @@ export class GameController {
     @Param('gameId', ParseIntPipe, PositiveIntPipe) gameId: number,
   ): Promise<void> {
     await this.gameService.cancelOneToOneGame(user, gameId);
+    GameGateway.setUserId.delete(user.id);
     GameGateway.emitToAllClient('deleteOneToOneGame', { id: gameId });
   }
 

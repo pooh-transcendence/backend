@@ -132,8 +132,5 @@ export class UserController {
     const user = await this.userService.getUserById(userEntity.id);
     if (!user) throw new BadRequestException('User not found');
     return await this.userService.updateUserAvatar(user, file);
-    // return await this.userService.updateUserElements(user.id, {
-    //   avatar: file.buffer.toString('base64'),
-    // });
   }
 }
