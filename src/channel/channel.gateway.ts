@@ -90,6 +90,7 @@ export class ChannelGateway
         .emit('changeFriendState', {
           id: user.id,
           nickname: user.nickname,
+          avatar: user.avatar,
           userState: UserState.ONLINE,
         });
     }
@@ -111,6 +112,7 @@ export class ChannelGateway
         .emit('changeFriendState', {
           id: user.id,
           nickname: user.nickname,
+          avatar: user.avatar,
           userState: UserState.OFFLINE,
         });
     }
@@ -499,7 +501,7 @@ export class ChannelGateway
     client.emit('getBlockList', blockList);
     return { sucess: true, blockList };
   }
-
+  
   @SubscribeMessage('createBlock')
   async createBlockList(
     @ConnectedSocket() client: Socket,

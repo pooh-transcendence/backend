@@ -52,6 +52,23 @@ export class UserService {
     user.friends = await this.getFriendListByUserId(_user.id);
     user.blocks = await this.getBlockListByUserId(_user.id);
     user.channels = await this.getChannelListByUserId(_user.id);
+    user.friends.forEach((friend) => {
+      if (friend.avatar && friend.avatar.substring(0, 4) !== 'data') {
+        const file = friend.avatar.split('.');
+        friend.avatar = fs.readFileSync(friend.avatar).toString('base64');
+        friend.avatar =
+          'data:' + 'image/' + file[1] + ';base64,' + friend.avatar;
+      }
+    });
+
+    user.blocks.forEach((friend) => {
+      if (friend.avatar && friend.avatar.substring(0, 4) !== 'data') {
+        const file = friend.avatar.split('.');
+        friend.avatar = fs.readFileSync(friend.avatar).toString('base64');
+        friend.avatar =
+          'data:' + 'image/' + file[1] + ';base64,' + friend.avatar;
+      }
+    });
     return user;
   }
 
@@ -171,6 +188,11 @@ export class UserService {
     );
     if (!result)
       throw new NotFoundException(`There is no user with id ${userId}`);
+    if (result.avatar && result.avatar.substring(0, 4) !== 'data') {
+      const file = result.avatar.split('.');
+      result.avatar = fs.readFileSync(result.avatar).toString('base64');
+      result.avatar = 'data:' + 'image/' + file[1] + ';base64,' + result.avatar;
+    }
     return result;
   }
 
