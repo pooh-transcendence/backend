@@ -64,7 +64,30 @@ export class UserRepository extends Repository<UserEntity> {
       user.avatar = fs.readFileSync(user.avatar).toString('base64');
       user.avatar = 'data:' + 'image/' + file[1] + ';base64,' + user.avatar;
     }
-
+    user.winnerGame.forEach((game) => {
+      if (game.winner.avatar && game.winner.avatar.substring(0, 4) !== 'data') {
+        const file = game.winner.avatar.split('.');
+        game.winner.avatar = fs.readFileSync(game.winner.avatar).toString('base64');
+        game.winner.avatar = 'data:' + 'image/' + file[1] + ';base64,' + game.winner.avatar;
+      }
+      if (game.loser.avatar && game.loser.avatar.substring(0, 4) !== 'data') {
+        const file = game.loser.avatar.split('.');
+        game.loser.avatar = fs.readFileSync(game.loser.avatar).toString('base64');
+        game.loser.avatar = 'data:' + 'image/' + file[1] + ';base64,' + game.loser.avatar;
+      }
+    });
+    user.loserGame.forEach((game) => {
+      if (game.winner.avatar && game.winner.avatar.substring(0, 4) !== 'data') {
+        const file = game.winner.avatar.split('.');
+        game.winner.avatar = fs.readFileSync(game.winner.avatar).toString('base64');
+        game.winner.avatar = 'data:' + 'image/' + file[1] + ';base64,' + game.winner.avatar;
+      }
+      if (game.loser.avatar && game.loser.avatar.substring(0, 4) !== 'data') {
+        const file = game.loser.avatar.split('.');
+        game.loser.avatar = fs.readFileSync(game.loser.avatar).toString('base64');
+        game.loser.avatar = 'data:' + 'image/' + file[1] + ';base64,' + game.loser.avatar;
+      }
+    });
     return user;
   }
 
